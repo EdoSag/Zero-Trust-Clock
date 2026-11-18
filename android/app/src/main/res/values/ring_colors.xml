@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The ring screen: the suite's indigo, dark, so it is easy on the eyes at night. -->
+    <color name="ring_background">#FF1E1B4B</color>
+    <color name="ring_text">#FFFFFFFF</color>
+    <color name="ring_text_soft">#FFC7D2FE</color>
+</resources>

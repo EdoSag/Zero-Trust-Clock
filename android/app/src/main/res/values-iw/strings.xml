@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ring_alarm">שעון מעורר</string>
+    <string name="ring_snooze">נודניק</string>
+    <string name="ring_dismiss">סגירה</string>
+    <string name="test_alarm">שעון מעורר לבדיקה</string>
+    <string name="channel_ringing">שעונים מעוררים שמצלצלים</string>
+    <string name="channel_ringing_about">מציג את השעון המעורר שמצלצל. יש להשאיר פעיל, אחרת השעון המעורר לא ייפתח מעל מסך הנעילה.</string>
+    <string name="channel_snoozed">שעונים מעוררים בנודניק</string>
+    <string name="channel_missed">שעונים מעוררים שהוחמצו</string>
+    <string name="snoozed_title">נודניק עד %1$s</string>
+    <string name="missed_title">שעון מעורר הוחמץ</string>
+    <string name="missed_text">השעון המעורר של %1$s לא צלצל בזמן או שלא נענה.</string>
+    <string name="missed_test">השעון המעורר לבדיקה לא צלצל בזמן או שלא נענה.</string>
+</resources>
