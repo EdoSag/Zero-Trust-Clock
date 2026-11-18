@@ -61,7 +61,7 @@ Where things are kept on the phone:
 flutter pub get
 flutter analyze
 flutter test test/
-cd android && ./gradlew :app:testReleaseUnitTest   # the scheduler's tests
+cd android && ./gradlew :app:testDebugUnitTest   # the scheduler's tests
 ```
 
 Flutter 3.47.9 (the suite's pinned version). Strings are in

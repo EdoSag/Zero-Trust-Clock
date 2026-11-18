@@ -163,7 +163,7 @@ jobs:
         # also puts the Gradle wrapper in place.
         run: |
           cd android
-          ./gradlew :app:testReleaseUnitTest --console=plain
+          ./gradlew :app:testDebugUnitTest --console=plain
 
       - uses: actions/upload-artifact@v4
         if: env.AAB != ''
