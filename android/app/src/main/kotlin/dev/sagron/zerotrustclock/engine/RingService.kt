@@ -2,8 +2,10 @@ package dev.sagron.zerotrustclock.engine
 
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -36,6 +38,19 @@ class RingService : Service() {
     private var vibrator: Vibrator? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var focus: AudioFocusRequest? = null
+    private var watchingLock = false
+
+    /**
+     * A label must not stay on the lock screen when the phone is locked
+     * while its alarm rings. Screen off: the label goes from the
+     * notification at once. Screen on or unlocked: it shows again if the
+     * phone really is unlocked.
+     */
+    private val lockWatcher = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            refreshNotification(hideLabel = intent.action == Intent.ACTION_SCREEN_OFF)
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -75,6 +90,7 @@ class RingService : Service() {
             }
         }
         AlarmNotifications.cancelSnoozed(this, alarm.id)
+        watchLock()
         holdAwake()
         stopSound()
         startSound()
@@ -116,6 +132,46 @@ class RingService : Service() {
             )
         } else {
             startForeground(AlarmNotifications.RINGING_ID, notification)
+        }
+    }
+
+    private fun watchLock() {
+        if (watchingLock) return
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(lockWatcher, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(lockWatcher, filter)
+            }
+            watchingLock = true
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun unwatchLock() {
+        if (!watchingLock) return
+        watchingLock = false
+        try {
+            unregisterReceiver(lockWatcher)
+        } catch (_: Exception) {
+        }
+    }
+
+    /** Shows the ringing notification again, with or without the label. */
+    private fun refreshNotification(hideLabel: Boolean) {
+        val id = ringingId ?: return
+        val alarm = AlarmStore.load(this).firstOrNull { it.id == id } ?: return
+        try {
+            getSystemService(NotificationManager::class.java)?.notify(
+                AlarmNotifications.RINGING_ID,
+                AlarmNotifications.ringing(Loc.wrap(this), alarm, hideLabel = hideLabel, update = true),
+            )
+        } catch (_: Exception) {
         }
     }
 
@@ -256,6 +312,7 @@ class RingService : Service() {
     }
 
     private fun stopNow() {
+        unwatchLock()
         try {
             if (wakeLock?.isHeld == true) wakeLock?.release()
         } catch (_: Exception) {
@@ -266,6 +323,7 @@ class RingService : Service() {
     }
 
     override fun onDestroy() {
+        unwatchLock()
         handler.removeCallbacks(timeout)
         stopSound()
         stopVibration()

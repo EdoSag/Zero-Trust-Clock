@@ -73,14 +73,27 @@ object AlarmNotifications {
     fun deviceLocked(context: Context): Boolean =
         context.getSystemService(KeyguardManager::class.java)?.isDeviceLocked ?: true
 
-    /** The label to show now: none on a locked phone, "Test alarm" for the test. */
-    fun visibleLabel(context: Context, alarm: Alarm): String = when {
+    /**
+     * The label to show now: none on a locked phone (or with [hidden],
+     * for a screen that just went dark), "Test alarm" for the test.
+     */
+    fun visibleLabel(context: Context, alarm: Alarm, hidden: Boolean = false): String = when {
         alarm.test -> context.getString(R.string.test_alarm)
-        deviceLocked(context) -> ""
+        hidden || deviceLocked(context) -> ""
         else -> LabelStore.get(context, alarm.id)
     }
 
-    fun ringing(context: Context, alarm: Alarm?): Notification {
+    /**
+     * The ringing alarm's notification. [update] is for showing it again
+     * while it rings (the label goes when the phone is locked): it must
+     * not pop up or open the ring screen a second time.
+     */
+    fun ringing(
+        context: Context,
+        alarm: Alarm?,
+        hideLabel: Boolean = false,
+        update: Boolean = false,
+    ): Notification {
         ensureChannels(context)
         val open = PendingIntent.getActivity(
             context,
@@ -89,7 +102,7 @@ object AlarmNotifications {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val label = if (alarm == null) "" else visibleLabel(context, alarm)
+        val label = if (alarm == null) "" else visibleLabel(context, alarm, hideLabel)
         val now = Calendar.getInstance()
         val builder = Notification.Builder(context, CHANNEL_RINGING)
             .setSmallIcon(R.drawable.ic_stat_alarm)
@@ -100,6 +113,7 @@ object AlarmNotifications {
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
+            .setOnlyAlertOnce(update)
             .setShowWhen(false)
             .setContentIntent(open)
             // Opens the ring screen over the lock screen; a heads-up

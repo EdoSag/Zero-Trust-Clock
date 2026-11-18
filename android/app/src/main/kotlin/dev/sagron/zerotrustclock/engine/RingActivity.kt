@@ -53,6 +53,9 @@ class RingActivity : Activity() {
         RingService.onEnded = closeWhenEnded
         // Opened from an old notification after the ring ended.
         if (RingService.ringingId == null) finish()
+        // Back on screen, maybe on a phone locked in the meantime: the
+        // label is read again, and stays away while the phone is locked.
+        show()
     }
 
     override fun onStop() {
