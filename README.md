@@ -146,4 +146,9 @@ notifications keep theirs in `android/app/src/main/res/values*/strings.xml`.
 The launcher icons are drawn from the suite's brand mark with
 `flutter test tool/launcher_icon_test.dart`.
 
+The Google Play listing (English and Hebrew: title, descriptions, icon,
+feature graphic, release notes) is in `fastlane/metadata/android/`. A push
+to `main` also builds the `.aab` that Play takes. Phone screenshots still
+need to be added under `images/phoneScreenshots/`.
+
 Licence: AGPL-3.0 (see `LICENSE`).

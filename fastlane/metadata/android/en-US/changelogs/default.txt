@@ -1,0 +1,1 @@
+First release: alarms with Turn off once that ring even after a restart, timers, stopwatch, world clock, bedtime with sleep sounds, widgets and tiles. English and Hebrew.
