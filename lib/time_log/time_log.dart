@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -16,23 +17,38 @@ class TimeKey extends Notifier<Uint8List?> {
   // Kept here too: state can't be read while the provider is disposed.
   Uint8List? _key;
 
+  /// Bumped by every derive, clear and dispose: a derive that finishes
+  /// after the vault locked is dropped.
+  int _generation = 0;
+
   @override
   Uint8List? build() {
     ref.listen(vaultControllerProvider, (_, VaultState next) {
       if (next is VaultLocked) clear();
     });
-    ref.onDispose(_zero);
+    ref.onDispose(() {
+      _generation++;
+      _zero();
+    });
     return null;
   }
 
   Future<void> deriveFrom(Uint8List dek) async {
+    final mine = ++_generation;
     final key = await KeyHierarchy.appKey(dek, timeAppId);
+    if (mine != _generation) {
+      key.fillRange(0, key.length, 0);
+      return;
+    }
     _zero();
     _key = key;
     state = key;
+    // An entry logged offline earlier goes up now.
+    unawaited(ref.read(timeLogProvider).flush().catchError((Object _) {}));
   }
 
   void clear() {
+    _generation++;
     _zero();
     state = null;
   }
@@ -59,6 +75,9 @@ abstract class TimeLog {
 
   /// The projects in ZT Time, not archived, by name.
   Future<List<TimeProject>> projects();
+
+  /// Sends entries logged while offline, if any.
+  Future<void> flush();
 
   /// Adds an entry to ZT Time, synced to the account.
   Future<void> log({
@@ -152,17 +171,32 @@ class VaultTimeLog implements TimeLog {
     }
   }
 
-  Future<void> _sync(ItemSyncEngine engine) async {
+  /// Set while an entry is on this phone only (logged offline).
+  static const pendingKey = 'clock_time_pending';
+
+  PreferencesStore get _prefs => ref.read(ztPreferencesStoreProvider);
+
+  /// True when the round reached the account.
+  Future<bool> _sync(ItemSyncEngine engine) async {
     try {
       await engine.sync();
+      return true;
     } on Object {
-      // Offline: what is here is used, and pushed next time.
+      // Offline: what is here is used, and pushed by [flush] later.
+      return false;
     }
   }
 
   @override
+  Future<void> flush() async {
+    if (!available || (await _prefs.read(pendingKey)) != '1') return;
+    final sent = await _withEngine((engine, _) => _sync(engine));
+    if (sent) await _prefs.write(pendingKey, '');
+  }
+
+  @override
   Future<List<TimeProject>> projects() => _withEngine((engine, store) async {
-    await _sync(engine);
+    if (await _sync(engine)) await _prefs.write(pendingKey, '');
     final out = <TimeProject>[];
     for (final item in await store.all()) {
       final j = item.json;
@@ -196,6 +230,7 @@ class VaultTimeLog implements TimeLog {
         now: DateTime.now(),
       ),
     );
-    await _sync(engine);
+    // Offline: kept here and sent at the next unlock (or the next log).
+    await _prefs.write(pendingKey, await _sync(engine) ? '' : '1');
   });
 }
