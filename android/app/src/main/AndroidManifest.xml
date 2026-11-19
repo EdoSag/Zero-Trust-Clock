@@ -43,6 +43,8 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Long-press shortcuts: new alarm, new timer, start stopwatch. -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
             <!-- Links are handled by the app's own code (app_links, see
                  lib/app/email_links.dart), not Flutter's router. -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
@@ -98,6 +100,27 @@
             android:name=".engine.TimerReceiver"
             android:exported="false"
             android:directBootAware="true"/>
+        <!-- Quick Settings tiles: the next alarm, and the stopwatch. -->
+        <service
+            android:name=".engine.NextAlarmTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_alarm"
+            android:label="@string/tile_next_alarm"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".engine.StopwatchTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_timer"
+            android:label="@string/stopwatch"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
         <!-- "Set an alarm for 7" and "set a timer for 5 minutes" from
              assistants and other apps (Android's standard alarm intents).
              Callers need SET_ALARM. -->

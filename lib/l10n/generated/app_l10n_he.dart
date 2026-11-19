@@ -441,4 +441,64 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get timerStarted => 'הטיימר התחיל';
+
+  @override
+  String get clock => 'שעון';
+
+  @override
+  String get addCity => 'הוספת עיר';
+
+  @override
+  String get searchCities => 'חיפוש עיר או מדינה';
+
+  @override
+  String get noCities => 'עדיין אין ערים';
+
+  @override
+  String get noCitiesHint => 'הוסיפו עיר כדי לראות את השעה בה לצד השעה שלכם.';
+
+  @override
+  String cityRemoved(String city) {
+    return '$city הוסרה';
+  }
+
+  @override
+  String get remove => 'הסרה';
+
+  @override
+  String get yesterday => 'אתמול';
+
+  @override
+  String get sameTime => 'אותה שעה';
+
+  @override
+  String timeAhead(String time) {
+    return '$time קדימה';
+  }
+
+  @override
+  String timeBehind(String time) {
+    return '$time אחורה';
+  }
+
+  @override
+  String hoursOnly(int hours) {
+    return '$hours שע׳';
+  }
+
+  @override
+  String hoursAndMinutes(int hours, int minutes) {
+    return '$hours שע׳ $minutes דק׳';
+  }
+
+  @override
+  String dayAndDifference(String day, String difference) {
+    return '$day, $difference';
+  }
+
+  @override
+  String get noCityFound => 'לא נמצאה עיר';
+
+  @override
+  String get dragToReorder => 'לחיצה ארוכה לשינוי הסדר, החלקה להסרה.';
 }

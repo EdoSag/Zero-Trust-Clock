@@ -38,4 +38,10 @@
     <string name="stopwatch_lap">Lap %1$d</string>
     <string name="stopwatch_lap_button">Lap</string>
     <string name="stopwatch_paused">Paused at %1$s</string>
+    <string name="tile_next_alarm">Next alarm</string>
+    <string name="tile_no_alarm">No alarm</string>
+    <string name="tile_tap_to_start">Tap to start</string>
+    <string name="shortcut_new_alarm">New alarm</string>
+    <string name="shortcut_new_timer">New timer</string>
+    <string name="shortcut_start_stopwatch">Start stopwatch</string>
 </resources>

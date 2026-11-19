@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.4.0)
+## What is in it now (0.5.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -44,6 +44,14 @@ Work happens on the `Dev` branch; `main` holds releases.
   "Copy laps". It keeps counting with the app closed, in a notification
   with Pause and Lap.
 - **"Set a timer for 5 minutes"** from assistants and other apps.
+- **World clock** (Clock tab): the time here, then your cities with their
+  time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
+  named in the app's language, found by city or country, offline. Long-press
+  to reorder, swipe to remove (with Undo).
+- **Quick Settings tiles**: Next alarm (opens the alarms) and Stopwatch
+  (starts and pauses it).
+- **Shortcuts** on the app icon (long-press): New alarm, New timer, Start
+  stopwatch.
 - **No account needed.** Alarms stay on the phone and ring without one.
 - **Optional sign-in** (Settings > Sign in or create an account) adds
   end-to-end encrypted backup and sync through the shared Zero-Trust
@@ -61,7 +69,7 @@ Work happens on the `Dev` branch; `main` holds releases.
 | Scheduler | `android/.../engine/core` | Plain Kotlin, no Android: when an alarm rings next (repeat days, Turn off once, snooze, clock and time zone changes), what each timer and stopwatch button does. Unit tested. |
 | Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. Timers (`TimerEngine`, exact AlarmManager wake-ups) and the stopwatch live here too, with their notifications. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
-| Screens | `lib/ui` | Flutter, on the shared core: Alarms, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
+| Screens | `lib/ui` | Flutter, on the shared core: Alarms, Clock, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
 | Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. |
 | Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
@@ -99,6 +107,10 @@ Where things are kept on the phone:
 8. "Hey Google, set a timer for 2 minutes": it starts in ZT Clock.
 9. Stopwatch: start, take laps, close the app (swipe it away), wait, open
    it again from the notification: the time kept going.
+10. Clock tab: add Tokyo and New York; switch the app to Hebrew and check
+    the names follow.
+11. Add the Next alarm and Stopwatch tiles to Quick Settings; long-press the
+    app icon for the shortcuts.
 
 ## Development
 

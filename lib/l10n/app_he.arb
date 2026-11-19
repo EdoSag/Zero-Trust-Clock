@@ -126,5 +126,21 @@
   "lapNumber": "הקפה {number}",
   "copyLaps": "העתקת ההקפות",
   "lapsCopied": "ההקפות הועתקו",
-  "timerStarted": "הטיימר התחיל"
+  "timerStarted": "הטיימר התחיל",
+  "clock": "שעון",
+  "addCity": "הוספת עיר",
+  "searchCities": "חיפוש עיר או מדינה",
+  "noCities": "עדיין אין ערים",
+  "noCitiesHint": "הוסיפו עיר כדי לראות את השעה בה לצד השעה שלכם.",
+  "cityRemoved": "{city} הוסרה",
+  "remove": "הסרה",
+  "yesterday": "אתמול",
+  "sameTime": "אותה שעה",
+  "timeAhead": "{time} קדימה",
+  "timeBehind": "{time} אחורה",
+  "hoursOnly": "{hours} שע׳",
+  "hoursAndMinutes": "{hours} שע׳ {minutes} דק׳",
+  "dayAndDifference": "{day}, {difference}",
+  "noCityFound": "לא נמצאה עיר",
+  "dragToReorder": "לחיצה ארוכה לשינוי הסדר, החלקה להסרה."
 }

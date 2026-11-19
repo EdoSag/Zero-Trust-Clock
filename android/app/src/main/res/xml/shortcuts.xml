@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon: new alarm, new timer, start the stopwatch.
+     The app reads the "tab" extra (see engine/Tabs.kt, lib/ui/clock_home.dart). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_alarm"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_alarm"
+        android:shortcutShortLabel="@string/shortcut_new_alarm">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.sagron.zerotrustclock"
+            android:targetClass="dev.sagron.zerotrustclock.MainActivity">
+            <extra android:name="dev.sagron.zerotrustclock.tab" android:value="newAlarm" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_timer"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_timer"
+        android:shortcutShortLabel="@string/shortcut_new_timer">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.sagron.zerotrustclock"
+            android:targetClass="dev.sagron.zerotrustclock.MainActivity">
+            <extra android:name="dev.sagron.zerotrustclock.tab" android:value="newTimer" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="start_stopwatch"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_stopwatch"
+        android:shortcutShortLabel="@string/shortcut_start_stopwatch">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.sagron.zerotrustclock"
+            android:targetClass="dev.sagron.zerotrustclock.MainActivity">
+            <extra android:name="dev.sagron.zerotrustclock.tab" android:value="startStopwatch" />
+        </intent>
+    </shortcut>
+</shortcuts>

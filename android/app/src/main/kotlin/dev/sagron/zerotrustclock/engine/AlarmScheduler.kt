@@ -72,6 +72,7 @@ object AlarmScheduler {
             // Only the notification; the rings themselves are set.
         }
         for (a in missed) AlarmNotifications.showMissed(Loc.wrap(context), a)
+        Tiles.refresh(context)
         notifyChanged()
     }
 

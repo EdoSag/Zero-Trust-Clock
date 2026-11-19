@@ -165,6 +165,7 @@ object TimerEngine {
         val now = now()
         val s = TimerStore.updateStopwatch(context) { how(it, now) }
         TimerNotifications.showStopwatch(Loc.wrap(context), s, now)
+        Tiles.refresh(context)
         notifyChanged()
     }
 
