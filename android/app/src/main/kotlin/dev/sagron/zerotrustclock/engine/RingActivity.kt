@@ -38,6 +38,9 @@ class RingActivity : Activity(), SensorEventListener {
 
     /** Shakes counted before the screen was recreated. */
     private var shakesDone = 0
+
+    /** The alarm the task on screen belongs to. */
+    private var taskFor: String? = null
     private var listening = false
 
     override fun attachBaseContext(base: Context) {
@@ -69,8 +72,11 @@ class RingActivity : Activity(), SensorEventListener {
             override fun afterTextChanged(s: Editable?) = checkAnswer(s?.toString().orEmpty())
         })
         if (savedInstanceState?.getBoolean(STATE_TASK) == true) {
-            solved = savedInstanceState.getInt(STATE_SOLVED)
-            shakesDone = savedInstanceState.getInt(STATE_SHAKES)
+            // Progress only counts for the alarm it was made on.
+            if (savedInstanceState.getString(STATE_FOR) == RingService.ringingId) {
+                solved = savedInstanceState.getInt(STATE_SOLVED)
+                shakesDone = savedInstanceState.getInt(STATE_SHAKES)
+            }
             startTask()
         } else if (intent?.getBooleanExtra(EXTRA_TASK, false) == true) {
             startTask()
@@ -89,6 +95,7 @@ class RingActivity : Activity(), SensorEventListener {
         outState.putBoolean(STATE_TASK, task != null)
         outState.putInt(STATE_SOLVED, solved)
         outState.putInt(STATE_SHAKES, shakes.count)
+        outState.putString(STATE_FOR, taskFor)
     }
 
     private fun ringingTask(): String? {
@@ -103,8 +110,10 @@ class RingActivity : Activity(), SensorEventListener {
         if (kind == WakeTasks.SHAKE && sensors?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) == null) {
             kind = WakeTasks.MATH // No motion sensor: sums instead.
         }
-        if (task == kind) return
+        if (task == kind && taskFor == RingService.ringingId) return
+        if (task != null) resetTask()
         task = kind
+        taskFor = RingService.ringingId
         findViewById<View>(R.id.ring_dismiss).visibility = View.GONE
         findViewById<View>(R.id.ring_task).visibility = View.VISIBLE
         val title = findViewById<TextView>(R.id.ring_task_title)
@@ -203,8 +212,28 @@ class RingActivity : Activity(), SensorEventListener {
         super.onStop()
     }
 
+    /**
+     * Back to the slider with no progress: another alarm took over the
+     * ring screen, and its own task (if any) starts from the beginning.
+     */
+    private fun resetTask() {
+        unlisten()
+        task = null
+        taskFor = null
+        solved = 0
+        shakesDone = 0
+        problem = null
+        shakes = ShakeCounter()
+        val answer = findViewById<EditText>(R.id.ring_task_answer)
+        answer.text.clear()
+        getSystemService(InputMethodManager::class.java)?.hideSoftInputFromWindow(answer.windowToken, 0)
+        findViewById<View>(R.id.ring_task).visibility = View.GONE
+        findViewById<View>(R.id.ring_dismiss).visibility = View.VISIBLE
+    }
+
     private fun show() {
         val id = RingService.ringingId
+        if (task != null && taskFor != id) resetTask()
         val alarm = if (id == null) null else AlarmStore.load(this).firstOrNull { it.id == id }
         val label = if (alarm == null) "" else AlarmNotifications.visibleLabel(this, alarm)
         val view = findViewById<TextView>(R.id.ring_label)
@@ -217,6 +246,7 @@ class RingActivity : Activity(), SensorEventListener {
         private const val STATE_TASK = "task"
         private const val STATE_SOLVED = "solved"
         private const val STATE_SHAKES = "shakes"
+        private const val STATE_FOR = "taskFor"
 
         fun taskIntent(context: Context): Intent = Intent(context, RingActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
