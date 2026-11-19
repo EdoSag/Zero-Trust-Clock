@@ -1,0 +1,47 @@
+name: zerotrust_clock
+description: "Zero-Trust Clock: alarms that ring, with Turn off once. Timer, stopwatch, world clock and bedtime to follow."
+publish_to: none
+version: 0.11.1+12
+
+environment:
+  sdk: ^3.9.0
+
+# Builds SQLite3MultipleCiphers instead of plain SQLite, so the core's local
+# store is encrypted as a whole file (see Zero-Trust-Core README, "Sync").
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # Shared account, settings and look of every Zero-Trust app.
+  # Core PR #55 (feature/settings-without-account, on Dev after 0.12.0): the
+  # settings screen works without an account. Move to the Dev merge commit,
+  # then to the next tag, once it is in. Never add cryptography_flutter: it
+  # breaks the core's key derivation.
+  zero_trust_core:
+    git:
+      url: https://github.com/EdoSag/Zero-Trust-Core.git
+      path: packages/zero_trust_core
+      ref: e471617215b5693123667ba60ee3bedc4527cb3e
+  flutter_riverpod: ^3.5.0
+  supabase_flutter: ^2.9.0
+  app_links: ">=6.4.0 <8.0.0"
+  flutter_dotenv: ^6.0.1
+  intl: any
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - .env

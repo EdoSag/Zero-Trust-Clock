@@ -1,0 +1,239 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sign-in and sync with the shared Zero-Trust account (optional in
+         this app: alarms work without it and without a network). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+
+    <!-- Alarms. USE_EXACT_ALARM is the permission for alarm clocks: given
+         at install, never asked, never switched off. Android 12 has only
+         the older SCHEDULE_EXACT_ALARM. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
+    <!-- Set every alarm again after a restart, before the first unlock too. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- The ringing alarm's notification and its screen over the lock screen. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- The service that rings. "System exempted" is the type Android
+         keeps for apps continuing an exact alarm. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Bedtime: Do Not Disturb through the night, only after the user
+         gives the app Do Not Disturb access in Android's settings. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
+    <!-- Sleep sounds play on with the screen off. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <application
+        android:supportsRtl="true"
+        android:label="ZT Clock"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Long-press shortcuts: new alarm, new timer, start stopwatch. -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
+            <!-- Links are handled by the app's own code (app_links, see
+                 lib/app/email_links.dart), not Flutter's router. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
+            <!-- Password-reset emails: https://zerotrust.bz/auth/clock/#token_hash=… -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="zerotrust.bz" android:pathPrefix="/auth/clock/"/>
+            </intent-filter>
+        </activity>
+
+        <!-- The alarm engine (dev.sagron.zerotrustclock.engine). Every part
+             is directBootAware: it runs before the phone's first unlock
+             after a restart, which is when a GrapheneOS phone that
+             restarted itself overnight has to ring. None is exported. -->
+        <activity
+            android:name=".engine.RingActivity"
+            android:exported="false"
+            android:directBootAware="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/RingTheme"/>
+        <service
+            android:name=".engine.RingService"
+            android:exported="false"
+            android:directBootAware="true"
+            android:foregroundServiceType="systemExempted"/>
+        <!-- Timers: "Time's up" over the lock screen, the service that
+             rings finished timers, and the receiver for their ends and
+             notification buttons. -->
+        <activity
+            android:name=".engine.TimerRingActivity"
+            android:exported="false"
+            android:directBootAware="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/RingTheme"/>
+        <service
+            android:name=".engine.TimerRingService"
+            android:exported="false"
+            android:directBootAware="true"
+            android:foregroundServiceType="systemExempted"/>
+        <receiver
+            android:name=".engine.TimerReceiver"
+            android:exported="false"
+            android:directBootAware="true"/>
+        <!-- Bedtime: the reminder, and the night's start and end. -->
+        <receiver
+            android:name=".engine.BedtimeReceiver"
+            android:exported="false"
+            android:directBootAware="true"/>
+        <service
+            android:name=".engine.SleepSoundService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"/>
+        <!-- Home screen widgets (engine/Widgets.kt), in the shared
+             Zero-Trust widget look. -->
+        <receiver
+            android:name=".engine.ClockWidget"
+            android:exported="false"
+            android:label="@string/widget_clock_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_clock_info"/>
+        </receiver>
+        <receiver
+            android:name=".engine.WorldClockWidget"
+            android:exported="false"
+            android:label="@string/widget_world_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_world_info"/>
+        </receiver>
+        <receiver
+            android:name=".engine.AnalogClockWidget"
+            android:exported="false"
+            android:label="@string/widget_analog_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_analog_info"/>
+        </receiver>
+        <!-- Quick Settings tiles: the next alarm, and the stopwatch. -->
+        <service
+            android:name=".engine.ClockScreensaver"
+            android:exported="true"
+            android:directBootAware="true"
+            android:icon="@drawable/ic_stat_alarm"
+            android:label="@string/screensaver_name"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".engine.NextAlarmTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_alarm"
+            android:label="@string/tile_next_alarm"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".engine.StopwatchTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_timer"
+            android:label="@string/stopwatch"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+        <!-- "Set an alarm for 7" and "set a timer for 5 minutes" from
+             assistants and other apps (Android's standard alarm intents).
+             Callers need SET_ALARM. -->
+        <activity
+            android:name=".engine.SetAlarmActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:permission="com.android.alarm.permission.SET_ALARM"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SET_ALARM"/>
+                <action android:name="android.intent.action.SHOW_ALARMS"/>
+                <action android:name="android.intent.action.SET_TIMER"/>
+                <action android:name="android.intent.action.SHOW_TIMERS"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <receiver
+            android:name=".engine.AlarmReceiver"
+            android:exported="false"
+            android:directBootAware="true"/>
+        <receiver
+            android:name=".engine.BootReceiver"
+            android:exported="false"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <!-- Android 12: taking "Alarms & reminders" away cancels
+                     every alarm. Set them again when it is given back. -->
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+    </queries>
+</manifest>

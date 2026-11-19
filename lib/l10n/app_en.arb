@@ -1,0 +1,402 @@
+{
+  "@@locale": "en",
+  "appTitle": "ZT Clock",
+  "alarms": "Alarms",
+  "settings": "Settings",
+  "addAlarm": "Add alarm",
+  "noAlarms": "No alarms yet",
+  "noAlarmsHint": "Tap + to set one.",
+  "everyDay": "Every day",
+  "once": "Once",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "turnOffOnce": "Turn off once",
+  "turnBackOn": "Turn back on",
+  "edit": "Edit",
+  "delete": "Delete",
+  "moreOptions": "More options",
+  "offOnceNext": "Off once. Next: {day}",
+  "@offOnceNext": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "offOnce": "Off once",
+  "undo": "Undo",
+  "alarmOff": "Alarm off",
+  "justOnce": "Just once",
+  "alarmDeleted": "Alarm deleted",
+  "snoozedUntil": "Snoozed until {time}",
+  "@snoozedUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dismiss": "Dismiss",
+  "snooze": "Snooze",
+  "ringingNow": "Ringing now",
+  "ringsInDays": "Rings in {days} d {hours} h",
+  "@ringsInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "ringsInHours": "Rings in {hours} h {minutes} min",
+  "@ringsInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "ringsInMinutes": "Rings in {minutes} min",
+  "@ringsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "ringsInUnderMinute": "Rings in less than a minute",
+  "mayNotRing": "Alarms may not ring",
+  "mayNotRingHint": "{count, plural, =1{1 thing on this phone needs attention.} other{{count} things on this phone need attention.}}",
+  "@mayNotRingHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openAlarmCheck": "Open Alarm check",
+  "editAlarm": "Edit alarm",
+  "changeTime": "Change time",
+  "repeat": "Repeat",
+  "ringsOnce": "No day picked: the alarm rings once.",
+  "label": "Label",
+  "labelHelper": "Not shown while the phone is locked.",
+  "vibrate": "Vibrate",
+  "snoozeLength": "Snooze length",
+  "minutesShort": "{minutes} min",
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "save": "Save",
+  "couldNotSave": "That did not work. Try again.",
+  "alarmCheck": "Alarm check",
+  "alarmCheckSubtitle": "What can stop an alarm on this phone",
+  "alarmCheckIntro": "Each line is something that can stop an alarm on this phone. Fix what is marked, then try a test alarm.",
+  "allGood": "Everything looks right",
+  "fix": "Fix",
+  "checkNotifications": "Notifications",
+  "checkNotificationsOk": "On",
+  "checkNotificationsBad": "Off. A ringing alarm cannot show on screen.",
+  "checkRingChannel": "\"Ringing alarms\" notifications",
+  "checkRingChannelOk": "Normal",
+  "checkRingChannelBad": "Turned down or off. The alarm screen may not open.",
+  "checkFullScreen": "Alarm screen over the lock screen",
+  "checkFullScreenOk": "Allowed",
+  "checkFullScreenBad": "Not allowed. You would only get a notification.",
+  "checkExact": "Exact alarms",
+  "checkExactOk": "Allowed",
+  "checkExactBad": "Not allowed. Alarms could ring late.",
+  "checkVolume": "Alarm volume",
+  "checkVolumeOk": "{level} of {max}",
+  "@checkVolumeOk": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "checkVolumeBad": "At zero. Alarms only vibrate.",
+  "checkSilence": "Do Not Disturb",
+  "checkSilenceOk": "Alarms can ring",
+  "checkSilenceBad": "Total silence is on. It mutes alarms.",
+  "checkProfile": "Phone profile",
+  "checkProfileOk": "Main profile",
+  "checkProfileBad": "Secondary profile. When this profile is ended, its alarms do not ring.",
+  "checkRestart": "After a restart",
+  "checkRestartNever": "No restart seen since the app was installed.",
+  "checkRestartLocked": "Alarms were set again on {when}, before the phone was unlocked.",
+  "@checkRestartLocked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "checkRestartUnlocked": "Alarms were set again on {when}, after the phone was unlocked.",
+  "@checkRestartUnlocked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "tryIt": "Try it",
+  "testIn10": "Test alarm in 10 seconds",
+  "testIn10Hint": "Rings like a real alarm. Lock the phone first to see the alarm screen.",
+  "testStarted": "Test alarm rings in 10 seconds.",
+  "restartTest": "Restart test",
+  "restartTestHint": "Sets a test alarm 3 minutes from now. Restart the phone and leave it locked. The alarm should still ring.",
+  "restartTestStarted": "Test alarm rings in 3 minutes. Restart the phone now and do not unlock it.",
+  "alarmsAdded": "{count, plural, =1{1 alarm from your account was added. It stays off on this phone until you switch it on.} other{{count} alarms from your account were added. They stay off on this phone until you switch them on.}}",
+  "@alarmsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "date": "Date",
+  "sound": "Sound",
+  "soundChime": "ZT chime",
+  "soundSystem": "The phone's alarm sound",
+  "soundRingtone": "Choose a phone sound",
+  "soundFile": "Choose an audio file",
+  "soundPicked": "Picked sound",
+  "soundHint": "A sound you choose is copied into the app, so it also plays before the phone is first unlocked. If it can't play, the ZT chime rings instead.",
+  "gradual": "Gradually louder",
+  "gradualHint": "Starts quietly and reaches full volume in a minute",
+  "silenceAfter": "Silence after",
+  "pauseUntil": "Pause until…",
+  "pauseUntilHelp": "Silent through this day",
+  "pausedUntil": "Paused until {day}",
+  "@pausedUntil": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "resume": "Resume",
+  "pauseAll": "Pause all alarms until…",
+  "resumeAll": "Resume all alarms",
+  "pausedAllUntil": "Repeating alarms are paused through {day}. Alarms set for one day still ring.",
+  "@pausedAllUntil": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "timers": "Timers",
+  "stopwatch": "Stopwatch",
+  "addTimer": "Add timer",
+  "start": "Start",
+  "pause": "Pause",
+  "reset": "Reset",
+  "addMinute": "+1:00",
+  "stop": "Stop",
+  "timesUp": "Time's up",
+  "timerOf": "{length} timer",
+  "@timerOf": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "timerPaused": "Paused",
+  "timerLabel": "Timer label",
+  "deleteTimer": "Delete timer",
+  "cancel": "Cancel",
+  "quickTimers": "Quick timers",
+  "saveQuickTimer": "Save as a quick timer",
+  "quickTimerSaved": "Saved as a quick timer",
+  "quickTimerRemoved": "Quick timer removed",
+  "quickTimersHint": "Tap one to start it. Remove one you saved with its ×.",
+  "hoursUnit": "h",
+  "minutesUnit": "m",
+  "secondsUnit": "s",
+  "deleteDigit": "Delete digit",
+  "lap": "Lap",
+  "lapNumber": "Lap {number}",
+  "@lapNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "copyLaps": "Copy laps",
+  "lapsCopied": "Laps copied",
+  "timerStarted": "Timer started",
+  "clock": "Clock",
+  "addCity": "Add city",
+  "searchCities": "Search cities or countries",
+  "noCities": "No cities yet",
+  "noCitiesHint": "Add a city to see its time next to yours.",
+  "cityRemoved": "{city} removed",
+  "@cityRemoved": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "Remove",
+  "yesterday": "Yesterday",
+  "sameTime": "Same time",
+  "timeAhead": "{time} ahead",
+  "@timeAhead": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "timeBehind": "{time} behind",
+  "@timeBehind": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "hoursOnly": "{hours} h",
+  "@hoursOnly": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAndMinutes": "{hours} h {minutes} min",
+  "@hoursAndMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "dayAndDifference": "{day}, {difference}",
+  "@dayAndDifference": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "difference": {
+        "type": "String"
+      }
+    }
+  },
+  "noCityFound": "No city found",
+  "dragToReorder": "Long-press to reorder, swipe to remove.",
+  "bedtime": "Bedtime",
+  "bedtimeSchedule": "Bedtime schedule",
+  "bedtimeScheduleHint": "A reminder before bed, and quiet through the night.",
+  "bedtimeStart": "Bedtime",
+  "wakeUp": "Wake up",
+  "sleepFor": "{length} of sleep",
+  "@sleepFor": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "nights": "Nights",
+  "reminder": "Reminder",
+  "off": "Off",
+  "doNotDisturbAtBedtime": "Do Not Disturb at bedtime",
+  "doNotDisturbHint": "Silences calls and notifications through the night. Alarms still ring.",
+  "dndNeedsAccess": "Needs Do Not Disturb access in Android's settings.",
+  "allow": "Allow",
+  "wakeUpAlarm": "Wake-up alarm",
+  "wakeUpAlarmHint": "An alarm at {time} on the mornings after your nights.",
+  "@wakeUpAlarmHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepSounds": "Sleep sounds",
+  "sleepSoundsHint": "Made on the phone, on the media volume. They fade out at the end.",
+  "soundWhite": "White noise",
+  "soundPink": "Pink noise",
+  "soundDeep": "Deep noise",
+  "stopAfter": "Stop after",
+  "play": "Play",
+  "stopsAt": "Plays until {time}",
+  "@stopsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "wakeTask": "Wake-up task",
+  "wakeTaskHint": "Done before the alarm can be dismissed. Snooze still works.",
+  "wakeTaskNone": "None",
+  "wakeTaskMath": "Solve 3 sums",
+  "wakeTaskShake": "Shake 30 times",
+  "screensaver": "Night clock screensaver",
+  "screensaverHint": "Shows the time and the next alarm while the phone charges. Choose \"Night clock\" in Android's screensaver settings.",
+  "screensaverNight": "Dim red",
+  "screensaverNightHint": "Easy on the eyes in a dark room",
+  "publicHolidays": "Public holidays",
+  "publicHolidaysHint": "Days alarms with \"Skip public holidays\" stay silent",
+  "holidayCalendar": "Holiday calendar",
+  "noHolidays": "None",
+  "holidaysPrivacy": "Downloaded from Google's public holiday calendars, like any web page. No account is used and nothing about you is sent.",
+  "holidaysDownloading": "Downloading…",
+  "holidaysFailed": "Couldn't download. The last list still counts.",
+  "holidaysUpdated": "Updated {date}",
+  "@holidaysUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "refresh": "Refresh",
+  "holidaysTickedHint": "Days off are ticked. Untick any day your alarms should ring on.",
+  "holidaysTickHint": "Tick the days your alarms should skip. This calendar doesn't say which days are days off.",
+  "skipHolidays": "Skip public holidays",
+  "skipHolidaysPick": "Choose a holiday calendar first",
+  "logToTime": "Log to ZT Time",
+  "logToTimeSpan": "{start} to {end} ({length})",
+  "@logToTimeSpan": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "whatWasIt": "What was it?",
+  "project": "Project",
+  "noProject": "No project",
+  "logIt": "Log",
+  "loggedToTime": "Logged in ZT Time",
+  "couldNotLog": "Couldn't log it. Check the connection and try again."
+}

@@ -1,0 +1,28 @@
+Zero-Trust Clock is an alarm clock built to ring: after a restart, before you unlock the phone, in battery saver and with the app closed. Need a day off? Turn off once skips only the next ring, and the alarm comes back by itself the day after. No account needed; sign in only if you want your alarms backed up and synced, end-to-end encrypted.
+
+WHAT IT DOES
+• Turn off once: skip the next ring from the alarm's menu, the notification or the widget, and the alarm stays on.
+• Rings after a restart and before the first unlock, with a full-screen alarm over the lock screen.
+• Repeat days or a single date, labels, your own sound or audio file, gradually louder, snooze length and auto-silence.
+• Pause a repeating alarm until a date, or pause every alarm for a holiday.
+• A heads-up before the next alarm, with a button to skip it.
+• Timers: several at once, quick timers, +1 minute, "Time's up" over the lock screen.
+• Stopwatch with laps that keeps counting with the app closed.
+• World clock with every city, named in your language, and how far ahead or behind it is.
+• Bedtime: a reminder before bed, Do Not Disturb through the night, a wake-up alarm, and sleep sounds with a timer.
+• Home-screen widgets (clock and next alarm, world clock, analog), Quick Settings tiles and app shortcuts.
+• Works with "set an alarm" and "set a timer" from your assistant and other apps.
+• Works without an account. Sign in to back up and sync alarms; a synced alarm arrives switched off on your other phones.
+
+WHY ZERO-TRUST
+• End-to-end encrypted: everything is encrypted on your phone before it syncs. We can't read it, and neither can anyone who breaks into the server.
+• One private account for every Zero-Trust app, unlocked with your fingerprint or face.
+• Works offline and syncs across your devices when you're back online.
+• No ads, no trackers, no analytics, no data sold. Ever.
+• Open source (AGPL-3.0), so anyone can check what the app does.
+• English and Hebrew, with full right-to-left support.
+
+Part of the Zero-Trust suite: Notes, Tasks, Calendar, Contacts, Phone, Fitness, Meds, Time and Browser. One account opens them all.
+
+Privacy policy: https://zerotrust.bz/privacy/
+Support: support@zerotrust.bz
