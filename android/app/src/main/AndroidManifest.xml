@@ -43,6 +43,16 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Links are handled by the app's own code (app_links, see
+                 lib/app/email_links.dart), not Flutter's router. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
+            <!-- Password-reset emails: https://zerotrust.bz/auth/clock/#token_hash=… -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="zerotrust.bz" android:pathPrefix="/auth/clock/"/>
+            </intent-filter>
         </activity>
 
         <!-- The alarm engine (dev.sagron.zerotrustclock.engine). Every part

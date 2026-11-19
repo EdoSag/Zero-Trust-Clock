@@ -66,6 +66,25 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                     )
                     result.success(id)
                 }
+                "importSynced" -> {
+                    val days = (call.argument<List<Int>>("days") ?: emptyList()).filter { it in 1..7 }.toSet()
+                    result.success(
+                        AlarmEngine.importSynced(
+                            activity,
+                            id(call),
+                            (call.argument<Int>("hour") ?: 0).coerceIn(0, 23),
+                            (call.argument<Int>("minute") ?: 0).coerceIn(0, 59),
+                            days,
+                            call.argument<String>("date"),
+                            call.argument<String>("skipDate"),
+                            call.argument<String>("label") ?: "",
+                            call.argument<Boolean>("vibrate") ?: true,
+                            (call.argument<Int>("snoozeMinutes") ?: 10).coerceIn(1, 60),
+                            call.argument<Boolean>("enabled") ?: false,
+                            (call.argument<Number>("updatedAt") ?: 0).toLong(),
+                        ),
+                    )
+                }
                 "setEnabled" -> done(result) {
                     AlarmEngine.setEnabled(activity, id(call), call.argument<Boolean>("enabled") ?: false)
                 }

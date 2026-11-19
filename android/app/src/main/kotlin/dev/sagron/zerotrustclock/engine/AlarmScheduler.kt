@@ -29,7 +29,7 @@ object AlarmScheduler {
         val now = AlarmSchedule.at(nowMs, ZoneId.systemDefault())
         val ringing = RingService.ringingId
         val missed = ArrayList<Alarm>()
-        AlarmStore.update(context) { list ->
+        val alarms = AlarmStore.update(context) { list ->
             val it = list.listIterator()
             while (it.hasNext()) {
                 var a = it.next()
@@ -63,6 +63,12 @@ object AlarmScheduler {
                 }
                 it.set(a)
             }
+            list.toList()
+        }
+        try {
+            UpcomingAlarms.refresh(context, alarms, now)
+        } catch (_: Exception) {
+            // Only the notification; the rings themselves are set.
         }
         for (a in missed) AlarmNotifications.showMissed(Loc.wrap(context), a)
         notifyChanged()

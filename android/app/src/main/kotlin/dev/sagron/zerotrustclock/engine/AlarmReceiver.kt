@@ -5,13 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.os.UserManager
 
-/** Android calls this at an alarm's time, and for the snoozed notification's button. */
+/**
+ * Android calls this at an alarm's time, when an upcoming-alarm window
+ * starts, and for the snoozed and upcoming notifications' buttons.
+ */
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.data?.lastPathSegment ?: return
         when (intent.action) {
             AlarmScheduler.ACTION_FIRE -> RingService.ring(context, id)
             ACTION_CANCEL_SNOOZE -> AlarmEngine.cancelSnooze(context, id)
+            // The upcoming alarm's window starts: rescheduling shows it.
+            UpcomingAlarms.ACTION_WINDOW -> AlarmScheduler.rescheduleAll(context)
+            UpcomingAlarms.ACTION_SKIP -> AlarmEngine.skipOnce(context, id)
+            UpcomingAlarms.ACTION_OFF -> AlarmEngine.setEnabled(context, id, false)
         }
     }
 

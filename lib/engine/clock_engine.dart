@@ -25,6 +25,11 @@ abstract class ClockEngine {
 
   Future<void> setEnabled(String id, bool enabled);
 
+  /// Takes an alarm as the account's backup has it, keeping its
+  /// [ClockAlarm.updatedAt]. [ClockAlarm.enabled] is this phone's own
+  /// switch. False while that alarm rings (nothing changed; try later).
+  Future<bool> importSynced(ClockAlarm alarm);
+
   /// "Turn off once": skips the next ring; the alarm stays on.
   Future<void> skipOnce(String id);
 
@@ -97,6 +102,23 @@ class MethodChannelClockEngine implements ClockEngine {
         'snoozeMinutes': snoozeMinutes,
       }) ??
       '';
+
+  @override
+  Future<bool> importSynced(ClockAlarm a) async =>
+      await _channel.invokeMethod<bool>('importSynced', {
+        'id': a.id,
+        'hour': a.hour,
+        'minute': a.minute,
+        'days': a.days.toList()..sort(),
+        'date': a.date,
+        'skipDate': a.skipDate,
+        'label': a.label,
+        'vibrate': a.vibrate,
+        'snoozeMinutes': a.snoozeMinutes,
+        'enabled': a.enabled,
+        'updatedAt': a.updatedAt,
+      }) ??
+      false;
 
   @override
   Future<void> setEnabled(String id, bool enabled) =>

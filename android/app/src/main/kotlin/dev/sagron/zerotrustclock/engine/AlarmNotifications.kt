@@ -18,7 +18,8 @@ import java.util.Date
 
 /**
  * The engine's notifications: the ringing alarm (which also opens the
- * ring screen over the lock screen), a snoozed alarm and a missed one.
+ * ring screen over the lock screen), an upcoming, a snoozed and a missed
+ * alarm.
  *
  * Pass a context from [Loc.wrap] so the texts are in the app's language.
  */
@@ -26,9 +27,11 @@ object AlarmNotifications {
     const val CHANNEL_RINGING = "ringing"
     private const val CHANNEL_SNOOZED = "snoozed"
     private const val CHANNEL_MISSED = "missed"
+    private const val CHANNEL_UPCOMING = "upcoming"
     const val RINGING_ID = 1
     private const val SNOOZED_ID = 2
     private const val MISSED_ID = 3
+    private const val UPCOMING_ID = 4
     private const val ACCENT = 0xFF6366F1.toInt()
 
     private fun manager(context: Context): NotificationManager? =
@@ -58,7 +61,14 @@ object AlarmNotifications {
             context.getString(R.string.channel_missed),
             NotificationManager.IMPORTANCE_DEFAULT,
         )
-        m.createNotificationChannels(listOf(ringing, snoozed, missed))
+        val upcoming = NotificationChannel(
+            CHANNEL_UPCOMING,
+            context.getString(R.string.channel_upcoming),
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = context.getString(R.string.channel_upcoming_about)
+        }
+        m.createNotificationChannels(listOf(ringing, snoozed, missed, upcoming))
     }
 
     /** "07:00" or "7:00 AM", as the phone shows times. */
@@ -165,6 +175,42 @@ object AlarmNotifications {
     fun cancelSnoozed(context: Context, id: String) {
         try {
             manager(context)?.cancel("snooze:$id", SNOOZED_ID)
+        } catch (_: Exception) {
+        }
+    }
+
+    /**
+     * "Upcoming alarm, 07:00", silent, with "Turn off once" (repeating) or
+     * "Dismiss" (rings once). The label is shown only on an unlocked
+     * phone; the lock screen gets the version without it.
+     */
+    fun showUpcoming(context: Context, alarm: Alarm, at: Long) {
+        ensureChannels(context)
+        val time = DateFormat.getTimeFormat(context).format(Date(at))
+        val label = visibleLabel(context, alarm)
+        val button = context.getString(if (alarm.repeats) R.string.upcoming_turn_off_once else R.string.ring_dismiss)
+        fun build(text: String): Notification.Builder = Notification.Builder(context, CHANNEL_UPCOMING)
+            .setSmallIcon(R.drawable.ic_stat_alarm)
+            .setColor(ACCENT)
+            .setContentTitle(context.getString(R.string.upcoming_title, time))
+            .apply { if (text.isNotEmpty()) setContentText(text) }
+            .setCategory(Notification.CATEGORY_REMINDER)
+            .setShowWhen(false)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(openApp(context))
+            .addAction(
+                Notification.Action.Builder(null, button, UpcomingAlarms.buttonIntent(context, alarm)).build(),
+            )
+        val notification = build(label)
+            .setVisibility(Notification.VISIBILITY_PRIVATE)
+            .setPublicVersion(build("").build())
+            .build()
+        notify(context, "upcoming:${alarm.id}", UPCOMING_ID, notification)
+    }
+
+    fun cancelUpcoming(context: Context, id: String) {
+        try {
+            manager(context)?.cancel("upcoming:$id", UPCOMING_ID)
         } catch (_: Exception) {
         }
     }

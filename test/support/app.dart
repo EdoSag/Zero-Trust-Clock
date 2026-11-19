@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:zero_trust_core/zero_trust_core.dart';
 import 'package:zerotrust_clock/app/clock_config.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
@@ -27,11 +28,16 @@ Widget testApp(
   Widget home = const AlarmsPage(),
   Locale? locale,
   double textScale = 1,
+  List<Override> overrides = const [],
+  PreferencesStore? prefs,
 }) => ProviderScope(
   overrides: [
+    ...overrides,
     clockEngineProvider.overrideWithValue(engine),
     ztAppConfigProvider.overrideWithValue(clockAppConfig),
-    ztPreferencesStoreProvider.overrideWithValue(InMemoryPreferencesStore()),
+    ztPreferencesStoreProvider.overrideWithValue(
+      prefs ?? InMemoryPreferencesStore(),
+    ),
     accountServiceProvider.overrideWithValue(
       AccountService(SignedOutBackend()),
     ),

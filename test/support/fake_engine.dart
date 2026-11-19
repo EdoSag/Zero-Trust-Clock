@@ -16,6 +16,9 @@ ClockAlarm alarm(
   DateTime? nextRing,
   bool skipActive = false,
   bool ringing = false,
+  String? date,
+  String? skipDate,
+  int updatedAt = 0,
 }) => ClockAlarm(
   id: id,
   hour: hour,
@@ -29,6 +32,9 @@ ClockAlarm alarm(
   nextRing: nextRing ?? (enabled ? DateTime.now().add(nextIn) : null),
   skipActive: skipActive,
   ringing: ringing,
+  date: date,
+  skipDate: skipDate,
+  updatedAt: updatedAt,
 );
 
 /// When a switched-on alarm rings next in the fake engine.
@@ -61,9 +67,50 @@ class FakeClockEngine implements ClockEngine {
     }
   }
 
+  /// The fake's clock for edits: every change by hand is a later edit.
+  int editTime = 1000;
+
   void _replace(String id, ClockAlarm Function(ClockAlarm) how) {
     final i = alarms.indexWhere((a) => a.id == id);
-    if (i >= 0) alarms[i] = how(alarms[i]);
+    if (i < 0) return;
+    alarms[i] = how(alarms[i]).copyWith(updatedAt: _editTimeAfter(alarms[i]));
+  }
+
+  /// As the engine: an edit is always later than the alarm's last one.
+  int _editTimeAfter(ClockAlarm? old) {
+    editTime = old == null || editTime + 1 > old.updatedAt
+        ? editTime + 1
+        : old.updatedAt + 1;
+    return editTime;
+  }
+
+  /// Imports refused, as while that alarm rings.
+  final Set<String> ringingIds = {};
+
+  @override
+  Future<bool> importSynced(ClockAlarm a) async {
+    calls.add('importSynced ${a.id} ${a.enabled}');
+    if (ringingIds.contains(a.id)) return false;
+    final i = alarms.indexWhere((x) => x.id == a.id);
+    final copy = alarm(
+      a.id,
+      hour: a.hour,
+      minute: a.minute,
+      days: a.days,
+      enabled: a.enabled,
+      label: a.label,
+      vibrate: a.vibrate,
+      snoozeMinutes: a.snoozeMinutes,
+      date: a.date,
+      skipDate: a.skipDate,
+      updatedAt: a.updatedAt,
+    );
+    if (i >= 0) {
+      alarms[i] = copy;
+    } else {
+      alarms.add(copy);
+    }
+    return true;
   }
 
   @override
@@ -95,6 +142,7 @@ class FakeClockEngine implements ClockEngine {
       label: label,
       vibrate: vibrate,
       snoozeMinutes: snoozeMinutes,
+      updatedAt: _editTimeAfter(alarms.where((a) => a.id == id).firstOrNull),
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);
     if (i >= 0) {
