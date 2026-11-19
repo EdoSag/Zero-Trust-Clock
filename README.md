@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.9.0)
+## What is in it now (0.10.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -54,6 +54,11 @@ Work happens on the `Dev` branch; `main` holds releases.
   next alarm (with Turn off once, and + for a new alarm), World clock (the
   first four cities of the Clock tab, each with a live time) and an Analog
   clock. No alarm labels on the home screen.
+- **Skip public holidays** (repeating alarms): pick a holiday calendar in
+  Settings > Public holidays (the same public calendars as ZT Calendar,
+  downloaded with no account and refreshed weekly). Days off are ticked;
+  untick any day an alarm should still ring on. A calendar that doesn't
+  mark days off skips nothing until you tick days. This phone only.
 - **Wake-up tasks** (in an alarm's editor): solve 3 sums or shake the
   phone 30 times before the alarm can be dismissed, so it can't be
   silenced half asleep. Snooze still works, and Dismiss in the
@@ -143,6 +148,9 @@ Where things are kept on the phone:
     works, and Dismiss in the notification opens the task.
 16. Settings > Night clock screensaver: choose "Night clock", put the
     phone on the charger and let the screen time out.
+17. Settings > Public holidays: pick Israel, check the list and that a
+    weekday alarm with "Skip public holidays" shows the day after a
+    holiday as its next ring.
 
 ## Development
 

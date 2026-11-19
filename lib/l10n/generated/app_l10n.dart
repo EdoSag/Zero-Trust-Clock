@@ -1146,6 +1146,84 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Easy on the eyes in a dark room'**
   String get screensaverNightHint;
+
+  /// No description provided for @publicHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Public holidays'**
+  String get publicHolidays;
+
+  /// No description provided for @publicHolidaysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Days alarms with \"Skip public holidays\" stay silent'**
+  String get publicHolidaysHint;
+
+  /// No description provided for @holidayCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Holiday calendar'**
+  String get holidayCalendar;
+
+  /// No description provided for @noHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get noHolidays;
+
+  /// No description provided for @holidaysPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded from Google\'s public holiday calendars, like any web page. No account is used and nothing about you is sent.'**
+  String get holidaysPrivacy;
+
+  /// No description provided for @holidaysDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get holidaysDownloading;
+
+  /// No description provided for @holidaysFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t download. The last list still counts.'**
+  String get holidaysFailed;
+
+  /// No description provided for @holidaysUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String holidaysUpdated(String date);
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @holidaysTickedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Days off are ticked. Untick any day your alarms should ring on.'**
+  String get holidaysTickedHint;
+
+  /// No description provided for @holidaysTickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick the days your alarms should skip. This calendar doesn\'t say which days are days off.'**
+  String get holidaysTickHint;
+
+  /// No description provided for @skipHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip public holidays'**
+  String get skipHolidays;
+
+  /// No description provided for @skipHolidaysPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a holiday calendar first'**
+  String get skipHolidaysPick;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

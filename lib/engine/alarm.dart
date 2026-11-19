@@ -45,6 +45,7 @@ class ClockAlarm {
     this.gradual = false,
     this.ringMinutes = defaultRingMinutes,
     this.task,
+    this.skipHolidays = false,
   });
 
   static const defaultRingMinutes = 10;
@@ -105,6 +106,9 @@ class ClockAlarm {
   /// Done before it can be dismissed; null: a slide dismisses it.
   final WakeTask? task;
 
+  /// A repeating alarm stays silent on this phone's public holidays.
+  final bool skipHolidays;
+
   bool get repeats => days.isNotEmpty;
 
   factory ClockAlarm.fromJson(Map<String, dynamic> j) {
@@ -136,6 +140,7 @@ class ClockAlarm {
       gradual: j['gradual'] as bool? ?? false,
       ringMinutes: (j['ringMinutes'] as num?)?.toInt() ?? defaultRingMinutes,
       task: WakeTask.parse(j['task']),
+      skipHolidays: j['skipHolidays'] as bool? ?? false,
     );
   }
 
@@ -163,6 +168,7 @@ class ClockAlarm {
         gradual: gradual,
         ringMinutes: ringMinutes,
         task: task,
+        skipHolidays: skipHolidays,
       );
 
   /// The engine's list, earliest time of day first.

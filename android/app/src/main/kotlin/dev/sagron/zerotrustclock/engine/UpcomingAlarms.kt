@@ -28,14 +28,20 @@ object UpcomingAlarms {
     /** Keeps AlarmManager's request codes apart from the rings' own. */
     private const val CODE_OFFSET = 1_000_000
 
-    fun refresh(context: Context, alarms: List<Alarm>, now: ZonedDateTime, pauseAll: LocalDate?) {
+    fun refresh(
+        context: Context,
+        alarms: List<Alarm>,
+        now: ZonedDateTime,
+        pauseAll: LocalDate?,
+        holidays: Set<LocalDate> = emptySet(),
+    ) {
         val nowMs = now.toInstant().toEpochMilli()
         val ringing = RingService.ringingId
         for (a in alarms) {
             val next = if (a.test || a.snoozeUntil != null || a.id == ringing) {
                 null
             } else {
-                AlarmSchedule.nextRing(a, now, pauseAll)
+                AlarmSchedule.nextRing(a, now, pauseAll, holidays)
             }
             val at = next?.at?.toInstant()?.toEpochMilli()
             when {

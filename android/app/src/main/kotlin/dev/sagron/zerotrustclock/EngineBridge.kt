@@ -17,6 +17,7 @@ import android.os.UserManager
 import android.provider.Settings
 import dev.sagron.zerotrustclock.engine.AlarmEngine
 import dev.sagron.zerotrustclock.engine.BedtimeEngine
+import dev.sagron.zerotrustclock.engine.Holidays
 import dev.sagron.zerotrustclock.engine.Screensaver
 import dev.sagron.zerotrustclock.engine.SleepSoundService
 import dev.sagron.zerotrustclock.engine.core.Bedtime
@@ -100,6 +101,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             gradual = call.argument<Boolean>("gradual") ?: false,
                             ringMinutes = (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                             task = call.argument<String>("task"),
+                            skipHolidays = call.argument<Boolean>("skipHolidays") ?: false,
                             date = call.argument<String>("date"),
                         ),
                     )
@@ -125,6 +127,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             call.argument<Boolean>("gradual") ?: false,
                             (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                             call.argument<String>("task"),
+                            call.argument<Boolean>("skipHolidays") ?: false,
                         ),
                     )
                 }
@@ -180,6 +183,10 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "stopwatchLap" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.lap(now) } }
                 "stopwatchReset" -> done(result) { TimerEngine.stopwatch(activity) { s, _ -> s.reset() } }
                 "now" -> result.success(TimerEngine.now())
+                "holidays" -> result.success(Holidays.days(activity).map { it.toString() }.sorted())
+                "setHolidays" -> done(result) {
+                    Holidays.set(activity, (call.argument<List<String>>("days") ?: emptyList()))
+                }
                 "screensaverNight" -> result.success(Screensaver.night(activity))
                 "setScreensaverNight" -> done(result) {
                     Screensaver.setNight(activity, call.argument<Boolean>("on") ?: true)

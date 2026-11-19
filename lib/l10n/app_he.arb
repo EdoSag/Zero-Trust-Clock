@@ -174,5 +174,18 @@
   "screensaver": "שומר מסך של שעון לילה",
   "screensaverHint": "מציג את השעה ואת השעון המעורר הבא בזמן טעינה. בוחרים \"שעון לילה\" בהגדרות שומר המסך של Android.",
   "screensaverNight": "אדום עמום",
-  "screensaverNightHint": "נעים לעיניים בחדר חשוך"
+  "screensaverNightHint": "נעים לעיניים בחדר חשוך",
+  "publicHolidays": "חגים",
+  "publicHolidaysHint": "ימים שבהם שעונים עם \"דילוג על חגים\" לא מצלצלים",
+  "holidayCalendar": "לוח חגים",
+  "noHolidays": "בלי",
+  "holidaysPrivacy": "מורד מלוחות החגים הציבוריים של Google, כמו כל דף אינטרנט. לא נעשה שימוש בחשבון ושום דבר עליכם לא נשלח.",
+  "holidaysDownloading": "מוריד…",
+  "holidaysFailed": "ההורדה נכשלה. הרשימה האחרונה עדיין בתוקף.",
+  "holidaysUpdated": "עודכן ב-{date}",
+  "refresh": "רענון",
+  "holidaysTickedHint": "ימי החופש מסומנים. מבטלים את הסימון בכל יום שבו השעונים צריכים לצלצל.",
+  "holidaysTickHint": "מסמנים את הימים שבהם השעונים ידלגו. הלוח הזה לא מציין אילו ימים הם ימי חופש.",
+  "skipHolidays": "דילוג על חגים",
+  "skipHolidaysPick": "קודם בוחרים לוח חגים"
 }
