@@ -187,5 +187,13 @@
   "holidaysTickedHint": "ימי החופש מסומנים. מבטלים את הסימון בכל יום שבו השעונים צריכים לצלצל.",
   "holidaysTickHint": "מסמנים את הימים שבהם השעונים ידלגו. הלוח הזה לא מציין אילו ימים הם ימי חופש.",
   "skipHolidays": "דילוג על חגים",
-  "skipHolidaysPick": "קודם בוחרים לוח חגים"
+  "skipHolidaysPick": "קודם בוחרים לוח חגים",
+  "logToTime": "רישום ב-ZT Time",
+  "logToTimeSpan": "{start} עד {end} ({length})",
+  "whatWasIt": "על מה עבדת?",
+  "project": "פרויקט",
+  "noProject": "בלי פרויקט",
+  "logIt": "רישום",
+  "loggedToTime": "נרשם ב-ZT Time",
+  "couldNotLog": "לא הצלחנו לרשום. כדאי לבדוק את החיבור ולנסות שוב."
 }

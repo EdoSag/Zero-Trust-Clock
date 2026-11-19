@@ -65,9 +65,7 @@ class _ClockGateState extends ConsumerState<ClockGate>
         recoveryKey: pending.newRecoveryKey!,
         onDone: () {
           ref.read(pendingRecoveryKeyProvider.notifier).set(null);
-          ref
-              .read(vaultControllerProvider.notifier)
-              .unlock(pending.dek, legacyDek: pending.legacyDek);
+          unlockVault(ref, pending.dek, legacyDek: pending.legacyDek);
         },
       );
     }

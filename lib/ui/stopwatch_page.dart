@@ -7,9 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../engine/clock_engine.dart';
 import '../engine/clock_timer.dart';
 import '../l10n/l10n.dart';
+import '../time_log/time_log.dart';
 import 'alarm_text.dart';
 import 'clock_home.dart';
 import 'duration_text.dart';
+import 'log_time_sheet.dart';
 import 'settings_button.dart';
 
 /// The Stopwatch tab: the time, Start / Pause, Lap / Reset, and the laps
@@ -95,6 +97,14 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
       appBar: AppBar(
         title: Text(l.stopwatch),
         actions: [
+          // A paused run can go to ZT Time (signed in and unlocked).
+          if (!s.running && !s.zero && ref.watch(timeLogProvider).available)
+            IconButton(
+              tooltip: l.logToTime,
+              onPressed: () =>
+                  LogTimeSheet.show(context, length: elapsed, description: ''),
+              icon: const Icon(Icons.more_time),
+            ),
           if (s.laps.isNotEmpty)
             IconButton(
               tooltip: l.copyLaps,
