@@ -6,12 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../engine/clock_engine.dart';
 import '../l10n/l10n.dart';
 import 'alarms_page.dart';
+import 'bedtime_page.dart';
 import 'stopwatch_page.dart';
 import 'timers_page.dart';
 import 'world_clock_page.dart';
 
 /// The app's tabs, as the engine names them in notifications.
-enum ClockTab { alarms, clock, timers, stopwatch }
+enum ClockTab { alarms, clock, timers, stopwatch, bedtime }
 
 /// Something a shortcut asked for, done by its tab once it is on screen.
 enum HomeAction { newAlarm, newTimer, startStopwatch }
@@ -72,7 +73,7 @@ class ClockTabController extends Notifier<ClockTab> {
   }
 }
 
-/// Alarms, Clock, Timers and Stopwatch, with the bar to switch between them.
+/// Alarms, Clock, Timers, Stopwatch and Bedtime, with the bar to switch between them.
 class ClockHome extends ConsumerStatefulWidget {
   const ClockHome({super.key});
 
@@ -117,6 +118,7 @@ class _ClockHomeState extends ConsumerState<ClockHome> {
         ClockTab.clock => const WorldClockPage(),
         ClockTab.timers => const TimersPage(),
         ClockTab.stopwatch => const StopwatchPage(),
+        ClockTab.bedtime => const BedtimePage(),
       },
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab.index,
@@ -142,6 +144,11 @@ class _ClockHomeState extends ConsumerState<ClockHome> {
             icon: const Icon(Icons.timer_outlined),
             selectedIcon: const Icon(Icons.timer),
             label: l.stopwatch,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.bedtime_outlined),
+            selectedIcon: const Icon(Icons.bedtime),
+            label: l.bedtime,
           ),
         ],
       ),

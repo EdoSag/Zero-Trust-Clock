@@ -16,6 +16,9 @@ import android.os.PowerManager
 import android.os.UserManager
 import android.provider.Settings
 import dev.sagron.zerotrustclock.engine.AlarmEngine
+import dev.sagron.zerotrustclock.engine.BedtimeEngine
+import dev.sagron.zerotrustclock.engine.SleepSoundService
+import dev.sagron.zerotrustclock.engine.core.Bedtime
 import dev.sagron.zerotrustclock.engine.AlarmNotifications
 import dev.sagron.zerotrustclock.engine.AlarmScheduler
 import dev.sagron.zerotrustclock.engine.EnginePrefs
@@ -52,6 +55,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             // Opening the app is one more chance to set every alarm again.
             AlarmScheduler.rescheduleAll(activity)
             TimerEngine.refresh(activity)
+            BedtimeEngine.refresh(activity)
         } catch (_: Exception) {
         }
     }
@@ -173,6 +177,22 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "stopwatchLap" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.lap(now) } }
                 "stopwatchReset" -> done(result) { TimerEngine.stopwatch(activity) { s, _ -> s.reset() } }
                 "now" -> result.success(TimerEngine.now())
+                "bedtime" -> result.success(BedtimeEngine.load(activity).toJson())
+                "setBedtime" -> done(result) {
+                    BedtimeEngine.save(activity, Bedtime.fromJson(call.argument<String>("json")))
+                }
+                "dndAccess" -> result.success(BedtimeEngine.hasDndAccess(activity))
+                "sleepSound" -> result.success(
+                    SleepSoundService.state?.let { mapOf("kind" to it.kind, "endsAt" to it.endsAt) },
+                )
+                "playSleepSound" -> done(result) {
+                    SleepSoundService.play(
+                        activity,
+                        call.argument<String>("kind") ?: SleepSoundService.WHITE,
+                        call.argument<Int>("minutes") ?: 30,
+                    )
+                }
+                "stopSleepSound" -> done(result) { SleepSoundService.stop(activity) }
                 "zones" -> result.success(WorldZones.allJson(activity))
                 "zoneOffsets" -> result.success(
                     WorldZones.offsets(call.argument<List<String>>("ids") ?: emptyList()),
@@ -328,6 +348,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             }
             "sound" -> Intent(Settings.ACTION_SOUND_SETTINGS)
             "doNotDisturb" -> Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS)
+            "dndAccess" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
             else -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app)
         }
         try {

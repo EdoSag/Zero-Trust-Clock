@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'alarm.dart';
+import 'bedtime.dart';
 import 'clock_timer.dart';
 import '../world/world_zone.dart';
 
@@ -117,6 +118,19 @@ abstract class ClockEngine {
   /// The tab a notification or shortcut opened the app on (taken once).
   Future<String?> launchTab();
 
+  // Bedtime.
+
+  Future<BedtimeSchedule> bedtime();
+  Future<void> setBedtime(BedtimeSchedule schedule);
+
+  /// Whether the app may turn Do Not Disturb on (Android's setting).
+  Future<bool> dndAccess();
+
+  /// Sleep sounds playing now, or null.
+  Future<SleepSoundState?> sleepSound();
+  Future<void> playSleepSound(SleepSound sound, int minutes);
+  Future<void> stopSleepSound();
+
   // World clock.
 
   /// Every city Android knows, named in the app's language.
@@ -151,6 +165,40 @@ class MethodChannelClockEngine implements ClockEngine {
 
   @override
   Future<String?> launchTab() => _channel.invokeMethod<String>('launchTab');
+
+  @override
+  Future<BedtimeSchedule> bedtime() async => BedtimeSchedule.fromJson(
+    await _channel.invokeMethod<String>('bedtime') ?? '{}',
+  );
+
+  @override
+  Future<void> setBedtime(BedtimeSchedule schedule) =>
+      _channel.invokeMethod('setBedtime', {'json': schedule.toJson()});
+
+  @override
+  Future<bool> dndAccess() async =>
+      await _channel.invokeMethod<bool>('dndAccess') ?? false;
+
+  @override
+  Future<SleepSoundState?> sleepSound() async {
+    final m = await _channel.invokeMethod<Map<Object?, Object?>>('sleepSound');
+    if (m == null) return null;
+    final sound = SleepSound.values.firstWhere(
+      (s) => s.name == m['kind'],
+      orElse: () => SleepSound.white,
+    );
+    return SleepSoundState(
+      sound,
+      DateTime.fromMillisecondsSinceEpoch((m['endsAt'] as num).toInt()),
+    );
+  }
+
+  @override
+  Future<void> playSleepSound(SleepSound sound, int minutes) => _channel
+      .invokeMethod('playSleepSound', {'kind': sound.name, 'minutes': minutes});
+
+  @override
+  Future<void> stopSleepSound() => _channel.invokeMethod('stopSleepSound');
 
   @override
   Future<List<WorldZone>> zones() async => WorldZone.listFromJson(
@@ -479,4 +527,52 @@ class StopwatchController extends AsyncNotifier<StopwatchState> {
 final stopwatchProvider =
     AsyncNotifierProvider<StopwatchController, StopwatchState>(
       StopwatchController.new,
+    );
+
+/// The bedtime schedule. [save] writes it to the engine, which sets the
+/// reminder and Do Not Disturb.
+class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
+  @override
+  Future<BedtimeSchedule> build() => ref.watch(clockEngineProvider).bedtime();
+
+  Future<void> save(BedtimeSchedule schedule) async {
+    state = AsyncData(schedule);
+    await ref.read(clockEngineProvider).setBedtime(schedule);
+  }
+}
+
+final bedtimeProvider =
+    AsyncNotifierProvider<BedtimeController, BedtimeSchedule>(
+      BedtimeController.new,
+    );
+
+/// Whether the app has Do Not Disturb access. Invalidate after coming back
+/// from Android's settings.
+final dndAccessProvider = FutureProvider<bool>(
+  (ref) => ref.watch(clockEngineProvider).dndAccess(),
+);
+
+/// Sleep sounds playing now. Reloads when the engine says something changed.
+class SleepSoundController extends AsyncNotifier<SleepSoundState?> {
+  @override
+  Future<SleepSoundState?> build() {
+    final engine = ref.watch(clockEngineProvider);
+    final sub = engine.changes.listen((_) => refresh());
+    ref.onDispose(sub.cancel);
+    return engine.sleepSound();
+  }
+
+  Future<void> refresh() async {
+    try {
+      final s = await ref.read(clockEngineProvider).sleepSound();
+      if (ref.mounted) state = AsyncData(s);
+    } on Object {
+      // Keeps the last state.
+    }
+  }
+}
+
+final sleepSoundProvider =
+    AsyncNotifierProvider<SleepSoundController, SleepSoundState?>(
+      SleepSoundController.new,
     );

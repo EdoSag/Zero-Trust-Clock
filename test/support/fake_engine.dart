@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:zerotrust_clock/engine/alarm.dart';
+import 'package:zerotrust_clock/engine/bedtime.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
 import 'package:zerotrust_clock/engine/clock_timer.dart';
 import 'package:zerotrust_clock/world/world_zone.dart';
@@ -577,6 +578,44 @@ class FakeClockEngine implements ClockEngine {
   Future<void> setWorldCities(List<String> ids) async {
     calls.add('setWorldCities ${ids.join(',')}');
     widgetCities = ids;
+  }
+
+  // Bedtime.
+
+  BedtimeSchedule schedule = const BedtimeSchedule();
+  bool hasDndAccess = true;
+  SleepSoundState? playing;
+
+  @override
+  Future<BedtimeSchedule> bedtime() async => schedule;
+
+  @override
+  Future<void> setBedtime(BedtimeSchedule s) async {
+    _mayFail();
+    calls.add('setBedtime ${s.toJson()}');
+    schedule = s;
+  }
+
+  @override
+  Future<bool> dndAccess() async => hasDndAccess;
+
+  @override
+  Future<SleepSoundState?> sleepSound() async => playing;
+
+  @override
+  Future<void> playSleepSound(SleepSound sound, int minutes) async {
+    _mayFail();
+    calls.add('playSleepSound ${sound.name} $minutes');
+    playing = SleepSoundState(
+      sound,
+      DateTime.now().add(Duration(minutes: minutes)),
+    );
+  }
+
+  @override
+  Future<void> stopSleepSound() async {
+    calls.add('stopSleepSound');
+    playing = null;
   }
 
   /// As when an alarm rings or is dismissed outside the app.

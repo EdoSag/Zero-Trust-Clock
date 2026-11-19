@@ -304,5 +304,49 @@
     }
   },
   "noCityFound": "No city found",
-  "dragToReorder": "Long-press to reorder, swipe to remove."
+  "dragToReorder": "Long-press to reorder, swipe to remove.",
+  "bedtime": "Bedtime",
+  "bedtimeSchedule": "Bedtime schedule",
+  "bedtimeScheduleHint": "A reminder before bed, and quiet through the night.",
+  "bedtimeStart": "Bedtime",
+  "wakeUp": "Wake up",
+  "sleepFor": "{length} of sleep",
+  "@sleepFor": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "nights": "Nights",
+  "reminder": "Reminder",
+  "off": "Off",
+  "doNotDisturbAtBedtime": "Do Not Disturb at bedtime",
+  "doNotDisturbHint": "Silences calls and notifications through the night. Alarms still ring.",
+  "dndNeedsAccess": "Needs Do Not Disturb access in Android's settings.",
+  "allow": "Allow",
+  "wakeUpAlarm": "Wake-up alarm",
+  "wakeUpAlarmHint": "An alarm at {time} on the mornings after your nights.",
+  "@wakeUpAlarmHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepSounds": "Sleep sounds",
+  "sleepSoundsHint": "Made on the phone, on the media volume. They fade out at the end.",
+  "soundWhite": "White noise",
+  "soundPink": "Pink noise",
+  "soundDeep": "Deep noise",
+  "stopAfter": "Stop after",
+  "play": "Play",
+  "stopsAt": "Plays until {time}",
+  "@stopsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -59,6 +59,10 @@ class BootReceiver : BroadcastReceiver() {
             TimerEngine.refreshStopwatch(context)
         } catch (_: Exception) {
         }
+        try {
+            BedtimeEngine.refresh(context)
+        } catch (_: Exception) {
+        }
     }
 
     /** True when a restart was already recorded since the phone booted. */

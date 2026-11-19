@@ -56,4 +56,12 @@
     <string name="widget_no_alarm">No alarm set</string>
     <string name="widget_sample_alarm">Tue 7:00</string>
     <string name="widget_sample_city">Tokyo</string>
+    <string name="channel_bedtime">Bedtime</string>
+    <string name="bedtime_reminder_title">Bedtime at %1$s</string>
+    <string name="bedtime_reminder_text">Time to wind down.</string>
+    <string name="channel_sleep_sounds">Sleep sounds</string>
+    <string name="sleep_sounds_playing">%1$s</string>
+    <string name="sleep_sound_white">White noise</string>
+    <string name="sleep_sound_pink">Pink noise</string>
+    <string name="sleep_sound_brown">Deep noise</string>
 </resources>

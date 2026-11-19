@@ -501,4 +501,81 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get dragToReorder => 'לחיצה ארוכה לשינוי הסדר, החלקה להסרה.';
+
+  @override
+  String get bedtime => 'שינה';
+
+  @override
+  String get bedtimeSchedule => 'לוח זמני שינה';
+
+  @override
+  String get bedtimeScheduleHint => 'תזכורת לפני השינה, ושקט לאורך הלילה.';
+
+  @override
+  String get bedtimeStart => 'שעת שינה';
+
+  @override
+  String get wakeUp => 'השכמה';
+
+  @override
+  String sleepFor(String length) {
+    return '$length שינה';
+  }
+
+  @override
+  String get nights => 'לילות';
+
+  @override
+  String get reminder => 'תזכורת';
+
+  @override
+  String get off => 'כבוי';
+
+  @override
+  String get doNotDisturbAtBedtime => 'נא לא להפריע בשעת השינה';
+
+  @override
+  String get doNotDisturbHint =>
+      'משתיק שיחות והתראות לאורך הלילה. שעונים מעוררים עדיין מצלצלים.';
+
+  @override
+  String get dndNeedsAccess => 'נדרשת הרשאת נא לא להפריע בהגדרות של Android.';
+
+  @override
+  String get allow => 'מתן הרשאה';
+
+  @override
+  String get wakeUpAlarm => 'שעון מעורר להשכמה';
+
+  @override
+  String wakeUpAlarmHint(String time) {
+    return 'שעון מעורר ב-$time בבקרים שאחרי הלילות שבחרתם.';
+  }
+
+  @override
+  String get sleepSounds => 'צלילי שינה';
+
+  @override
+  String get sleepSoundsHint =>
+      'נוצרים בטלפון, בעוצמת המדיה. נחלשים בהדרגה בסוף.';
+
+  @override
+  String get soundWhite => 'רעש לבן';
+
+  @override
+  String get soundPink => 'רעש ורוד';
+
+  @override
+  String get soundDeep => 'רעש עמוק';
+
+  @override
+  String get stopAfter => 'עצירה אחרי';
+
+  @override
+  String get play => 'הפעלה';
+
+  @override
+  String stopsAt(String time) {
+    return 'מתנגן עד $time';
+  }
 }

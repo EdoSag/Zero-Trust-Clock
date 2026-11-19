@@ -954,6 +954,144 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Long-press to reorder, swipe to remove.'**
   String get dragToReorder;
+
+  /// No description provided for @bedtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get bedtime;
+
+  /// No description provided for @bedtimeSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime schedule'**
+  String get bedtimeSchedule;
+
+  /// No description provided for @bedtimeScheduleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A reminder before bed, and quiet through the night.'**
+  String get bedtimeScheduleHint;
+
+  /// No description provided for @bedtimeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get bedtimeStart;
+
+  /// No description provided for @wakeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake up'**
+  String get wakeUp;
+
+  /// No description provided for @sleepFor.
+  ///
+  /// In en, this message translates to:
+  /// **'{length} of sleep'**
+  String sleepFor(String length);
+
+  /// No description provided for @nights.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights'**
+  String get nights;
+
+  /// No description provided for @reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminder;
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
+
+  /// No description provided for @doNotDisturbAtBedtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Do Not Disturb at bedtime'**
+  String get doNotDisturbAtBedtime;
+
+  /// No description provided for @doNotDisturbHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Silences calls and notifications through the night. Alarms still ring.'**
+  String get doNotDisturbHint;
+
+  /// No description provided for @dndNeedsAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Do Not Disturb access in Android\'s settings.'**
+  String get dndNeedsAccess;
+
+  /// No description provided for @allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get allow;
+
+  /// No description provided for @wakeUpAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake-up alarm'**
+  String get wakeUpAlarm;
+
+  /// No description provided for @wakeUpAlarmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'An alarm at {time} on the mornings after your nights.'**
+  String wakeUpAlarmHint(String time);
+
+  /// No description provided for @sleepSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep sounds'**
+  String get sleepSounds;
+
+  /// No description provided for @sleepSoundsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Made on the phone, on the media volume. They fade out at the end.'**
+  String get sleepSoundsHint;
+
+  /// No description provided for @soundWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White noise'**
+  String get soundWhite;
+
+  /// No description provided for @soundPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink noise'**
+  String get soundPink;
+
+  /// No description provided for @soundDeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep noise'**
+  String get soundDeep;
+
+  /// No description provided for @stopAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop after'**
+  String get stopAfter;
+
+  /// No description provided for @play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play;
+
+  /// No description provided for @stopsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays until {time}'**
+  String stopsAt(String time);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
