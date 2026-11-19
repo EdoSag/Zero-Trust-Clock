@@ -578,4 +578,20 @@ class AppL10nHe extends AppL10n {
   String stopsAt(String time) {
     return 'מתנגן עד $time';
   }
+
+  @override
+  String get wakeTask => 'משימת השכמה';
+
+  @override
+  String get wakeTaskHint =>
+      'צריך לבצע אותה לפני שאפשר לכבות את השעון. נודניק עדיין עובד.';
+
+  @override
+  String get wakeTaskNone => 'בלי';
+
+  @override
+  String get wakeTaskMath => '3 תרגילי חשבון';
+
+  @override
+  String get wakeTaskShake => 'לנער 30 פעמים';
 }

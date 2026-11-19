@@ -28,6 +28,7 @@ ClockAlarm alarm(
   String? soundName,
   bool gradual = false,
   int ringMinutes = ClockAlarm.defaultRingMinutes,
+  WakeTask? task,
 }) => ClockAlarm(
   id: id,
   hour: hour,
@@ -50,6 +51,7 @@ ClockAlarm alarm(
   soundName: soundName,
   gradual: gradual,
   ringMinutes: ringMinutes,
+  task: task,
 );
 
 /// When a switched-on alarm rings next in the fake engine.
@@ -205,6 +207,7 @@ class FakeClockEngine implements ClockEngine {
     String? soundName,
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
+    WakeTask? task,
     DateTime? date,
   }) async {
     _mayFail();
@@ -213,6 +216,7 @@ class FakeClockEngine implements ClockEngine {
       'soundName': soundName,
       'gradual': gradual,
       'ringMinutes': ringMinutes,
+      'task': task?.name,
       'date': date == null ? null : dayKey(date),
     };
     final days0 = (days.toList()..sort()).join('');
@@ -233,6 +237,7 @@ class FakeClockEngine implements ClockEngine {
       soundName: sound == null ? null : soundName,
       gradual: gradual,
       ringMinutes: ringMinutes,
+      task: task,
       date: days.isEmpty && date != null ? dayKey(date) : null,
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);

@@ -34,6 +34,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
   late String? _soundName = widget.alarm.soundName;
   late bool _gradual = widget.alarm.gradual;
   late int _silenceAfter = widget.alarm.ringMinutes;
+  late WakeTask? _task = widget.alarm.task;
 
   /// The day an alarm without repeat days rings; null: the next such time.
   late DateTime? _date = widget.alarm.repeats
@@ -176,6 +177,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             soundName: _soundName,
             gradual: _gradual,
             ringMinutes: _silenceAfter,
+            task: _task,
             // Only a picked (or kept) day: saving a label alone does not
             // switch an alarm on.
             date: _days.isEmpty && _date != null ? _ringDay() : null,
@@ -328,6 +330,28 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
                     label: Text(l.minutesShort(minutes)),
                     selected: _silenceAfter == minutes,
                     onSelected: (_) => setState(() => _silenceAfter = minutes),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(l.wakeTask, style: theme.textTheme.titleSmall),
+            const SizedBox(height: 2),
+            Text(l.wakeTaskHint, style: soft),
+            const SizedBox(height: 8),
+            Wrap(
+              key: const ValueKey('wakeTask'),
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final (task, name) in [
+                  (null, l.wakeTaskNone),
+                  (WakeTask.math, l.wakeTaskMath),
+                  (WakeTask.shake, l.wakeTaskShake),
+                ])
+                  ChoiceChip(
+                    label: Text(name),
+                    selected: _task == task,
+                    onSelected: (_) => setState(() => _task = task),
                   ),
               ],
             ),

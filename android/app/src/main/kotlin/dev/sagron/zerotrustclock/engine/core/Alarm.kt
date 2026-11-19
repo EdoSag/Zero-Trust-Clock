@@ -53,6 +53,8 @@ data class Alarm(
     val gradual: Boolean = false,
     /** An unanswered ring stops by itself after this many minutes. */
     val ringMinutes: Int = DEFAULT_RING_MINUTES,
+    /** A wake-up task (see WakeTasks) to do before it can be dismissed. */
+    val task: String? = null,
 ) {
     val repeats: Boolean get() = days.isNotEmpty()
 
@@ -76,6 +78,7 @@ data class Alarm(
         if (soundName != null) put("soundName", soundName)
         put("gradual", gradual)
         put("ringMinutes", ringMinutes)
+        if (task != null) put("task", task)
     }
 
     companion object {
@@ -110,6 +113,7 @@ data class Alarm(
                 soundName = text(o, "soundName"),
                 gradual = o.optBoolean("gradual", false),
                 ringMinutes = o.optInt("ringMinutes", DEFAULT_RING_MINUTES).coerceIn(1, 60),
+                task = WakeTasks.parse(text(o, "task")),
             )
         }
 

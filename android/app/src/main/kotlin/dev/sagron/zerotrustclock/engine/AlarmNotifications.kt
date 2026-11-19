@@ -130,7 +130,23 @@ object AlarmNotifications {
             // notification with the two buttons when the phone is in use.
             .setFullScreenIntent(open, true)
             .addAction(action(context, R.string.ring_snooze, RingService.ACTION_SNOOZE, 1))
-            .addAction(action(context, R.string.ring_dismiss, RingService.ACTION_DISMISS, 2))
+            .addAction(
+                if (alarm?.task != null) {
+                    // Dismissing takes the wake-up task: the button opens it.
+                    Notification.Action.Builder(
+                        null,
+                        context.getString(R.string.ring_dismiss),
+                        PendingIntent.getActivity(
+                            context,
+                            3,
+                            RingActivity.taskIntent(context),
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                        ),
+                    ).build()
+                } else {
+                    action(context, R.string.ring_dismiss, RingService.ACTION_DISMISS, 2)
+                },
+            )
         if (Build.VERSION.SDK_INT >= 31) {
             builder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
         }

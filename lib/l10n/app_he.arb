@@ -165,5 +165,10 @@
   "soundDeep": "רעש עמוק",
   "stopAfter": "עצירה אחרי",
   "play": "הפעלה",
-  "stopsAt": "מתנגן עד {time}"
+  "stopsAt": "מתנגן עד {time}",
+  "wakeTask": "משימת השכמה",
+  "wakeTaskHint": "צריך לבצע אותה לפני שאפשר לכבות את השעון. נודניק עדיין עובד.",
+  "wakeTaskNone": "בלי",
+  "wakeTaskMath": "3 תרגילי חשבון",
+  "wakeTaskShake": "לנער 30 פעמים"
 }

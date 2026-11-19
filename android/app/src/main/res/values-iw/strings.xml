@@ -62,4 +62,9 @@
     <string name="sleep_sound_white">רעש לבן</string>
     <string name="sleep_sound_pink">רעש ורוד</string>
     <string name="sleep_sound_brown">רעש עמוק</string>
+    <string name="ring_task_math">פותרים %1$d תרגילים כדי לכבות</string>
+    <string name="ring_task_shake">מנערים את הטלפון כדי לכבות</string>
+    <string name="ring_task_answer">תשובה</string>
+    <string name="ring_task_progress">%1$d מתוך %2$d</string>
+    <string name="ring_task_wrong">לא בדיוק. נסו שוב.</string>
 </resources>

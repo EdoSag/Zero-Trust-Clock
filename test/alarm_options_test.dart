@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zerotrust_clock/engine/alarm.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
 import 'package:zerotrust_clock/sync/alarm_sync.dart';
 import 'package:zerotrust_clock/ui/alarm_card.dart';
@@ -152,6 +153,7 @@ void main() {
       'soundName': 'Birds',
       'gradual': true,
       'ringMinutes': 5,
+      'task': null,
       'date': null,
     });
   });
@@ -207,4 +209,67 @@ void main() {
       expect(back.sound, isNull);
     },
   );
+
+  testWidgets('editor: a wake-up task is picked under Silence after', (
+    tester,
+  ) async {
+    final engine = FakeClockEngine(
+      alarms: [
+        alarm('a', days: {1}),
+      ],
+    );
+    await tester.pumpWidget(testApp(engine));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(AlarmCard));
+    await tester.pumpAndSettle();
+    final shake = find.widgetWithText(ChoiceChip, 'Shake 30 times');
+    await scrollTo(tester, shake);
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'None'))
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester.getRect(find.byKey(const ValueKey('wakeTask'))).top,
+      greaterThan(
+        tester.getRect(find.byKey(const ValueKey('silenceAfter'))).bottom,
+      ),
+    );
+    await tester.tap(shake);
+    await tester.pumpAndSettle();
+    final save = find.widgetWithText(FilledButton, 'Save');
+    await scrollTo(tester, save);
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(engine.lastSave['task'], 'shake');
+    expect(engine.alarms.single.task, WakeTask.shake);
+  });
+
+  test('the wake-up task syncs, and an unknown one is dropped', () {
+    final s = SyncedAlarm.fromEngine(
+      alarm('a', days: {1}, task: WakeTask.math),
+      device: 'A',
+    );
+    expect(s.toJson()['task'], 'math');
+    expect(
+      SyncedAlarm.fromJson('a', s.toJson()).toEngine('B').task,
+      WakeTask.math,
+    );
+    final none = SyncedAlarm.fromEngine(alarm('b', days: {1}), device: 'A');
+    expect(none.toJson()['task'], isNull);
+    expect(
+      SyncedAlarm.fromJson('c', {...s.toJson(), 'task': 'qr'}).task,
+      isNull,
+    );
+    expect(
+      ClockAlarm.fromJson({
+        'id': 'x',
+        'hour': 7,
+        'minute': 0,
+        'task': 'shake',
+      }).task,
+      WakeTask.shake,
+    );
+  });
 }

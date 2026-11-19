@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.7.0)
+## What is in it now (0.8.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -54,6 +54,10 @@ Work happens on the `Dev` branch; `main` holds releases.
   next alarm (with Turn off once, and + for a new alarm), World clock (the
   first four cities of the Clock tab, each with a live time) and an Analog
   clock. No alarm labels on the home screen.
+- **Wake-up tasks** (in an alarm's editor): solve 3 sums or shake the
+  phone 30 times before the alarm can be dismissed, so it can't be
+  silenced half asleep. Snooze still works, and Dismiss in the
+  notification or the app opens the task on the ring screen.
 - **Bedtime** tab: when your nights start and end and which nights, with
   the length of sleep. A reminder before bed (15, 30 or 60 minutes), Do Not
   Disturb through the night (alarms still ring; it is only turned off again
@@ -130,6 +134,9 @@ Where things are kept on the phone:
     wake-up. Switch on the wake-up alarm and find it on the Alarms tab.
 14. Sleep sounds: play each for 15 minutes with the phone locked; the
     sound fades out and stops.
+15. Give a test alarm "Solve 3 sums", then "Shake 30 times": slide to
+    dismiss shows the task, a wrong answer gives a new sum, Snooze still
+    works, and Dismiss in the notification opens the task.
 
 ## Development
 
