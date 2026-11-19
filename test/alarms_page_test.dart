@@ -11,8 +11,16 @@ import 'support/fake_engine.dart';
 Finder inCard(Finder what) =>
     find.descendant(of: find.byType(AlarmCard), matching: what);
 
+/// The editor's list (not the label field's own scrollable).
+final editorScroll = find
+    .descendant(
+      of: find.byType(AlarmEditorPage),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
 Future<void> openMenu(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('More options'));
+  await tester.tap(inCard(find.byTooltip('More options')).first);
   await tester.pumpAndSettle();
 }
 
@@ -399,10 +407,17 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilterChip, 'Wed'));
     await tester.enterText(find.byType(TextField), ' Gym ');
-    await tester.tap(find.widgetWithText(ChoiceChip, '15 min'));
+    final snooze15 = find.descendant(
+      of: find.byKey(const ValueKey('snooze')),
+      matching: find.widgetWithText(ChoiceChip, '15 min'),
+    );
+    await tester.scrollUntilVisible(snooze15, 200, scrollable: editorScroll);
+    await tester.ensureVisible(snooze15);
+    await tester.pumpAndSettle();
+    await tester.tap(snooze15);
     await tester.pumpAndSettle();
     final save = find.widgetWithText(FilledButton, 'Save');
-    await tester.ensureVisible(save);
+    await tester.scrollUntilVisible(save, 200, scrollable: editorScroll);
     await tester.pumpAndSettle();
     await tester.tap(save);
     await tester.pumpAndSettle();
@@ -469,7 +484,7 @@ void main() {
     // Mirrored: the menu at the left edge, then the switch, then the time.
     final time = tester.getRect(find.text('7:00'));
     final toggle = tester.getRect(find.byType(Switch));
-    final menu = tester.getRect(find.byTooltip('אפשרויות נוספות'));
+    final menu = tester.getRect(inCard(find.byTooltip('אפשרויות נוספות')));
     expect(menu.right, lessThanOrEqualTo(toggle.left));
     expect(toggle.right, lessThan(time.left));
 
@@ -482,7 +497,7 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'סגירה'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('אפשרויות נוספות'));
+    await tester.tap(inCard(find.byTooltip('אפשרויות נוספות')));
     await tester.pumpAndSettle();
     expect(find.text('כיבוי לפעם אחת'), findsOneWidget);
     expect(find.text('עריכה'), findsOneWidget);
@@ -515,6 +530,11 @@ void main() {
     final last = tester.getRect(find.byType(FilterChip).last);
     expect(first.left, greaterThan(last.right));
     expect(first.top, last.top);
+    await tester.scrollUntilVisible(
+      find.text('שמירה'),
+      200,
+      scrollable: editorScroll,
+    );
     expect(find.text('שמירה'), findsOneWidget);
   });
 

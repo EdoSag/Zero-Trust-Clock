@@ -21,7 +21,24 @@ abstract class ClockEngine {
     String label = '',
     bool vibrate = true,
     int snoozeMinutes = 10,
+    String? sound,
+    String? soundName,
+    bool gradual = false,
+    int ringMinutes = ClockAlarm.defaultRingMinutes,
+    DateTime? date,
   });
+
+  /// "Pause until": a repeating alarm is silent through [until].
+  Future<void> pause(String id, DateTime until);
+  Future<void> resume(String id);
+
+  /// "Pause all alarms until" (repeating ones, this phone), or null.
+  Future<DateTime?> pauseAllUntil();
+  Future<void> setPauseAll(DateTime? until);
+
+  /// Lets the user pick a phone sound ([SoundKind.ringtone]) or an audio
+  /// file. Null when cancelled.
+  Future<PickedSound?> pickSound(SoundKind kind);
 
   Future<void> setEnabled(String id, bool enabled);
 
@@ -91,6 +108,11 @@ class MethodChannelClockEngine implements ClockEngine {
     String label = '',
     bool vibrate = true,
     int snoozeMinutes = 10,
+    String? sound,
+    String? soundName,
+    bool gradual = false,
+    int ringMinutes = ClockAlarm.defaultRingMinutes,
+    DateTime? date,
   }) async =>
       await _channel.invokeMethod<String>('save', {
         'id': id,
@@ -100,8 +122,40 @@ class MethodChannelClockEngine implements ClockEngine {
         'label': label,
         'vibrate': vibrate,
         'snoozeMinutes': snoozeMinutes,
+        'sound': sound,
+        'soundName': soundName,
+        'gradual': gradual,
+        'ringMinutes': ringMinutes,
+        'date': date == null ? null : dayKey(date),
       }) ??
       '';
+
+  @override
+  Future<void> pause(String id, DateTime until) =>
+      _channel.invokeMethod('pause', {'id': id, 'until': dayKey(until)});
+
+  @override
+  Future<void> resume(String id) => _channel.invokeMethod('resume', {'id': id});
+
+  @override
+  Future<DateTime?> pauseAllUntil() async =>
+      parseDay(await _channel.invokeMethod<String>('pauseAllUntil'));
+
+  @override
+  Future<void> setPauseAll(DateTime? until) => _channel.invokeMethod(
+    'setPauseAll',
+    {'until': until == null ? null : dayKey(until)},
+  );
+
+  @override
+  Future<PickedSound?> pickSound(SoundKind kind) async {
+    final m = await _channel.invokeMethod<Map<Object?, Object?>>('pickSound', {
+      'kind': kind.name,
+    });
+    final sound = m?['sound'] as String?;
+    if (sound == null) return null;
+    return PickedSound(sound, m?['name'] as String? ?? '');
+  }
 
   @override
   Future<bool> importSynced(ClockAlarm a) async =>
@@ -117,6 +171,9 @@ class MethodChannelClockEngine implements ClockEngine {
         'snoozeMinutes': a.snoozeMinutes,
         'enabled': a.enabled,
         'updatedAt': a.updatedAt,
+        'pauseUntil': a.pauseUntil,
+        'gradual': a.gradual,
+        'ringMinutes': a.ringMinutes,
       }) ??
       false;
 
@@ -167,6 +224,25 @@ class MethodChannelClockEngine implements ClockEngine {
       _channel.invokeMethod('openSettings', {'which': which});
 }
 
+enum SoundKind { ringtone, file }
+
+class PickedSound {
+  const PickedSound(this.sound, this.name);
+  final String sound;
+  final String name;
+}
+
+/// A calendar day as the engine writes it: yyyy-MM-dd.
+String dayKey(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-'
+    '${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+DateTime? parseDay(String? key) {
+  if (key == null) return null;
+  final d = DateTime.tryParse(key);
+  return d == null ? null : DateTime(d.year, d.month, d.day);
+}
+
 /// Tests override this with a fake engine.
 final clockEngineProvider = Provider<ClockEngine>(
   (ref) => MethodChannelClockEngine(),
@@ -202,4 +278,9 @@ final alarmsProvider =
 /// after coming back from a system settings screen).
 final alarmCheckProvider = FutureProvider<AlarmCheck>(
   (ref) => ref.watch(clockEngineProvider).check(),
+);
+
+/// "Pause all alarms until", or null. Invalidate after changing it.
+final pauseAllProvider = FutureProvider<DateTime?>(
+  (ref) => ref.watch(clockEngineProvider).pauseAllUntil(),
 );

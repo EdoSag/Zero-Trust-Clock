@@ -21,7 +21,15 @@ class ClockAlarm {
     this.date,
     this.skipDate,
     this.updatedAt = 0,
+    this.pauseUntil,
+    this.paused = false,
+    this.sound,
+    this.soundName,
+    this.gradual = false,
+    this.ringMinutes = defaultRingMinutes,
   });
+
+  static const defaultRingMinutes = 10;
 
   final String id;
   final int hour;
@@ -57,6 +65,25 @@ class ClockAlarm {
   /// changed it (epoch milliseconds). Sync keeps the newer side.
   final int updatedAt;
 
+  /// "Pause until": silent through this day (yyyy-MM-dd), then on again.
+  final String? pauseUntil;
+
+  /// Silent now because of a pause (its own, or "Pause all").
+  final bool paused;
+
+  /// Null: the app's chime. "system": the phone's alarm sound. Else a sound
+  /// picked on this phone (copied into the app). Not synced.
+  final String? sound;
+
+  /// What [sound] is called.
+  final String? soundName;
+
+  /// Starts quietly and gets louder over a minute.
+  final bool gradual;
+
+  /// An unanswered ring stops by itself after this many minutes.
+  final int ringMinutes;
+
   bool get repeats => days.isNotEmpty;
 
   factory ClockAlarm.fromJson(Map<String, dynamic> j) {
@@ -81,6 +108,12 @@ class ClockAlarm {
       date: j['date'] as String?,
       skipDate: j['skipDate'] as String?,
       updatedAt: (j['updatedAt'] as num?)?.toInt() ?? 0,
+      pauseUntil: j['pauseUntil'] as String?,
+      paused: j['paused'] as bool? ?? false,
+      sound: j['sound'] as String?,
+      soundName: j['soundName'] as String?,
+      gradual: j['gradual'] as bool? ?? false,
+      ringMinutes: (j['ringMinutes'] as num?)?.toInt() ?? defaultRingMinutes,
     );
   }
 
@@ -101,6 +134,12 @@ class ClockAlarm {
         date: date,
         skipDate: skipDate,
         updatedAt: updatedAt ?? this.updatedAt,
+        pauseUntil: pauseUntil,
+        paused: paused,
+        sound: sound,
+        soundName: soundName,
+        gradual: gradual,
+        ringMinutes: ringMinutes,
       );
 
   /// The engine's list, earliest time of day first.

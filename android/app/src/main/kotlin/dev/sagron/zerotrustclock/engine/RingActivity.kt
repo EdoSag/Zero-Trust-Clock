@@ -37,7 +37,8 @@ class RingActivity : Activity() {
         findViewById<View>(R.id.ring_snooze).setOnClickListener {
             RingService.send(this, RingService.ACTION_SNOOZE)
         }
-        findViewById<View>(R.id.ring_dismiss).setOnClickListener {
+        // Dismiss is a slide, so a sleepy tap can't silence the alarm.
+        findViewById<SlideToDismiss>(R.id.ring_dismiss).onDismiss = {
             RingService.send(this, RingService.ACTION_DISMISS)
         }
         show()

@@ -295,4 +295,64 @@ class AppL10nEn extends AppL10n {
     );
     return '$_temp0';
   }
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get sound => 'Sound';
+
+  @override
+  String get soundChime => 'ZT chime';
+
+  @override
+  String get soundSystem => 'The phone\'s alarm sound';
+
+  @override
+  String get soundRingtone => 'Choose a phone sound';
+
+  @override
+  String get soundFile => 'Choose an audio file';
+
+  @override
+  String get soundPicked => 'Picked sound';
+
+  @override
+  String get soundHint =>
+      'A sound you choose is copied into the app, so it also plays before the phone is first unlocked. If it can\'t play, the ZT chime rings instead.';
+
+  @override
+  String get gradual => 'Gradually louder';
+
+  @override
+  String get gradualHint =>
+      'Starts quietly and reaches full volume in a minute';
+
+  @override
+  String get silenceAfter => 'Silence after';
+
+  @override
+  String get pauseUntil => 'Pause until…';
+
+  @override
+  String get pauseUntilHelp => 'Silent through this day';
+
+  @override
+  String pausedUntil(String day) {
+    return 'Paused until $day';
+  }
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get pauseAll => 'Pause all alarms until…';
+
+  @override
+  String get resumeAll => 'Resume all alarms';
+
+  @override
+  String pausedAllUntil(String day) {
+    return 'Repeating alarms are paused through $day. Alarms set for one day still ring.';
+  }
 }

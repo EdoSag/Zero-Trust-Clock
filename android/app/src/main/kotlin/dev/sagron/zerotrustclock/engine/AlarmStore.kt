@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.UserManager
 import android.util.AtomicFile
 import dev.sagron.zerotrustclock.engine.core.Alarm
+import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -118,4 +119,17 @@ object EnginePrefs {
     fun bootAt(context: Context): Long = prefs(context).getLong("bootAt", 0)
 
     fun bootLocked(context: Context): Boolean = prefs(context).getBoolean("bootLocked", false)
+
+    /**
+     * "Pause all alarms until": repeating alarms are silent through this
+     * day. Null when not set or already over. This phone only.
+     */
+    fun pauseAllUntil(context: Context): java.time.LocalDate? {
+        val day = AlarmSchedule.parseDay(prefs(context).getString("pauseAll", null)) ?: return null
+        return if (day.isBefore(java.time.LocalDate.now())) null else day
+    }
+
+    fun setPauseAllUntil(context: Context, day: String?) {
+        prefs(context).edit().apply { if (day == null) remove("pauseAll") else putString("pauseAll", day) }.apply()
+    }
 }

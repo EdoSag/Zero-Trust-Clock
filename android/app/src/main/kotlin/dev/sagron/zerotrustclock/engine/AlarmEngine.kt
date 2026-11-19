@@ -14,10 +14,12 @@ object AlarmEngine {
 
     /**
      * The alarms as the screens show them: each with its label, its next
-     * ring (after any "Turn off once") and whether a skip is waiting.
+     * ring (after any "Turn off once" or pause) and whether a skip or a
+     * pause is waiting.
      */
     fun listJson(context: Context): String {
         val now = now()
+        val pauseAll = EnginePrefs.pauseAllUntil(context)
         val out = JSONArray()
         for (a in AlarmStore.load(context)) {
             if (a.test) continue
@@ -25,62 +27,87 @@ object AlarmEngine {
             o.remove("armedFor")
             o.remove("code")
             o.put("label", LabelStore.get(context, a.id))
-            val next = AlarmSchedule.nextRing(a, now)
+            val next = AlarmSchedule.nextRing(a, now, pauseAll)
             if (next != null) o.put("nextRing", next.at.toInstant().toEpochMilli())
             o.put("skipActive", AlarmSchedule.skipActive(a, now))
+            o.put("paused", AlarmSchedule.paused(a, now, pauseAll))
             o.put("ringing", a.id == RingService.ringingId)
             out.put(o)
         }
         return out.toString()
     }
 
-    /** Adds an alarm ([id] null) or changes one. A new or re-timed alarm is switched on. */
+    /** "Pause all alarms until", or null when none is set. */
+    fun pauseAllUntil(context: Context): String? = EnginePrefs.pauseAllUntil(context)?.toString()
+
+    /** Everything about an alarm besides its time and days. */
+    data class Options(
+        val label: String = "",
+        val vibrate: Boolean = true,
+        val snoozeMinutes: Int = 10,
+        val sound: String? = null,
+        val soundName: String? = null,
+        val gradual: Boolean = false,
+        val ringMinutes: Int = Alarm.DEFAULT_RING_MINUTES,
+        /** Rings once on this day (yyyy-MM-dd); null: the next such time. */
+        val date: String? = null,
+    )
+
+    /**
+     * Adds an alarm ([id] null) or changes one. A new or re-timed alarm is
+     * switched on. An alarm without repeat days rings on [Options.date] when
+     * that time is still ahead, else at the next such time.
+     */
     fun save(
         context: Context,
         id: String?,
         hour: Int,
         minute: Int,
         days: Set<Int>,
-        label: String,
-        vibrate: Boolean,
-        snoozeMinutes: Int,
+        options: Options,
     ): String {
         val now = now()
+        val pickedDay = if (days.isEmpty()) AlarmSchedule.parseDay(options.date) else null
         val saved = AlarmStore.update(context) { list ->
             val i = if (id == null) -1 else list.indexOfFirst { it.id == id }
-            if (i < 0) {
-                val created = AlarmSchedule.withTime(
+            val old = if (i >= 0) list[i] else null
+            var alarm = if (old == null) {
+                AlarmSchedule.withTime(
                     Alarm(
                         id = id ?: UUID.randomUUID().toString(),
                         code = (list.maxOfOrNull { it.code } ?: 0) + 1,
                         hour = hour,
                         minute = minute,
-                        vibrate = vibrate,
-                        snoozeMinutes = snoozeMinutes,
-                        updatedAt = System.currentTimeMillis(),
                     ),
                     hour, minute, days, now,
                 )
-                list.add(created)
-                created
+            } else if (old.hour != hour || old.minute != minute || old.days != days ||
+                (pickedDay != null && pickedDay.toString() != old.date)
+            ) {
+                AlarmSchedule.withTime(old.copy(enabled = true), hour, minute, days, now)
             } else {
-                val old = list[i]
-                val timed = if (old.hour != hour || old.minute != minute || old.days != days) {
-                    AlarmSchedule.withTime(old.copy(enabled = true), hour, minute, days, now)
-                } else {
-                    old
-                }
-                val changed = timed.copy(
-                    vibrate = vibrate,
-                    snoozeMinutes = snoozeMinutes,
-                    updatedAt = editedAt(old),
-                )
-                list[i] = changed
-                changed
+                old
             }
+            if (pickedDay != null && alarm.date != pickedDay.toString() &&
+                AlarmSchedule.ringOn(alarm, pickedDay, now.zone).isAfter(now)
+            ) {
+                alarm = alarm.copy(date = pickedDay.toString(), enabled = true, skipDate = null)
+            }
+            alarm = alarm.copy(
+                vibrate = options.vibrate,
+                snoozeMinutes = options.snoozeMinutes.coerceIn(1, 60),
+                sound = options.sound,
+                soundName = if (options.sound == null) null else options.soundName,
+                gradual = options.gradual,
+                ringMinutes = options.ringMinutes.coerceIn(1, 60),
+                updatedAt = if (old == null) System.currentTimeMillis() else editedAt(old),
+            )
+            if (i >= 0) list[i] = alarm else list.add(alarm)
+            alarm
         }
-        LabelStore.set(context, saved.id, label)
+        LabelStore.set(context, saved.id, options.label)
         AlarmNotifications.cancelSnoozed(context, saved.id)
+        Sounds.prune(context)
         AlarmScheduler.rescheduleAll(context)
         return saved.id
     }
@@ -90,7 +117,23 @@ object AlarmEngine {
     }
 
     /** "Turn off once". */
-    fun skipOnce(context: Context, id: String) = change(context, id) { a, now -> AlarmSchedule.skipOnce(a, now) }
+    fun skipOnce(context: Context, id: String) = change(context, id) { a, now ->
+        AlarmSchedule.skipOnce(a, now, EnginePrefs.pauseAllUntil(context))
+    }
+
+    /** "Pause until": silent through [until] (yyyy-MM-dd). */
+    fun pause(context: Context, id: String, until: String) {
+        val day = AlarmSchedule.parseDay(until) ?: return
+        change(context, id) { a, _ -> AlarmSchedule.pause(a, day) }
+    }
+
+    fun resume(context: Context, id: String) = change(context, id) { a, _ -> AlarmSchedule.resume(a) }
+
+    /** "Pause all alarms until" [until] (repeating ones), or null to end it. This phone only. */
+    fun setPauseAll(context: Context, until: String?) {
+        EnginePrefs.setPauseAllUntil(context, until?.let { AlarmSchedule.parseDay(it)?.toString() })
+        AlarmScheduler.rescheduleAll(context)
+    }
 
     /** "Turn back on". */
     fun undoSkip(context: Context, id: String) = change(context, id) { a, now -> AlarmSchedule.undoSkip(a, now) }
@@ -111,13 +154,15 @@ object AlarmEngine {
         }
         LabelStore.remove(context, id)
         AlarmNotifications.cancelSnoozed(context, id)
+        Sounds.prune(context)
         AlarmScheduler.rescheduleAll(context)
     }
 
     /**
      * Takes an alarm as the account's backup has it (another phone changed
-     * it, or this phone is restoring). Only what syncs is taken; a snooze
-     * on this phone stays unless the time changed or it is switched off.
+     * it, or this phone is restoring). Only what syncs is taken; the sound
+     * stays this phone's own, and a snooze on this phone stays unless the
+     * time changed or it is switched off.
      * [enabled] is this phone's own switch: an alarm switched on elsewhere
      * arrives off here. Nothing is changed while it rings; false then, and
      * sync tries again later.
@@ -135,6 +180,9 @@ object AlarmEngine {
         snoozeMinutes: Int,
         enabled: Boolean,
         updatedAt: Long,
+        pauseUntil: String?,
+        gradual: Boolean,
+        ringMinutes: Int,
     ): Boolean {
         if (id == RingService.ringingId) return false
         AlarmStore.update(context) { list ->
@@ -154,6 +202,9 @@ object AlarmEngine {
                     enabled = enabled,
                     snoozeUntil = if (keepSnooze) old?.snoozeUntil else null,
                     updatedAt = updatedAt,
+                    pauseUntil = if (days.isEmpty()) null else pauseUntil,
+                    gradual = gradual,
+                    ringMinutes = ringMinutes.coerceIn(1, 60),
                 )
             if (i >= 0) list[i] = alarm else list.add(alarm)
             if (!keepSnooze) AlarmNotifications.cancelSnoozed(context, id)

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../engine/alarm.dart';
+import '../engine/clock_engine.dart' show parseDay;
 import '../l10n/l10n.dart';
 import 'alarm_text.dart';
 
-enum _Menu { skipOnce, undoSkip, edit, delete }
+enum _Menu { skipOnce, undoSkip, pause, resume, edit, delete }
 
 /// One alarm in the list: its time, when it rings, the on/off switch and
 /// the three-dot menu with "Turn off once".
@@ -18,6 +19,8 @@ class AlarmCard extends StatelessWidget {
     required this.onCancelSnooze,
     required this.onEdit,
     required this.onDelete,
+    required this.onPause,
+    required this.onResume,
     this.now,
   });
 
@@ -28,6 +31,10 @@ class AlarmCard extends StatelessWidget {
   final VoidCallback onCancelSnooze;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+
+  /// "Pause until...": asks for the day.
+  final VoidCallback onPause;
+  final VoidCallback onResume;
 
   /// The current time (tests).
   final DateTime? now;
@@ -55,6 +62,11 @@ class AlarmCard extends StatelessWidget {
       status = l.snoozedUntil(clockText(context, snoozedUntil));
       actionLabel = l.dismiss;
       action = onCancelSnooze;
+    } else if (parseDay(alarm.pauseUntil) case final until?
+        when alarm.enabled) {
+      status = l.pausedUntil(dayText(context, until, now: now));
+      actionLabel = l.resume;
+      action = onResume;
     } else if (alarm.skipActive) {
       final next = alarm.nextRing;
       status = next == null
@@ -108,6 +120,8 @@ class AlarmCard extends StatelessWidget {
                     onSelected: (choice) => switch (choice) {
                       _Menu.skipOnce => onSkipOnce(),
                       _Menu.undoSkip => onUndoSkip(),
+                      _Menu.pause => onPause(),
+                      _Menu.resume => onResume(),
                       _Menu.edit => onEdit(),
                       _Menu.delete => onDelete(),
                     },
@@ -121,6 +135,18 @@ class AlarmCard extends StatelessWidget {
                         PopupMenuItem(
                           value: _Menu.undoSkip,
                           child: Text(l.turnBackOn),
+                        ),
+                      if (alarm.repeats &&
+                          alarm.enabled &&
+                          alarm.pauseUntil == null)
+                        PopupMenuItem(
+                          value: _Menu.pause,
+                          child: Text(l.pauseUntil),
+                        ),
+                      if (alarm.pauseUntil != null)
+                        PopupMenuItem(
+                          value: _Menu.resume,
+                          child: Text(l.resume),
                         ),
                       PopupMenuItem(value: _Menu.edit, child: Text(l.edit)),
                       PopupMenuItem(value: _Menu.delete, child: Text(l.delete)),
@@ -148,6 +174,8 @@ class AlarmCard extends StatelessWidget {
                                   ? Icons.notifications_active_outlined
                                   : snoozedUntil != null
                                   ? Icons.snooze
+                                  : alarm.pauseUntil != null
+                                  ? Icons.pause_circle_outline
                                   : Icons.event_busy_outlined,
                               size: 18,
                               color: colors.primary,

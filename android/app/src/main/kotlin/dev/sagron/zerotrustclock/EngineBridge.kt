@@ -7,8 +7,11 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.os.UserManager
 import android.provider.Settings
@@ -18,6 +21,7 @@ import dev.sagron.zerotrustclock.engine.AlarmScheduler
 import dev.sagron.zerotrustclock.engine.EnginePrefs
 import dev.sagron.zerotrustclock.engine.Loc
 import dev.sagron.zerotrustclock.engine.RingService
+import dev.sagron.zerotrustclock.engine.Sounds
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -60,9 +64,16 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                         (call.argument<Int>("hour") ?: 0).coerceIn(0, 23),
                         (call.argument<Int>("minute") ?: 0).coerceIn(0, 59),
                         days,
-                        call.argument<String>("label") ?: "",
-                        call.argument<Boolean>("vibrate") ?: true,
-                        (call.argument<Int>("snoozeMinutes") ?: 10).coerceIn(1, 60),
+                        AlarmEngine.Options(
+                            label = call.argument<String>("label") ?: "",
+                            vibrate = call.argument<Boolean>("vibrate") ?: true,
+                            snoozeMinutes = (call.argument<Int>("snoozeMinutes") ?: 10).coerceIn(1, 60),
+                            sound = call.argument<String>("sound"),
+                            soundName = call.argument<String>("soundName"),
+                            gradual = call.argument<Boolean>("gradual") ?: false,
+                            ringMinutes = (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
+                            date = call.argument<String>("date"),
+                        ),
                     )
                     result.success(id)
                 }
@@ -82,6 +93,9 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             (call.argument<Int>("snoozeMinutes") ?: 10).coerceIn(1, 60),
                             call.argument<Boolean>("enabled") ?: false,
                             (call.argument<Number>("updatedAt") ?: 0).toLong(),
+                            call.argument<String>("pauseUntil"),
+                            call.argument<Boolean>("gradual") ?: false,
+                            (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                         ),
                     )
                 }
@@ -90,6 +104,13 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 }
                 "skipOnce" -> done(result) { AlarmEngine.skipOnce(activity, id(call)) }
                 "undoSkip" -> done(result) { AlarmEngine.undoSkip(activity, id(call)) }
+                "pause" -> done(result) {
+                    AlarmEngine.pause(activity, id(call), call.argument<String>("until") ?: "")
+                }
+                "resume" -> done(result) { AlarmEngine.resume(activity, id(call)) }
+                "pauseAllUntil" -> result.success(AlarmEngine.pauseAllUntil(activity))
+                "setPauseAll" -> done(result) { AlarmEngine.setPauseAll(activity, call.argument<String>("until")) }
+                "pickSound" -> pickSound(call.argument<String>("kind") ?: "file", call.argument<String>("current"), result)
                 "cancelSnooze" -> done(result) { AlarmEngine.cancelSnooze(activity, id(call)) }
                 "delete" -> done(result) { AlarmEngine.delete(activity, id(call)) }
                 "testAlarm" -> done(result) {
@@ -170,6 +191,63 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         pendingPermission = null
     }
 
+    private var pendingSound: MethodChannel.Result? = null
+
+    /**
+     * Lets the user pick a sound: a phone ringtone ([kind] "ringtone") or
+     * any audio file ("file"). It is copied into the app so it plays before
+     * the first unlock too. Answers {sound, name}, or null when cancelled.
+     */
+    private fun pickSound(kind: String, current: String?, result: MethodChannel.Result) {
+        pendingSound?.success(null)
+        pendingSound = result
+        val intent = if (kind == "ringtone") {
+            Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, false)
+        } else {
+            Intent(Intent.ACTION_OPEN_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("audio/*")
+        }
+        try {
+            activity.startActivityForResult(intent, if (kind == "ringtone") REQUEST_RINGTONE else REQUEST_FILE)
+        } catch (_: Exception) {
+            pendingSound = null
+            result.success(null)
+        }
+    }
+
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode != REQUEST_RINGTONE && requestCode != REQUEST_FILE) return false
+        val result = pendingSound ?: return true
+        pendingSound = null
+        val uri: Uri? = if (resultCode != Activity.RESULT_OK) {
+            null
+        } else if (requestCode == REQUEST_RINGTONE) {
+            @Suppress("DEPRECATION")
+            data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        } else {
+            data?.data
+        }
+        if (uri == null) {
+            result.success(null)
+            return true
+        }
+        val context = activity.applicationContext
+        val main = Handler(Looper.getMainLooper())
+        // Copying can take a moment: not on the main thread.
+        Thread {
+            val name = (if (requestCode == REQUEST_RINGTONE) Sounds.ringtoneTitle(context, uri) else null)
+                ?: Sounds.displayName(context, uri)?.substringBeforeLast('.')
+                ?: ""
+            val sound = Sounds.copyIn(context, uri) ?: Sounds.byUri(uri)
+            main.post { result.success(mapOf("sound" to sound, "name" to name)) }
+        }.start()
+        return true
+    }
+
     /** Opens the system screen where one check can be fixed. */
     private fun openSettings(which: String) {
         val pkg = activity.packageName
@@ -203,5 +281,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
 
     private companion object {
         const val REQUEST_NOTIFICATIONS = 7301
+        const val REQUEST_RINGTONE = 7302
+        const val REQUEST_FILE = 7303
     }
 }

@@ -145,7 +145,12 @@ void main() {
     await settleSync(tester);
     expect(vault.live('gym')!.onDevices, {'A', 'B'});
 
-    await tester.tap(find.byTooltip('More options'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlarmCard),
+        matching: find.byTooltip('More options'),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
@@ -170,7 +175,12 @@ void main() {
       testApp(engine, home: const ClockGate(), prefs: prefs),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('More options'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlarmCard),
+        matching: find.byTooltip('More options'),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();

@@ -13,7 +13,8 @@ import '../engine/clock_engine.dart';
 /// the account; this is the copy that backs them up and moves them between
 /// phones. Each phone has its own switch: [onDevices] lists the phones the
 /// alarm is switched on for, so an alarm made on one phone arrives switched
-/// off on the others (Edo's choice, 2026-11-18).
+/// off on the others (Edo's choice, 2026-11-18). The sound stays each
+/// phone's own too (a picked sound is a file on that phone).
 class SyncedAlarm {
   const SyncedAlarm({
     required this.id,
@@ -27,6 +28,9 @@ class SyncedAlarm {
     this.snoozeMinutes = 10,
     this.onDevices = const {},
     this.editedAt = 0,
+    this.pauseUntil,
+    this.gradual = false,
+    this.ringMinutes = ClockAlarm.defaultRingMinutes,
   });
 
   final String id;
@@ -45,29 +49,37 @@ class SyncedAlarm {
   /// The engine's `updatedAt` of the edit this copy holds.
   final int editedAt;
 
-  factory SyncedAlarm.fromJson(String id, Map<String, Object?> j) =>
-      SyncedAlarm(
-        id: id,
-        hour: ((j['hour'] as num?)?.toInt() ?? 0).clamp(0, 23),
-        minute: ((j['minute'] as num?)?.toInt() ?? 0).clamp(0, 59),
-        days: {
-          for (final d in (j['days'] as List? ?? const []))
-            if (d is num && d >= 1 && d <= 7) d.toInt(),
-        },
-        date: j['date'] as String?,
-        skipDate: j['skipDate'] as String?,
-        label: j['label'] as String? ?? '',
-        vibrate: j['vibrate'] as bool? ?? true,
-        snoozeMinutes: ((j['snoozeMinutes'] as num?)?.toInt() ?? 10).clamp(
-          1,
-          60,
-        ),
-        onDevices: {
-          for (final d in (j['onDevices'] as List? ?? const []))
-            if (d is String) d,
-        },
-        editedAt: (j['editedAt'] as num?)?.toInt() ?? 0,
-      );
+  final String? pauseUntil;
+  final bool gradual;
+  final int ringMinutes;
+
+  factory SyncedAlarm.fromJson(
+    String id,
+    Map<String, Object?> j,
+  ) => SyncedAlarm(
+    id: id,
+    hour: ((j['hour'] as num?)?.toInt() ?? 0).clamp(0, 23),
+    minute: ((j['minute'] as num?)?.toInt() ?? 0).clamp(0, 59),
+    days: {
+      for (final d in (j['days'] as List? ?? const []))
+        if (d is num && d >= 1 && d <= 7) d.toInt(),
+    },
+    date: j['date'] as String?,
+    skipDate: j['skipDate'] as String?,
+    label: j['label'] as String? ?? '',
+    vibrate: j['vibrate'] as bool? ?? true,
+    snoozeMinutes: ((j['snoozeMinutes'] as num?)?.toInt() ?? 10).clamp(1, 60),
+    onDevices: {
+      for (final d in (j['onDevices'] as List? ?? const []))
+        if (d is String) d,
+    },
+    editedAt: (j['editedAt'] as num?)?.toInt() ?? 0,
+    pauseUntil: j['pauseUntil'] as String?,
+    gradual: j['gradual'] as bool? ?? false,
+    ringMinutes:
+        ((j['ringMinutes'] as num?)?.toInt() ?? ClockAlarm.defaultRingMinutes)
+            .clamp(1, 60),
+  );
 
   /// Every field, null for a cleared one (see [ZtCollection]).
   Map<String, Object?> toJson() => {
@@ -81,6 +93,9 @@ class SyncedAlarm {
     'snoozeMinutes': snoozeMinutes,
     'onDevices': onDevices.toList()..sort(),
     'editedAt': editedAt,
+    'pauseUntil': pauseUntil,
+    'gradual': gradual,
+    'ringMinutes': ringMinutes,
   };
 
   /// The alarm on this phone, as the copy from the account says it.
@@ -101,6 +116,9 @@ class SyncedAlarm {
     snoozeMinutes: a.snoozeMinutes,
     onDevices: {...onDevices.where((d) => d != device), if (a.enabled) device},
     editedAt: editedAt ?? a.updatedAt,
+    pauseUntil: a.repeats ? a.pauseUntil : null,
+    gradual: a.gradual,
+    ringMinutes: a.ringMinutes,
   );
 
   /// What the engine on [device] is given: on only if switched on there.
@@ -116,6 +134,9 @@ class SyncedAlarm {
     date: days.isEmpty ? date : null,
     skipDate: skipDate,
     updatedAt: editedAt,
+    pauseUntil: days.isEmpty ? null : pauseUntil,
+    gradual: gradual,
+    ringMinutes: ringMinutes,
   );
 
   @override

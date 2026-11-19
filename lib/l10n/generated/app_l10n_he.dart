@@ -293,4 +293,63 @@ class AppL10nHe extends AppL10n {
     );
     return '$_temp0';
   }
+
+  @override
+  String get date => 'תאריך';
+
+  @override
+  String get sound => 'צליל';
+
+  @override
+  String get soundChime => 'צלצול ZT';
+
+  @override
+  String get soundSystem => 'צליל השעון המעורר של הטלפון';
+
+  @override
+  String get soundRingtone => 'בחירת צליל מהטלפון';
+
+  @override
+  String get soundFile => 'בחירת קובץ שמע';
+
+  @override
+  String get soundPicked => 'צליל שנבחר';
+
+  @override
+  String get soundHint =>
+      'צליל שבוחרים מועתק לאפליקציה, כך שהוא מתנגן גם לפני שהטלפון נפתח בפעם הראשונה. אם אי אפשר לנגן אותו, יצלצל צלצול ZT.';
+
+  @override
+  String get gradual => 'עוצמה עולה בהדרגה';
+
+  @override
+  String get gradualHint => 'מתחיל בשקט ומגיע לעוצמה מלאה תוך דקה';
+
+  @override
+  String get silenceAfter => 'השתקה אחרי';
+
+  @override
+  String get pauseUntil => 'השהיה עד…';
+
+  @override
+  String get pauseUntilHelp => 'שקט עד סוף היום הזה';
+
+  @override
+  String pausedUntil(String day) {
+    return 'מושהה עד $day';
+  }
+
+  @override
+  String get resume => 'חידוש';
+
+  @override
+  String get pauseAll => 'השהיית כל השעונים המעוררים עד…';
+
+  @override
+  String get resumeAll => 'חידוש כל השעונים המעוררים';
+
+  @override
+  String pausedAllUntil(String day) {
+    return 'השעונים המעוררים החוזרים מושהים עד סוף $day. שעונים מעוררים ליום אחד עדיין יצלצלו.';
+  }
 }
