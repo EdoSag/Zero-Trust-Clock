@@ -93,7 +93,8 @@ object AlarmSchedule {
         holidays: Set<LocalDate> = emptySet(),
     ): Long? {
         if (!alarm.enabled) return null
-        alarm.snoozeUntil?.let { return it }
+        // A pause (its own, or "Pause all") silences a snooze too.
+        alarm.snoozeUntil?.let { if (!paused(alarm, now, pauseAll)) return it }
         return nextRing(alarm, now, pauseAll, holidays)?.at?.toInstant()?.toEpochMilli()
     }
 
@@ -104,10 +105,18 @@ object AlarmSchedule {
         return ringOn(alarm, skip, now.zone).isAfter(now)
     }
 
-    /** Switched on by hand: any skip, pause or snooze is forgotten. */
-    fun turnOn(alarm: Alarm, now: ZonedDateTime): Alarm = withTime(
-        alarm.copy(enabled = true, pauseUntil = null), alarm.hour, alarm.minute, alarm.days, now,
-    )
+    /**
+     * Switched on by hand: any skip, pause or snooze is forgotten. One that
+     * rings once keeps a picked day that is still ahead.
+     */
+    fun turnOn(alarm: Alarm, now: ZonedDateTime): Alarm {
+        val on = alarm.copy(enabled = true, pauseUntil = null)
+        val picked = parseDay(alarm.date)
+        if (!alarm.repeats && picked != null && ringOn(alarm, picked, now.zone).isAfter(now)) {
+            return on.copy(skipDate = null, snoozeUntil = null, armedFor = null)
+        }
+        return withTime(on, alarm.hour, alarm.minute, alarm.days, now)
+    }
 
     fun turnOff(alarm: Alarm): Alarm =
         alarm.copy(enabled = false, skipDate = null, pauseUntil = null, snoozeUntil = null, armedFor = null)

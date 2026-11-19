@@ -65,4 +65,18 @@ class BedtimeTest {
         assertEquals(b, Bedtime.fromJson(b.toJson()))
         assertEquals(Bedtime(), Bedtime.fromJson("not json"))
     }
+
+    @Test
+    fun aNightTheClocksChangeEndsAtTheWakeUpTimeOnTheClock() {
+        val ny = ZoneId.of("America/New_York")
+        val saturday = weeknights.copy(nights = setOf(6))
+        // Clocks go forward on 14 March 2027: the night is 7 hours, still
+        // ending at 07:00.
+        val night = saturday.current(ZonedDateTime.of(2027, 3, 14, 6, 30, 0, 0, ny))
+        assertEquals(ZonedDateTime.of(2027, 3, 14, 7, 0, 0, 0, ny), night?.second)
+        assertNull(saturday.current(ZonedDateTime.of(2027, 3, 14, 7, 30, 0, 0, ny)))
+        // And back on 6 November 2027.
+        val autumn = saturday.current(ZonedDateTime.of(2027, 11, 7, 6, 30, 0, 0, ny))
+        assertEquals(ZonedDateTime.of(2027, 11, 7, 7, 0, 0, 0, ny), autumn?.second)
+    }
 }

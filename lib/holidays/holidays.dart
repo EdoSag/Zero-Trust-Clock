@@ -149,10 +149,13 @@ class HolidaysController extends AsyncNotifier<HolidaysState> {
     final calendar = s.calendar;
     if (calendar == null || s.loading) return;
     state = AsyncData(s.copyWith(loading: true));
+    // Another calendar (or none) picked meanwhile: this download is dropped.
+    bool stale() => state.value?.feedId != calendar.feedId;
     try {
       final items = parseHolidays(
         await ref.read(holidayFetcherProvider)(calendar.url),
       );
+      if (stale()) return;
       final at = DateTime.now();
       await _prefs.write(
         _cacheKey,
@@ -171,6 +174,7 @@ class HolidaysController extends AsyncNotifier<HolidaysState> {
         ),
       );
     } on Object {
+      if (stale()) return;
       state = AsyncData((await future).copyWith(loading: false, failed: true));
     }
   }

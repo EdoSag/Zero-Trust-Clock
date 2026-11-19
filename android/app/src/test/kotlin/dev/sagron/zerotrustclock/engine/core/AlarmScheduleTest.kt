@@ -374,4 +374,28 @@ class AlarmScheduleTest {
         assertTrue(Alarm.fromJson(once.toJson()).skipHolidays)
         assertFalse(Alarm.fromJson(alarm().toJson()).skipHolidays)
     }
+
+    @Test
+    fun switchingBackOnKeepsAPickedDayStillAhead() {
+        val now = at("2026-11-18T09:00")
+        val off = AlarmSchedule.turnOff(alarm(date = "2026-11-25"))
+        val on = AlarmSchedule.turnOn(off, now)
+        assertEquals("2026-11-25", on.date)
+        assertEquals("2026-11-25T07:00", next(on, now))
+        // A day that has passed gives the next such time instead.
+        val old = AlarmSchedule.turnOn(AlarmSchedule.turnOff(alarm(date = "2026-11-17")), now)
+        assertEquals("2026-11-19", old.date)
+    }
+
+    @Test
+    fun aPauseSilencesASnoozeToo() {
+        val now = at("2026-11-18T07:05")
+        val snoozed = alarm(days = everyDay).copy(snoozeUntil = at("2026-11-18T07:15").toInstant().toEpochMilli())
+        assertEquals(at("2026-11-18T07:15").toInstant().toEpochMilli(), AlarmSchedule.nextTrigger(snoozed, now))
+        val pauseAll = java.time.LocalDate.parse("2026-11-20")
+        assertEquals(
+            at("2026-11-21T07:00").toInstant().toEpochMilli(),
+            AlarmSchedule.nextTrigger(snoozed, now, pauseAll),
+        )
+    }
 }

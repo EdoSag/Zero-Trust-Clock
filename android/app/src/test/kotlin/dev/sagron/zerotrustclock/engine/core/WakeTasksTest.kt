@@ -52,4 +52,12 @@ class WakeTasksTest {
         old.put("task", "unknown")
         assertNull(Alarm.fromJson(old).task)
     }
+
+    @Test
+    fun aShakeCountCarriesOverWhenTheScreenIsRecreated() {
+        val c = ShakeCounter(start = 12)
+        assertEquals(12, c.count)
+        assertTrue(c.add(1_000, 0f, 0f, 30f))
+        assertEquals(13, c.count)
+    }
 }

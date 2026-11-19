@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -83,6 +84,13 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
       today.isAfter(now) ? today : today.add(const Duration(days: 1)),
     );
   }
+
+  /// Time, days and day as the alarm had them.
+  bool get _scheduleUnchanged =>
+      _hour == widget.alarm.hour &&
+      _minute == widget.alarm.minute &&
+      setEquals(_days, widget.alarm.days) &&
+      _date == parseDay(widget.alarm.date);
 
   Future<void> _pickDate() async {
     final today = DateUtils.dateOnly(DateTime.now());
@@ -183,8 +191,10 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             task: _task,
             skipHolidays: _days.isNotEmpty && _skipHolidays,
             // Only a picked (or kept) day: saving a label alone does not
-            // switch an alarm on.
-            date: _days.isEmpty && _date != null ? _ringDay() : null,
+            // switch an alarm on, or move a snoozed one to its next day.
+            date: _days.isEmpty && _date != null
+                ? (_scheduleUnchanged ? _date : _ringDay())
+                : null,
           );
       if (mounted) Navigator.of(context).pop(AlarmEditorResult.saved);
     } on Object {

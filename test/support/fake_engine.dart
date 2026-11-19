@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:zerotrust_clock/engine/alarm.dart';
 import 'package:zerotrust_clock/engine/bedtime.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
@@ -170,6 +171,8 @@ class FakeClockEngine implements ClockEngine {
     calls.add('importSynced ${a.id} ${a.enabled}');
     if (ringingIds.contains(a.id)) return false;
     final i = alarms.indexWhere((x) => x.id == a.id);
+    // Like the engine: an edit made here since sync read it is newer.
+    if (i >= 0 && alarms[i].updatedAt > a.updatedAt) return false;
     final copy = alarm(
       a.id,
       hour: a.hour,
@@ -228,11 +231,22 @@ class FakeClockEngine implements ClockEngine {
       'save ${id ?? 'new'} $hour:$minute [$days0] "$label" '
       '$vibrate $snoozeMinutes',
     );
+    // Like the engine: a new or re-timed alarm is switched on, an
+    // unchanged one keeps its switch.
+    final old = alarms.where((a) => a.id == id).firstOrNull;
+    final newDate = days.isEmpty && date != null ? dayKey(date) : null;
+    final retimed =
+        old == null ||
+        old.hour != hour ||
+        old.minute != minute ||
+        !setEquals(old.days, days) ||
+        (newDate != null && newDate != old.date);
     final saved = alarm(
       id ?? 'new-${++_ids}',
       hour: hour,
       minute: minute,
       days: days,
+      enabled: retimed || old.enabled,
       label: label,
       vibrate: vibrate,
       snoozeMinutes: snoozeMinutes,
@@ -243,7 +257,7 @@ class FakeClockEngine implements ClockEngine {
       ringMinutes: ringMinutes,
       task: task,
       skipHolidays: skipHolidays,
-      date: days.isEmpty && date != null ? dayKey(date) : null,
+      date: newDate,
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);
     if (i >= 0) {

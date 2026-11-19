@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.text.format.DateFormat
 import dev.sagron.zerotrustclock.R
 import dev.sagron.zerotrustclock.engine.core.Bedtime
@@ -76,9 +77,12 @@ object BedtimeEngine {
         p.edit().putBoolean("dndOurs", false).apply()
         val m = context.getSystemService(NotificationManager::class.java) ?: return
         try {
-            // Only if it is still ours: the user may have changed it since.
+            // Android 15 keeps the app's Do Not Disturb as its own mode, and
+            // this call ends only that one, whatever else is on. Before, it
+            // is the phone's setting: only if it is still ours.
             if (m.isNotificationPolicyAccessGranted &&
-                m.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+                (Build.VERSION.SDK_INT >= 35 ||
+                    m.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY)
             ) {
                 m.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
             }

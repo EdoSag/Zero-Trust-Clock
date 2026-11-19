@@ -42,8 +42,10 @@ data class MathProblem(val a: Int, val b: Int, val c: Int) {
 class ShakeCounter(
     private val threshold: Double = 2.2 * 9.81,
     private val gapMs: Long = 250,
+    /** Shakes already counted (the ring screen was recreated). */
+    start: Int = 0,
 ) {
-    var count = 0
+    var count = start
         private set
     private var last = Long.MIN_VALUE
 

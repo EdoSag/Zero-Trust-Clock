@@ -139,7 +139,23 @@ object AlarmEngine {
 
     /** "Pause all alarms until" [until] (repeating ones), or null to end it. This phone only. */
     fun setPauseAll(context: Context, until: String?) {
-        EnginePrefs.setPauseAllUntil(context, until?.let { AlarmSchedule.parseDay(it)?.toString() })
+        val day = until?.let { AlarmSchedule.parseDay(it) }
+        EnginePrefs.setPauseAllUntil(context, day?.toString())
+        if (day != null) {
+            // A snooze of a repeating alarm stops too, as with its own pause.
+            val snoozed = AlarmStore.update(context) { list ->
+                val ids = mutableListOf<String>()
+                for (i in list.indices) {
+                    val a = list[i]
+                    if (a.repeats && a.snoozeUntil != null) {
+                        list[i] = a.copy(snoozeUntil = null, armedFor = null)
+                        ids.add(a.id)
+                    }
+                }
+                ids
+            }
+            snoozed.forEach { AlarmNotifications.cancelSnoozed(context, it) }
+        }
         AlarmScheduler.rescheduleAll(context)
     }
 
@@ -195,17 +211,23 @@ object AlarmEngine {
         skipHolidays: Boolean,
     ): Boolean {
         if (id == RingService.ringingId) return false
-        AlarmStore.update(context) { list ->
+        val taken = AlarmStore.update(context) { list ->
             val i = list.indexOfFirst { it.id == id }
             val old = if (i >= 0) list[i] else null
-            val retimed = old == null || old.hour != hour || old.minute != minute || old.days != days
-            val keepSnooze = old?.snoozeUntil != null && enabled && !retimed
+            // Edited here since sync read it: this phone's edit is newer
+            // and goes to the account on the next round instead.
+            if (old != null && old.updatedAt > updatedAt) return@update false
+            val newDate = if (days.isEmpty()) date else null
+            val retimed = old == null || old.hour != hour || old.minute != minute || old.days != days ||
+                (days.isEmpty() && old.date != newDate)
+            val newlyPaused = days.isNotEmpty() && pauseUntil != null && pauseUntil != old?.pauseUntil
+            val keepSnooze = old?.snoozeUntil != null && enabled && !retimed && !newlyPaused
             val alarm = (old ?: Alarm(id = id, code = (list.maxOfOrNull { it.code } ?: 0) + 1, hour = hour, minute = minute))
                 .copy(
                     hour = hour,
                     minute = minute,
                     days = days,
-                    date = if (days.isEmpty()) date else null,
+                    date = newDate,
                     skipDate = skipDate,
                     vibrate = vibrate,
                     snoozeMinutes = snoozeMinutes,
@@ -220,7 +242,9 @@ object AlarmEngine {
                 )
             if (i >= 0) list[i] = alarm else list.add(alarm)
             if (!keepSnooze) AlarmNotifications.cancelSnoozed(context, id)
+            true
         }
+        if (!taken) return false
         LabelStore.set(context, id, label)
         AlarmScheduler.rescheduleAll(context)
         return true

@@ -35,6 +35,9 @@ class RingActivity : Activity(), SensorEventListener {
     private var solved = 0
     private var problem: MathProblem? = null
     private var shakes = ShakeCounter()
+
+    /** Shakes counted before the screen was recreated. */
+    private var shakesDone = 0
     private var listening = false
 
     override fun attachBaseContext(base: Context) {
@@ -67,6 +70,7 @@ class RingActivity : Activity(), SensorEventListener {
         })
         if (savedInstanceState?.getBoolean(STATE_TASK) == true) {
             solved = savedInstanceState.getInt(STATE_SOLVED)
+            shakesDone = savedInstanceState.getInt(STATE_SHAKES)
             startTask()
         } else if (intent?.getBooleanExtra(EXTRA_TASK, false) == true) {
             startTask()
@@ -84,6 +88,7 @@ class RingActivity : Activity(), SensorEventListener {
         super.onSaveInstanceState(outState)
         outState.putBoolean(STATE_TASK, task != null)
         outState.putInt(STATE_SOLVED, solved)
+        outState.putInt(STATE_SHAKES, shakes.count)
     }
 
     private fun ringingTask(): String? {
@@ -116,7 +121,7 @@ class RingActivity : Activity(), SensorEventListener {
         } else {
             title.text = getString(R.string.ring_task_shake)
             answer.visibility = View.GONE
-            shakes = ShakeCounter()
+            shakes = ShakeCounter(start = shakesDone)
             showShakes()
             listen()
         }
@@ -211,6 +216,7 @@ class RingActivity : Activity(), SensorEventListener {
         const val EXTRA_TASK = "task"
         private const val STATE_TASK = "task"
         private const val STATE_SOLVED = "solved"
+        private const val STATE_SHAKES = "shakes"
 
         fun taskIntent(context: Context): Intent = Intent(context, RingActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
