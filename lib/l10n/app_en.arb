@@ -353,5 +353,9 @@
   "wakeTaskHint": "Done before the alarm can be dismissed. Snooze still works.",
   "wakeTaskNone": "None",
   "wakeTaskMath": "Solve 3 sums",
-  "wakeTaskShake": "Shake 30 times"
+  "wakeTaskShake": "Shake 30 times",
+  "screensaver": "Night clock screensaver",
+  "screensaverHint": "Shows the time and the next alarm while the phone charges. Choose \"Night clock\" in Android's screensaver settings.",
+  "screensaverNight": "Dim red",
+  "screensaverNightHint": "Easy on the eyes in a dark room"
 }

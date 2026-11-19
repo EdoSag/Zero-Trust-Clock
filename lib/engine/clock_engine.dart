@@ -119,6 +119,12 @@ abstract class ClockEngine {
   /// The tab a notification or shortcut opened the app on (taken once).
   Future<String?> launchTab();
 
+  // Screensaver.
+
+  /// The night clock screensaver is dim red (true) or soft white.
+  Future<bool> screensaverNight();
+  Future<void> setScreensaverNight(bool on);
+
   // Bedtime.
 
   Future<BedtimeSchedule> bedtime();
@@ -166,6 +172,14 @@ class MethodChannelClockEngine implements ClockEngine {
 
   @override
   Future<String?> launchTab() => _channel.invokeMethod<String>('launchTab');
+
+  @override
+  Future<bool> screensaverNight() async =>
+      await _channel.invokeMethod<bool>('screensaverNight') ?? true;
+
+  @override
+  Future<void> setScreensaverNight(bool on) =>
+      _channel.invokeMethod('setScreensaverNight', {'on': on});
 
   @override
   Future<BedtimeSchedule> bedtime() async => BedtimeSchedule.fromJson(
@@ -579,4 +593,20 @@ class SleepSoundController extends AsyncNotifier<SleepSoundState?> {
 final sleepSoundProvider =
     AsyncNotifierProvider<SleepSoundController, SleepSoundState?>(
       SleepSoundController.new,
+    );
+
+/// Whether the night clock screensaver is dim red.
+class ScreensaverNightController extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() => ref.watch(clockEngineProvider).screensaverNight();
+
+  Future<void> set(bool on) async {
+    state = AsyncData(on);
+    await ref.read(clockEngineProvider).setScreensaverNight(on);
+  }
+}
+
+final screensaverNightProvider =
+    AsyncNotifierProvider<ScreensaverNightController, bool>(
+      ScreensaverNightController.new,
     );

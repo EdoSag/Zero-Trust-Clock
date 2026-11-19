@@ -1122,6 +1122,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Shake 30 times'**
   String get wakeTaskShake;
+
+  /// No description provided for @screensaver.
+  ///
+  /// In en, this message translates to:
+  /// **'Night clock screensaver'**
+  String get screensaver;
+
+  /// No description provided for @screensaverHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the time and the next alarm while the phone charges. Choose \"Night clock\" in Android\'s screensaver settings.'**
+  String get screensaverHint;
+
+  /// No description provided for @screensaverNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Dim red'**
+  String get screensaverNight;
+
+  /// No description provided for @screensaverNightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy on the eyes in a dark room'**
+  String get screensaverNightHint;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

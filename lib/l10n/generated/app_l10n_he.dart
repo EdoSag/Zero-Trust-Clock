@@ -594,4 +594,17 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get wakeTaskShake => 'לנער 30 פעמים';
+
+  @override
+  String get screensaver => 'שומר מסך של שעון לילה';
+
+  @override
+  String get screensaverHint =>
+      'מציג את השעה ואת השעון המעורר הבא בזמן טעינה. בוחרים \"שעון לילה\" בהגדרות שומר המסך של Android.';
+
+  @override
+  String get screensaverNight => 'אדום עמום';
+
+  @override
+  String get screensaverNightHint => 'נעים לעיניים בחדר חשוך';
 }

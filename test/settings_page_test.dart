@@ -106,4 +106,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(engine.language, isNull);
   });
+
+  testWidgets('the night clock: under Alarm check, opens Android, dims red', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final engine = FakeClockEngine();
+    await tester.pumpWidget(testApp(engine, home: const ClockSettingsPage()));
+    await tester.pumpAndSettle();
+    final check = tester.getRect(find.text('Alarm check'));
+    final saver = tester.getRect(find.text('Night clock screensaver'));
+    final dim = find.byKey(const ValueKey('screensaverNight'));
+    expect(saver.top, greaterThan(check.bottom));
+    expect(tester.getRect(dim).top, greaterThanOrEqualTo(saver.bottom));
+    expect(tester.widget<SwitchListTile>(dim).value, isTrue);
+
+    await tester.tap(find.text('Night clock screensaver'));
+    await tester.pumpAndSettle();
+    expect(engine.calls, contains('openSettings screensaver'));
+    await tester.tap(dim);
+    await tester.pumpAndSettle();
+    expect(engine.calls, contains('setScreensaverNight false'));
+    expect(tester.widget<SwitchListTile>(dim).value, isFalse);
+  });
 }

@@ -585,6 +585,19 @@ class FakeClockEngine implements ClockEngine {
     widgetCities = ids;
   }
 
+  // Screensaver.
+
+  bool night = true;
+
+  @override
+  Future<bool> screensaverNight() async => night;
+
+  @override
+  Future<void> setScreensaverNight(bool on) async {
+    calls.add('setScreensaverNight $on');
+    night = on;
+  }
+
   // Bedtime.
 
   BedtimeSchedule schedule = const BedtimeSchedule();

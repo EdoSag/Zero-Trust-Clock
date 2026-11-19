@@ -4,4 +4,9 @@
     <color name="ring_background">#FF1E1B4B</color>
     <color name="ring_text">#FFFFFFFF</color>
     <color name="ring_text_soft">#FFC7D2FE</color>
+    <!-- The night clock screensaver: dim red at night, soft white by day. -->
+    <color name="dream_night">#FF7F1D1D</color>
+    <color name="dream_night_soft">#FF5A1414</color>
+    <color name="dream_day">#FFE5E7EB</color>
+    <color name="dream_day_soft">#FF9CA3AF</color>
 </resources>

@@ -599,4 +599,17 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get wakeTaskShake => 'Shake 30 times';
+
+  @override
+  String get screensaver => 'Night clock screensaver';
+
+  @override
+  String get screensaverHint =>
+      'Shows the time and the next alarm while the phone charges. Choose \"Night clock\" in Android\'s screensaver settings.';
+
+  @override
+  String get screensaverNight => 'Dim red';
+
+  @override
+  String get screensaverNightHint => 'Easy on the eyes in a dark room';
 }
