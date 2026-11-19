@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zero_trust_core/zero_trust_core.dart';
 import 'package:zerotrust_clock/engine/clock_timer.dart';
 import 'package:zerotrust_clock/time_log/time_log.dart';
 import 'package:zerotrust_clock/ui/log_time_sheet.dart';
@@ -19,6 +22,11 @@ class FakeTimeLog implements TimeLog {
   final bool available;
   bool fail;
   final logged = <Map<String, Object?>>[];
+
+  int flushes = 0;
+
+  @override
+  Future<void> flush() async => flushes++;
 
   @override
   Future<List<TimeProject>> projects() async => const [
@@ -48,7 +56,38 @@ Widget app(FakeClockEngine engine, Widget home, TimeLog log) => testApp(
   overrides: [timeLogProvider.overrideWithValue(log)],
 );
 
+ProviderContainer keyContainer(FakeTimeLog log) => ProviderContainer(
+  overrides: [
+    timeLogProvider.overrideWithValue(log),
+    ztPreferencesStoreProvider.overrideWithValue(InMemoryPreferencesStore()),
+    accountServiceProvider.overrideWithValue(
+      AccountService(SignedOutBackend()),
+    ),
+  ],
+);
+
 void main() {
+  test('the Time key comes at unlock, and offline entries go up', () async {
+    final log = FakeTimeLog();
+    final c = keyContainer(log);
+    addTearDown(c.dispose);
+    await c.read(timeKeyProvider.notifier).deriveFrom(Uint8List(32));
+    expect(c.read(timeKeyProvider), hasLength(32));
+    expect(log.flushes, 1);
+  });
+
+  test('a key derived after the vault locked is dropped', () async {
+    final log = FakeTimeLog();
+    final c = keyContainer(log);
+    addTearDown(c.dispose);
+    final key = c.read(timeKeyProvider.notifier);
+    final deriving = key.deriveFrom(Uint8List(32));
+    key.clear(); // Locked while it worked.
+    await deriving;
+    expect(c.read(timeKeyProvider), isNull);
+    expect(log.flushes, 0);
+  });
+
   test('an entry is written the way ZT Time writes one', () {
     final start = DateTime.utc(2026, 11, 19, 9);
     final j = timeEntryJson(
