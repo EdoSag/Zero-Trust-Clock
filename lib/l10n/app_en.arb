@@ -240,5 +240,69 @@
   },
   "copyLaps": "Copy laps",
   "lapsCopied": "Laps copied",
-  "timerStarted": "Timer started"
+  "timerStarted": "Timer started",
+  "clock": "Clock",
+  "addCity": "Add city",
+  "searchCities": "Search cities or countries",
+  "noCities": "No cities yet",
+  "noCitiesHint": "Add a city to see its time next to yours.",
+  "cityRemoved": "{city} removed",
+  "@cityRemoved": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "Remove",
+  "yesterday": "Yesterday",
+  "sameTime": "Same time",
+  "timeAhead": "{time} ahead",
+  "@timeAhead": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "timeBehind": "{time} behind",
+  "@timeBehind": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "hoursOnly": "{hours} h",
+  "@hoursOnly": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAndMinutes": "{hours} h {minutes} min",
+  "@hoursAndMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "dayAndDifference": "{day}, {difference}",
+  "@dayAndDifference": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "difference": {
+        "type": "String"
+      }
+    }
+  },
+  "noCityFound": "No city found",
+  "dragToReorder": "Long-press to reorder, swipe to remove."
 }

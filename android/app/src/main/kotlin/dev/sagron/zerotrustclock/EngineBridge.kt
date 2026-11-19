@@ -26,6 +26,7 @@ import dev.sagron.zerotrustclock.engine.Tabs
 import dev.sagron.zerotrustclock.engine.TimerEngine
 import dev.sagron.zerotrustclock.engine.TimerNotifications
 import dev.sagron.zerotrustclock.engine.TimerRingService
+import dev.sagron.zerotrustclock.engine.WorldZones
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -169,6 +170,13 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "stopwatchLap" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.lap(now) } }
                 "stopwatchReset" -> done(result) { TimerEngine.stopwatch(activity) { s, _ -> s.reset() } }
                 "now" -> result.success(TimerEngine.now())
+                "zones" -> result.success(WorldZones.allJson(activity))
+                "zoneOffsets" -> result.success(
+                    WorldZones.offsets(call.argument<List<String>>("ids") ?: emptyList()),
+                )
+                "setWorldCities" -> done(result) {
+                    WorldZones.setSaved(activity, call.argument<List<String>>("ids") ?: emptyList())
+                }
                 "check" -> result.success(check())
                 "requestNotifications" -> requestNotifications(result)
                 "openSettings" -> done(result) { openSettings(call.argument<String>("which") ?: "") }

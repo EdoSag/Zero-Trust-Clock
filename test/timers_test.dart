@@ -72,9 +72,9 @@ void main() {
     final bar = tester.getRect(find.byType(NavigationBar));
     final screen = tester.getRect(find.byType(ClockHome));
     expect(bar.bottom, screen.bottom);
-    // Alarms, Timers, Stopwatch, in that order across the bar.
+    // Alarms, Clock, Timers, Stopwatch, in that order across the bar.
     final xs = [
-      for (final label in ['Alarms', 'Timers', 'Stopwatch'])
+      for (final label in ['Alarms', 'Clock', 'Timers', 'Stopwatch'])
         tester
             .getCenter(
               find.descendant(
@@ -86,6 +86,7 @@ void main() {
     ];
     expect(xs[0], lessThan(xs[1]));
     expect(xs[1], lessThan(xs[2]));
+    expect(xs[2], lessThan(xs[3]));
 
     await openTab(tester, 'Timers');
     expect(find.byType(TimerKeypad), findsOneWidget);
@@ -338,7 +339,7 @@ void main() {
     expect(find.byType(TimersPage), findsOneWidget);
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-      1,
+      2,
     );
   });
 

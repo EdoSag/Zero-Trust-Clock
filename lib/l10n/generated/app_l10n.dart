@@ -858,6 +858,102 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Timer started'**
   String get timerStarted;
+
+  /// No description provided for @clock.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock'**
+  String get clock;
+
+  /// No description provided for @addCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Add city'**
+  String get addCity;
+
+  /// No description provided for @searchCities.
+  ///
+  /// In en, this message translates to:
+  /// **'Search cities or countries'**
+  String get searchCities;
+
+  /// No description provided for @noCities.
+  ///
+  /// In en, this message translates to:
+  /// **'No cities yet'**
+  String get noCities;
+
+  /// No description provided for @noCitiesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a city to see its time next to yours.'**
+  String get noCitiesHint;
+
+  /// No description provided for @cityRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{city} removed'**
+  String cityRemoved(String city);
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @sameTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Same time'**
+  String get sameTime;
+
+  /// No description provided for @timeAhead.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} ahead'**
+  String timeAhead(String time);
+
+  /// No description provided for @timeBehind.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} behind'**
+  String timeBehind(String time);
+
+  /// No description provided for @hoursOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String hoursOnly(int hours);
+
+  /// No description provided for @hoursAndMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String hoursAndMinutes(int hours, int minutes);
+
+  /// No description provided for @dayAndDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}, {difference}'**
+  String dayAndDifference(String day, String difference);
+
+  /// No description provided for @noCityFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No city found'**
+  String get noCityFound;
+
+  /// No description provided for @dragToReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press to reorder, swipe to remove.'**
+  String get dragToReorder;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

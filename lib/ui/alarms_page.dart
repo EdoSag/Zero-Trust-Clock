@@ -11,6 +11,7 @@ import 'alarm_card.dart';
 import 'alarm_check_page.dart';
 import 'alarm_editor.dart';
 import 'alarm_text.dart';
+import 'clock_home.dart';
 import 'settings_button.dart';
 
 /// The home screen: every alarm, with the switch and "Turn off once".
@@ -238,6 +239,7 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
     final alarms = ref.watch(alarmsProvider);
     final problems = ref.watch(alarmCheckProvider).value?.problems ?? 0;
     final pausedAll = ref.watch(pauseAllProvider).value;
+    onHomeAction(ref, HomeAction.newAlarm, _add);
     return Scaffold(
       appBar: AppBar(
         title: Text(l.alarms),

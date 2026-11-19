@@ -36,4 +36,10 @@
     <string name="stopwatch_lap">הקפה %1$d</string>
     <string name="stopwatch_lap_button">הקפה</string>
     <string name="stopwatch_paused">נעצר ב-%1$s</string>
+    <string name="tile_next_alarm">השעון המעורר הבא</string>
+    <string name="tile_no_alarm">אין שעון מעורר</string>
+    <string name="tile_tap_to_start">הקישו להתחלה</string>
+    <string name="shortcut_new_alarm">שעון מעורר חדש</string>
+    <string name="shortcut_new_timer">טיימר חדש</string>
+    <string name="shortcut_start_stopwatch">הפעלת שעון עצר</string>
 </resources>

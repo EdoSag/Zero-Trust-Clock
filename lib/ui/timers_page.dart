@@ -7,6 +7,7 @@ import '../engine/clock_engine.dart';
 import '../engine/clock_timer.dart';
 import '../l10n/l10n.dart';
 import 'alarm_text.dart';
+import 'clock_home.dart';
 import 'duration_text.dart';
 import 'settings_button.dart';
 import 'timer_keypad.dart';
@@ -87,6 +88,12 @@ class _TimersPageState extends ConsumerState<TimersPage> {
     final timers = ref.watch(timersProvider);
     final list = timers.value ?? const <ClockTimer>[];
     _keepTicking(list);
+    // "New timer" shortcut: with no timers the keypad is already here.
+    onHomeAction(ref, HomeAction.newTimer, () {
+      if ((ref.read(timersProvider).value ?? const []).isNotEmpty) {
+        _addAnother();
+      }
+    });
     final now = DateTime.now();
     return Scaffold(
       appBar: AppBar(title: Text(l.timers), actions: const [SettingsButton()]),

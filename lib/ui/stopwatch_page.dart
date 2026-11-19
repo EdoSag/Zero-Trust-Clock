@@ -8,6 +8,7 @@ import '../engine/clock_engine.dart';
 import '../engine/clock_timer.dart';
 import '../l10n/l10n.dart';
 import 'alarm_text.dart';
+import 'clock_home.dart';
 import 'duration_text.dart';
 import 'settings_button.dart';
 
@@ -72,6 +73,10 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
     final theme = Theme.of(context);
     final s = ref.watch(stopwatchProvider).value ?? const StopwatchState();
     _keepTicking(s.running);
+    onHomeAction(ref, HomeAction.startStopwatch, () {
+      final now = ref.read(stopwatchProvider).value;
+      if (now == null || !now.running) _run(_engine.stopwatchStart);
+    });
     final now = DateTime.now();
     final elapsed = s.elapsed(now);
     final times = s.lapTimes;

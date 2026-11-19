@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:zerotrust_clock/engine/alarm.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
 import 'package:zerotrust_clock/engine/clock_timer.dart';
+import 'package:zerotrust_clock/world/world_zone.dart';
 
 ClockAlarm alarm(
   String id, {
@@ -531,6 +532,51 @@ class FakeClockEngine implements ClockEngine {
   Future<void> stopwatchReset() async {
     calls.add('stopwatchReset');
     stopwatchState = const StopwatchState();
+  }
+
+  // World clock.
+
+  List<WorldZone> zoneList = const [
+    WorldZone(
+      id: 'Asia/Tokyo',
+      city: 'Tokyo',
+      country: 'Japan',
+      offset: Duration(hours: 9),
+    ),
+    WorldZone(
+      id: 'America/New_York',
+      city: 'New York',
+      country: 'United States',
+      offset: Duration(hours: -5),
+    ),
+    WorldZone(
+      id: 'Asia/Kolkata',
+      city: 'Kolkata',
+      country: 'India',
+      offset: Duration(hours: 5, minutes: 30),
+    ),
+    WorldZone(
+      id: 'Europe/London',
+      city: 'London',
+      country: 'United Kingdom',
+      offset: Duration.zero,
+    ),
+  ];
+  List<String>? widgetCities;
+
+  @override
+  Future<List<WorldZone>> zones() async => zoneList;
+
+  @override
+  Future<Map<String, Duration>> zoneOffsets(List<String> ids) async => {
+    for (final z in zoneList)
+      if (ids.contains(z.id)) z.id: z.offset,
+  };
+
+  @override
+  Future<void> setWorldCities(List<String> ids) async {
+    calls.add('setWorldCities ${ids.join(',')}');
+    widgetCities = ids;
   }
 
   /// As when an alarm rings or is dismissed outside the app.

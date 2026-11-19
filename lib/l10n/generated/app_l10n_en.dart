@@ -444,4 +444,64 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get timerStarted => 'Timer started';
+
+  @override
+  String get clock => 'Clock';
+
+  @override
+  String get addCity => 'Add city';
+
+  @override
+  String get searchCities => 'Search cities or countries';
+
+  @override
+  String get noCities => 'No cities yet';
+
+  @override
+  String get noCitiesHint => 'Add a city to see its time next to yours.';
+
+  @override
+  String cityRemoved(String city) {
+    return '$city removed';
+  }
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get sameTime => 'Same time';
+
+  @override
+  String timeAhead(String time) {
+    return '$time ahead';
+  }
+
+  @override
+  String timeBehind(String time) {
+    return '$time behind';
+  }
+
+  @override
+  String hoursOnly(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String hoursAndMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String dayAndDifference(String day, String difference) {
+    return '$day, $difference';
+  }
+
+  @override
+  String get noCityFound => 'No city found';
+
+  @override
+  String get dragToReorder => 'Long-press to reorder, swipe to remove.';
 }

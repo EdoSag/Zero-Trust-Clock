@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'alarm.dart';
 import 'clock_timer.dart';
+import '../world/world_zone.dart';
 
 /// The alarm engine on the phone. It keeps the alarms, hands them to
 /// Android and rings them, also with the app closed and before the
@@ -116,6 +117,17 @@ abstract class ClockEngine {
   /// The tab a notification or shortcut opened the app on (taken once).
   Future<String?> launchTab();
 
+  // World clock.
+
+  /// Every city Android knows, named in the app's language.
+  Future<List<WorldZone>> zones();
+
+  /// The offsets from UTC right now of [ids].
+  Future<Map<String, Duration>> zoneOffsets(List<String> ids);
+
+  /// The cities picked, in order, for the world clock widget.
+  Future<void> setWorldCities(List<String> ids);
+
   /// A tab asked for while the app is already open.
   Stream<String> get openTab;
 }
@@ -139,6 +151,28 @@ class MethodChannelClockEngine implements ClockEngine {
 
   @override
   Future<String?> launchTab() => _channel.invokeMethod<String>('launchTab');
+
+  @override
+  Future<List<WorldZone>> zones() async => WorldZone.listFromJson(
+    await _channel.invokeMethod<String>('zones') ?? '[]',
+  );
+
+  @override
+  Future<Map<String, Duration>> zoneOffsets(List<String> ids) async {
+    final m = await _channel.invokeMethod<Map<Object?, Object?>>(
+      'zoneOffsets',
+      {'ids': ids},
+    );
+    return {
+      for (final e in (m ?? const {}).entries)
+        if (e.key is String && e.value is num)
+          e.key as String: Duration(minutes: (e.value as num).toInt()),
+    };
+  }
+
+  @override
+  Future<void> setWorldCities(List<String> ids) =>
+      _channel.invokeMethod('setWorldCities', {'ids': ids});
 
   @override
   Future<List<ClockTimer>> timers() async => ClockTimer.listFromJson(
