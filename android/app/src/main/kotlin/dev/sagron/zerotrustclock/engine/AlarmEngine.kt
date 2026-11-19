@@ -3,6 +3,7 @@ package dev.sagron.zerotrustclock.engine
 import android.content.Context
 import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
+import dev.sagron.zerotrustclock.engine.core.WakeTasks
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -49,6 +50,8 @@ object AlarmEngine {
         val soundName: String? = null,
         val gradual: Boolean = false,
         val ringMinutes: Int = Alarm.DEFAULT_RING_MINUTES,
+        /** A wake-up task (WakeTasks), or null. */
+        val task: String? = null,
         /** Rings once on this day (yyyy-MM-dd); null: the next such time. */
         val date: String? = null,
     )
@@ -100,6 +103,7 @@ object AlarmEngine {
                 soundName = if (options.sound == null) null else options.soundName,
                 gradual = options.gradual,
                 ringMinutes = options.ringMinutes.coerceIn(1, 60),
+                task = WakeTasks.parse(options.task),
                 updatedAt = if (old == null) System.currentTimeMillis() else editedAt(old),
             )
             if (i >= 0) list[i] = alarm else list.add(alarm)
@@ -183,6 +187,7 @@ object AlarmEngine {
         pauseUntil: String?,
         gradual: Boolean,
         ringMinutes: Int,
+        task: String?,
     ): Boolean {
         if (id == RingService.ringingId) return false
         AlarmStore.update(context) { list ->
@@ -205,6 +210,7 @@ object AlarmEngine {
                     pauseUntil = if (days.isEmpty()) null else pauseUntil,
                     gradual = gradual,
                     ringMinutes = ringMinutes.coerceIn(1, 60),
+                    task = WakeTasks.parse(task),
                 )
             if (i >= 0) list[i] = alarm else list.add(alarm)
             if (!keepSnooze) AlarmNotifications.cancelSnoozed(context, id)

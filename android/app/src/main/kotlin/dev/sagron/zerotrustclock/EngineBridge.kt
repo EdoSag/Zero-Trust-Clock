@@ -98,6 +98,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             soundName = call.argument<String>("soundName"),
                             gradual = call.argument<Boolean>("gradual") ?: false,
                             ringMinutes = (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
+                            task = call.argument<String>("task"),
                             date = call.argument<String>("date"),
                         ),
                     )
@@ -122,6 +123,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             call.argument<String>("pauseUntil"),
                             call.argument<Boolean>("gradual") ?: false,
                             (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
+                            call.argument<String>("task"),
                         ),
                     )
                 }

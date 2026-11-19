@@ -583,4 +583,20 @@ class AppL10nEn extends AppL10n {
   String stopsAt(String time) {
     return 'Plays until $time';
   }
+
+  @override
+  String get wakeTask => 'Wake-up task';
+
+  @override
+  String get wakeTaskHint =>
+      'Done before the alarm can be dismissed. Snooze still works.';
+
+  @override
+  String get wakeTaskNone => 'None';
+
+  @override
+  String get wakeTaskMath => 'Solve 3 sums';
+
+  @override
+  String get wakeTaskShake => 'Shake 30 times';
 }

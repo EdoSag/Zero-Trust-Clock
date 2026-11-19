@@ -348,5 +348,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "wakeTask": "Wake-up task",
+  "wakeTaskHint": "Done before the alarm can be dismissed. Snooze still works.",
+  "wakeTaskNone": "None",
+  "wakeTaskMath": "Solve 3 sums",
+  "wakeTaskShake": "Shake 30 times"
 }

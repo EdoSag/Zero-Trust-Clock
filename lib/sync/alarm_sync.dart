@@ -31,6 +31,7 @@ class SyncedAlarm {
     this.pauseUntil,
     this.gradual = false,
     this.ringMinutes = ClockAlarm.defaultRingMinutes,
+    this.task,
   });
 
   final String id;
@@ -52,6 +53,7 @@ class SyncedAlarm {
   final String? pauseUntil;
   final bool gradual;
   final int ringMinutes;
+  final WakeTask? task;
 
   factory SyncedAlarm.fromJson(
     String id,
@@ -79,6 +81,7 @@ class SyncedAlarm {
     ringMinutes:
         ((j['ringMinutes'] as num?)?.toInt() ?? ClockAlarm.defaultRingMinutes)
             .clamp(1, 60),
+    task: WakeTask.parse(j['task']),
   );
 
   /// Every field, null for a cleared one (see [ZtCollection]).
@@ -96,6 +99,7 @@ class SyncedAlarm {
     'pauseUntil': pauseUntil,
     'gradual': gradual,
     'ringMinutes': ringMinutes,
+    'task': task?.name,
   };
 
   /// The alarm on this phone, as the copy from the account says it.
@@ -119,6 +123,7 @@ class SyncedAlarm {
     pauseUntil: a.repeats ? a.pauseUntil : null,
     gradual: a.gradual,
     ringMinutes: a.ringMinutes,
+    task: a.task,
   );
 
   /// What the engine on [device] is given: on only if switched on there.
@@ -137,6 +142,7 @@ class SyncedAlarm {
     pauseUntil: days.isEmpty ? null : pauseUntil,
     gradual: gradual,
     ringMinutes: ringMinutes,
+    task: task,
   );
 
   @override

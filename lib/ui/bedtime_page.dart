@@ -110,6 +110,7 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
       soundName: alarm?.soundName,
       gradual: alarm?.gradual ?? false,
       ringMinutes: alarm?.ringMinutes ?? ClockAlarm.defaultRingMinutes,
+      task: alarm?.task,
     );
     await ref.read(alarmsProvider.notifier).refresh();
     return id;

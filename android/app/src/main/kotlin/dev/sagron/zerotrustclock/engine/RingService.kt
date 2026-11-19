@@ -47,11 +47,28 @@ class RingService : Service() {
         when (intent?.action) {
             ACTION_RING -> ring(intent.getStringExtra(EXTRA_ID))
             ACTION_SNOOZE -> end(Outcome.SNOOZE)
-            ACTION_DISMISS -> end(Outcome.DISMISS)
+            ACTION_DISMISS -> if (taskWaiting(intent)) openTask() else end(Outcome.DISMISS)
             else -> if (ringingId == null) stopNow()
         }
         // If Android has to restart the service mid-ring, it rings again.
         return START_REDELIVER_INTENT
+    }
+
+    /** The ringing alarm has a wake-up task, and this dismiss isn't its end. */
+    private fun taskWaiting(intent: Intent): Boolean {
+        if (intent.getBooleanExtra(EXTRA_TASK_DONE, false)) return false
+        val id = ringingId ?: return false
+        return AlarmStore.load(this).firstOrNull { it.id == id }?.task != null
+    }
+
+    /** Dismiss from the app: the ring screen opens on the task instead. */
+    private fun openTask() {
+        try {
+            startActivity(RingActivity.taskIntent(this))
+        } catch (_: Exception) {
+            // Not allowed from the background: the ring screen is a tap
+            // on the notification away, and it opens on the task.
+        }
     }
 
     private fun ring(id: String?) {
@@ -237,6 +254,9 @@ class RingService : Service() {
         const val ACTION_DISMISS = "dev.sagron.zerotrustclock.action.DISMISS"
         const val EXTRA_ID = "id"
 
+        /** On a dismiss: the wake-up task was done. */
+        const val EXTRA_TASK_DONE = "taskDone"
+
         /** The longest an unanswered alarm rings ("Silence after" at most an hour). */
         const val MAX_RING_MS = 60 * 60_000L
 
@@ -263,9 +283,12 @@ class RingService : Service() {
             }
         }
 
-        fun send(context: Context, action: String) {
+        fun send(context: Context, action: String, taskDone: Boolean = false) {
             try {
-                context.startService(Intent(context, RingService::class.java).setAction(action))
+                context.startService(
+                    Intent(context, RingService::class.java).setAction(action)
+                        .putExtra(EXTRA_TASK_DONE, taskDone),
+                )
             } catch (_: Exception) {
             }
         }

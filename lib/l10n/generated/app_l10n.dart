@@ -1092,6 +1092,36 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Plays until {time}'**
   String stopsAt(String time);
+
+  /// No description provided for @wakeTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake-up task'**
+  String get wakeTask;
+
+  /// No description provided for @wakeTaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Done before the alarm can be dismissed. Snooze still works.'**
+  String get wakeTaskHint;
+
+  /// No description provided for @wakeTaskNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get wakeTaskNone;
+
+  /// No description provided for @wakeTaskMath.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve 3 sums'**
+  String get wakeTaskMath;
+
+  /// No description provided for @wakeTaskShake.
+  ///
+  /// In en, this message translates to:
+  /// **'Shake 30 times'**
+  String get wakeTaskShake;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

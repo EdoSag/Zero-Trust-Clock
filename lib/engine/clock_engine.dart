@@ -28,6 +28,7 @@ abstract class ClockEngine {
     String? soundName,
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
+    WakeTask? task,
     DateTime? date,
   });
 
@@ -305,6 +306,7 @@ class MethodChannelClockEngine implements ClockEngine {
     String? soundName,
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
+    WakeTask? task,
     DateTime? date,
   }) async =>
       await _channel.invokeMethod<String>('save', {
@@ -319,6 +321,7 @@ class MethodChannelClockEngine implements ClockEngine {
         'soundName': soundName,
         'gradual': gradual,
         'ringMinutes': ringMinutes,
+        'task': task?.name,
         'date': date == null ? null : dayKey(date),
       }) ??
       '';
@@ -367,6 +370,7 @@ class MethodChannelClockEngine implements ClockEngine {
         'pauseUntil': a.pauseUntil,
         'gradual': a.gradual,
         'ringMinutes': a.ringMinutes,
+        'task': a.task?.name,
       }) ??
       false;
 

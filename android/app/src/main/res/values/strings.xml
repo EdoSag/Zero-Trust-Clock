@@ -64,4 +64,9 @@
     <string name="sleep_sound_white">White noise</string>
     <string name="sleep_sound_pink">Pink noise</string>
     <string name="sleep_sound_brown">Deep noise</string>
+    <string name="ring_task_math">Solve %1$d sums to dismiss</string>
+    <string name="ring_task_shake">Shake the phone to dismiss</string>
+    <string name="ring_task_answer">Answer</string>
+    <string name="ring_task_progress">%1$d of %2$d</string>
+    <string name="ring_task_wrong">Not quite. Try again.</string>
 </resources>

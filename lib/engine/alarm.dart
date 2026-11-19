@@ -1,5 +1,22 @@
 import 'dart:convert';
 
+/// Something to do before a ringing alarm can be dismissed, so it can't
+/// be silenced half asleep. Snooze still works.
+enum WakeTask {
+  /// Solve three sums.
+  math,
+
+  /// Shake the phone 30 times.
+  shake;
+
+  static WakeTask? parse(Object? name) {
+    for (final t in values) {
+      if (t.name == name) return t;
+    }
+    return null;
+  }
+}
+
 /// One alarm, as the engine on the phone reports it. The engine (Kotlin,
 /// `android/.../engine`) owns the alarms and decides when they ring; the
 /// screens only show what it says, so the time on screen is the time it
@@ -27,6 +44,7 @@ class ClockAlarm {
     this.soundName,
     this.gradual = false,
     this.ringMinutes = defaultRingMinutes,
+    this.task,
   });
 
   static const defaultRingMinutes = 10;
@@ -84,6 +102,9 @@ class ClockAlarm {
   /// An unanswered ring stops by itself after this many minutes.
   final int ringMinutes;
 
+  /// Done before it can be dismissed; null: a slide dismisses it.
+  final WakeTask? task;
+
   bool get repeats => days.isNotEmpty;
 
   factory ClockAlarm.fromJson(Map<String, dynamic> j) {
@@ -114,6 +135,7 @@ class ClockAlarm {
       soundName: j['soundName'] as String?,
       gradual: j['gradual'] as bool? ?? false,
       ringMinutes: (j['ringMinutes'] as num?)?.toInt() ?? defaultRingMinutes,
+      task: WakeTask.parse(j['task']),
     );
   }
 
@@ -140,6 +162,7 @@ class ClockAlarm {
         soundName: soundName,
         gradual: gradual,
         ringMinutes: ringMinutes,
+        task: task,
       );
 
   /// The engine's list, earliest time of day first.
