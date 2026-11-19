@@ -12,6 +12,7 @@ object Tabs {
     const val TIMERS = "timers"
     const val STOPWATCH = "stopwatch"
     const val CLOCK = "clock"
+    const val BEDTIME = "bedtime"
 
     fun intent(context: Context, tab: String): Intent =
         Intent(context, MainActivity::class.java)

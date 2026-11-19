@@ -504,4 +504,83 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get dragToReorder => 'Long-press to reorder, swipe to remove.';
+
+  @override
+  String get bedtime => 'Bedtime';
+
+  @override
+  String get bedtimeSchedule => 'Bedtime schedule';
+
+  @override
+  String get bedtimeScheduleHint =>
+      'A reminder before bed, and quiet through the night.';
+
+  @override
+  String get bedtimeStart => 'Bedtime';
+
+  @override
+  String get wakeUp => 'Wake up';
+
+  @override
+  String sleepFor(String length) {
+    return '$length of sleep';
+  }
+
+  @override
+  String get nights => 'Nights';
+
+  @override
+  String get reminder => 'Reminder';
+
+  @override
+  String get off => 'Off';
+
+  @override
+  String get doNotDisturbAtBedtime => 'Do Not Disturb at bedtime';
+
+  @override
+  String get doNotDisturbHint =>
+      'Silences calls and notifications through the night. Alarms still ring.';
+
+  @override
+  String get dndNeedsAccess =>
+      'Needs Do Not Disturb access in Android\'s settings.';
+
+  @override
+  String get allow => 'Allow';
+
+  @override
+  String get wakeUpAlarm => 'Wake-up alarm';
+
+  @override
+  String wakeUpAlarmHint(String time) {
+    return 'An alarm at $time on the mornings after your nights.';
+  }
+
+  @override
+  String get sleepSounds => 'Sleep sounds';
+
+  @override
+  String get sleepSoundsHint =>
+      'Made on the phone, on the media volume. They fade out at the end.';
+
+  @override
+  String get soundWhite => 'White noise';
+
+  @override
+  String get soundPink => 'Pink noise';
+
+  @override
+  String get soundDeep => 'Deep noise';
+
+  @override
+  String get stopAfter => 'Stop after';
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String stopsAt(String time) {
+    return 'Plays until $time';
+  }
 }

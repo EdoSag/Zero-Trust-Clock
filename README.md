@@ -1,13 +1,13 @@
 # Zero-Trust Clock
 
-Alarms that ring, with **Turn off once** (on the phone: **ZT Clock**).
-Timer, stopwatch, world clock and bedtime follow. Same settings and look as
+Alarms that ring, with **Turn off once** (on the phone: **ZT Clock**), plus
+timers, a stopwatch, a world clock and bedtime. Same settings and look as
 the other Zero-Trust apps, built on
 [Zero-Trust-Core](https://github.com/EdoSag/Zero-Trust-Core).
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.6.0)
+## What is in it now (0.7.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -54,6 +54,13 @@ Work happens on the `Dev` branch; `main` holds releases.
   next alarm (with Turn off once, and + for a new alarm), World clock (the
   first four cities of the Clock tab, each with a live time) and an Analog
   clock. No alarm labels on the home screen.
+- **Bedtime** tab: when your nights start and end and which nights, with
+  the length of sleep. A reminder before bed (15, 30 or 60 minutes), Do Not
+  Disturb through the night (alarms still ring; it is only turned off again
+  if the app turned it on), and a wake-up alarm on the mornings after your
+  nights that follows the schedule when you change it.
+- **Sleep sounds**: white, pink or deep noise made on the phone (no files,
+  no network), with a sleep timer and a 30-second fade-out.
 - **Shortcuts** on the app icon (long-press): New alarm, New timer, Start
   stopwatch.
 - **No account needed.** Alarms stay on the phone and ring without one.
@@ -117,6 +124,12 @@ Where things are kept on the phone:
     app icon for the shortcuts.
 12. Add the three widgets; tap Turn off once on the Clock widget and check
     the alarm list; add a city and check the World clock widget.
+13. Bedtime tab: switch the schedule on with bedtime 16 minutes ahead and
+    the 15-minute reminder, and wait for the reminder. Switch on Do Not
+    Disturb, allow the access, and check it turns on at bedtime and off at
+    wake-up. Switch on the wake-up alarm and find it on the Alarms tab.
+14. Sleep sounds: play each for 15 minutes with the phone locked; the
+    sound fades out and stops.
 
 ## Development
 

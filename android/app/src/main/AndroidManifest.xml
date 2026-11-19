@@ -19,6 +19,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Bedtime: Do Not Disturb through the night, only after the user
+         gives the app Do Not Disturb access in Android's settings. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
+    <!-- Sleep sounds play on with the screen off. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
@@ -100,6 +105,15 @@
             android:name=".engine.TimerReceiver"
             android:exported="false"
             android:directBootAware="true"/>
+        <!-- Bedtime: the reminder, and the night's start and end. -->
+        <receiver
+            android:name=".engine.BedtimeReceiver"
+            android:exported="false"
+            android:directBootAware="true"/>
+        <service
+            android:name=".engine.SleepSoundService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"/>
         <!-- Home screen widgets (engine/Widgets.kt), in the shared
              Zero-Trust widget look. -->
         <receiver
