@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
+import '../time_log/time_log.dart';
 import 'email_links.dart';
 
 /// Every Supabase auth event (sign-in, sign-out, password-recovery link).
@@ -74,9 +77,19 @@ void openVault(WidgetRef ref, UnlockResult result) {
     ref.read(pendingRecoveryKeyProvider.notifier).set(result);
     return;
   }
+  unlockVault(ref, result.dek, legacyDek: result.legacyDek);
+}
+
+/// Opens the vault with the account key. While the key is at hand, Clock
+/// also derives ZT Time's key, for "Log to ZT Time".
+void unlockVault(WidgetRef ref, Uint8List dek, {required bool legacyDek}) {
+  final copy = Uint8List.fromList(dek);
   ref
-      .read(vaultControllerProvider.notifier)
-      .unlock(result.dek, legacyDek: result.legacyDek);
+      .read(timeKeyProvider.notifier)
+      .deriveFrom(copy)
+      .catchError((Object _) {})
+      .whenComplete(() => copy.fillRange(0, copy.length, 0));
+  ref.read(vaultControllerProvider.notifier).unlock(dek, legacyDek: legacyDek);
 }
 
 void openForgotPassword(BuildContext context) => Navigator.of(context).push(

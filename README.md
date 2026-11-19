@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.10.0)
+## What is in it now (0.11.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -43,6 +43,10 @@ Work happens on the `Dev` branch; `main` holds releases.
 - **Stopwatch** with laps (newest on top, fastest and slowest marked) and
   "Copy laps". It keeps counting with the app closed, in a notification
   with Pause and Lap.
+- **Log to ZT Time** (signed in): a paused stopwatch, or a timer that has
+  just rung, becomes a time entry in ZT Time, ending now, with what it was
+  and a project from ZT Time. It goes to the same account, end-to-end
+  encrypted, and is pushed later if the phone is offline.
 - **"Set a timer for 5 minutes"** from assistants and other apps.
 - **World clock** (Clock tab): the time here, then your cities with their
   time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
@@ -151,6 +155,10 @@ Where things are kept on the phone:
 17. Settings > Public holidays: pick Israel, check the list and that a
     weekday alarm with "Skip public holidays" shows the day after a
     holiday as its next ring.
+18. Signed in, with a project in ZT Time: run the stopwatch, pause it, tap
+    the clock-plus icon, pick the project and Log. Open ZT Time: the entry
+    is there with that length. Do the same from a 1-minute timer when it
+    rings.
 
 ## Development
 

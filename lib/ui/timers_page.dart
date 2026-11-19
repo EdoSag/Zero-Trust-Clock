@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../engine/clock_engine.dart';
 import '../engine/clock_timer.dart';
 import '../l10n/l10n.dart';
+import '../time_log/time_log.dart';
 import 'alarm_text.dart';
 import 'clock_home.dart';
 import 'duration_text.dart';
+import 'log_time_sheet.dart';
 import 'settings_button.dart';
 import 'timer_keypad.dart';
 
@@ -95,6 +97,7 @@ class _TimersPageState extends ConsumerState<TimersPage> {
       }
     });
     final now = DateTime.now();
+    final logAvailable = ref.watch(timeLogProvider).available;
     return Scaffold(
       appBar: AppBar(title: Text(l.timers), actions: const [SettingsButton()]),
       floatingActionButton: list.isEmpty
@@ -128,6 +131,17 @@ class _TimersPageState extends ConsumerState<TimersPage> {
                         onStop: () => _run(_engine.stopRingingTimers),
                         onDelete: () => _run(() => _engine.deleteTimer(t.id)),
                         onLabel: () => _editLabel(t),
+                        onLog: logAvailable
+                            ? () {
+                                // The sound stops first; the sheet is quiet.
+                                _run(_engine.stopRingingTimers);
+                                LogTimeSheet.show(
+                                  context,
+                                  length: t.length,
+                                  description: t.label,
+                                );
+                              }
+                            : null,
                       ),
                   ],
                 ),
@@ -150,6 +164,7 @@ class TimerCard extends StatelessWidget {
     required this.onStop,
     required this.onDelete,
     required this.onLabel,
+    this.onLog,
   });
 
   final ClockTimer timer;
@@ -161,6 +176,9 @@ class TimerCard extends StatelessWidget {
   final VoidCallback onStop;
   final VoidCallback onDelete;
   final VoidCallback onLabel;
+
+  /// "Log to ZT Time", offered once the timer has rung; null hides it.
+  final VoidCallback? onLog;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +235,13 @@ class TimerCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (t.ringing && onLog != null)
+                  IconButton(
+                    key: ValueKey('logTimer-${t.id}'),
+                    tooltip: l.logToTime,
+                    onPressed: onLog,
+                    icon: const Icon(Icons.more_time),
+                  ),
                 IconButton(
                   tooltip: l.deleteTimer,
                   onPressed: onDelete,

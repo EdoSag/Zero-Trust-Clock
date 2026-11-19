@@ -1224,6 +1224,54 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Choose a holiday calendar first'**
   String get skipHolidaysPick;
+
+  /// No description provided for @logToTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Log to ZT Time'**
+  String get logToTime;
+
+  /// No description provided for @logToTimeSpan.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} to {end} ({length})'**
+  String logToTimeSpan(String start, String end, String length);
+
+  /// No description provided for @whatWasIt.
+  ///
+  /// In en, this message translates to:
+  /// **'What was it?'**
+  String get whatWasIt;
+
+  /// No description provided for @project.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get project;
+
+  /// No description provided for @noProject.
+  ///
+  /// In en, this message translates to:
+  /// **'No project'**
+  String get noProject;
+
+  /// No description provided for @logIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get logIt;
+
+  /// No description provided for @loggedToTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in ZT Time'**
+  String get loggedToTime;
+
+  /// No description provided for @couldNotLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t log it. Check the connection and try again.'**
+  String get couldNotLog;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

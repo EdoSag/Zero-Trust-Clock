@@ -377,5 +377,26 @@
   "holidaysTickedHint": "Days off are ticked. Untick any day your alarms should ring on.",
   "holidaysTickHint": "Tick the days your alarms should skip. This calendar doesn't say which days are days off.",
   "skipHolidays": "Skip public holidays",
-  "skipHolidaysPick": "Choose a holiday calendar first"
+  "skipHolidaysPick": "Choose a holiday calendar first",
+  "logToTime": "Log to ZT Time",
+  "logToTimeSpan": "{start} to {end} ({length})",
+  "@logToTimeSpan": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "whatWasIt": "What was it?",
+  "project": "Project",
+  "noProject": "No project",
+  "logIt": "Log",
+  "loggedToTime": "Logged in ZT Time",
+  "couldNotLog": "Couldn't log it. Check the connection and try again."
 }

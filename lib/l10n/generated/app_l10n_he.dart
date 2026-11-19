@@ -652,4 +652,30 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get skipHolidaysPick => 'קודם בוחרים לוח חגים';
+
+  @override
+  String get logToTime => 'רישום ב-ZT Time';
+
+  @override
+  String logToTimeSpan(String start, String end, String length) {
+    return '$start עד $end ($length)';
+  }
+
+  @override
+  String get whatWasIt => 'על מה עבדת?';
+
+  @override
+  String get project => 'פרויקט';
+
+  @override
+  String get noProject => 'בלי פרויקט';
+
+  @override
+  String get logIt => 'רישום';
+
+  @override
+  String get loggedToTime => 'נרשם ב-ZT Time';
+
+  @override
+  String get couldNotLog => 'לא הצלחנו לרשום. כדאי לבדוק את החיבור ולנסות שוב.';
 }

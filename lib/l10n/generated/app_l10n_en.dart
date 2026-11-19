@@ -658,4 +658,31 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get skipHolidaysPick => 'Choose a holiday calendar first';
+
+  @override
+  String get logToTime => 'Log to ZT Time';
+
+  @override
+  String logToTimeSpan(String start, String end, String length) {
+    return '$start to $end ($length)';
+  }
+
+  @override
+  String get whatWasIt => 'What was it?';
+
+  @override
+  String get project => 'Project';
+
+  @override
+  String get noProject => 'No project';
+
+  @override
+  String get logIt => 'Log';
+
+  @override
+  String get loggedToTime => 'Logged in ZT Time';
+
+  @override
+  String get couldNotLog =>
+      'Couldn\'t log it. Check the connection and try again.';
 }
