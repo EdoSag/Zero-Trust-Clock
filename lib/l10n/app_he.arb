@@ -170,5 +170,9 @@
   "wakeTaskHint": "צריך לבצע אותה לפני שאפשר לכבות את השעון. נודניק עדיין עובד.",
   "wakeTaskNone": "בלי",
   "wakeTaskMath": "3 תרגילי חשבון",
-  "wakeTaskShake": "לנער 30 פעמים"
+  "wakeTaskShake": "לנער 30 פעמים",
+  "screensaver": "שומר מסך של שעון לילה",
+  "screensaverHint": "מציג את השעה ואת השעון המעורר הבא בזמן טעינה. בוחרים \"שעון לילה\" בהגדרות שומר המסך של Android.",
+  "screensaverNight": "אדום עמום",
+  "screensaverNightHint": "נעים לעיניים בחדר חשוך"
 }

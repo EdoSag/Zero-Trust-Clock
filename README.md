@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.8.0)
+## What is in it now (0.9.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -65,6 +65,10 @@ Work happens on the `Dev` branch; `main` holds releases.
   nights that follows the schedule when you change it.
 - **Sleep sounds**: white, pink or deep noise made on the phone (no files,
   no network), with a sleep timer and a 30-second fade-out.
+- **Night clock screensaver**: the time, date and next alarm on black
+  while the phone charges, dim red by default, moving a little every
+  minute so nothing burns in. Settings has a link to Android's screensaver
+  settings and the dim red switch.
 - **Shortcuts** on the app icon (long-press): New alarm, New timer, Start
   stopwatch.
 - **No account needed.** Alarms stay on the phone and ring without one.
@@ -137,6 +141,8 @@ Where things are kept on the phone:
 15. Give a test alarm "Solve 3 sums", then "Shake 30 times": slide to
     dismiss shows the task, a wrong answer gives a new sum, Snooze still
     works, and Dismiss in the notification opens the task.
+16. Settings > Night clock screensaver: choose "Night clock", put the
+    phone on the charger and let the screen time out.
 
 ## Development
 

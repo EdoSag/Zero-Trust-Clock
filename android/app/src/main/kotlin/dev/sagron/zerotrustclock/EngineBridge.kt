@@ -17,6 +17,7 @@ import android.os.UserManager
 import android.provider.Settings
 import dev.sagron.zerotrustclock.engine.AlarmEngine
 import dev.sagron.zerotrustclock.engine.BedtimeEngine
+import dev.sagron.zerotrustclock.engine.Screensaver
 import dev.sagron.zerotrustclock.engine.SleepSoundService
 import dev.sagron.zerotrustclock.engine.core.Bedtime
 import dev.sagron.zerotrustclock.engine.AlarmNotifications
@@ -179,6 +180,10 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "stopwatchLap" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.lap(now) } }
                 "stopwatchReset" -> done(result) { TimerEngine.stopwatch(activity) { s, _ -> s.reset() } }
                 "now" -> result.success(TimerEngine.now())
+                "screensaverNight" -> result.success(Screensaver.night(activity))
+                "setScreensaverNight" -> done(result) {
+                    Screensaver.setNight(activity, call.argument<Boolean>("on") ?: true)
+                }
                 "bedtime" -> result.success(BedtimeEngine.load(activity).toJson())
                 "setBedtime" -> done(result) {
                     BedtimeEngine.save(activity, Bedtime.fromJson(call.argument<String>("json")))
@@ -350,6 +355,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             }
             "sound" -> Intent(Settings.ACTION_SOUND_SETTINGS)
             "doNotDisturb" -> Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS)
+            "screensaver" -> Intent(Settings.ACTION_DREAM_SETTINGS)
             "dndAccess" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
             else -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app)
         }
