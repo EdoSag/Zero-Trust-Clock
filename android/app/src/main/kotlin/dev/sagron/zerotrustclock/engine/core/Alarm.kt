@@ -36,6 +36,23 @@ data class Alarm(
     /** The Alarm check screen's test alarm; removed after it rings. */
     val test: Boolean = false,
     val updatedAt: Long = 0,
+    /**
+     * "Pause until": a repeating alarm stays silent through this day
+     * (yyyy-MM-dd) and rings again after it, by itself.
+     */
+    val pauseUntil: String? = null,
+    /**
+     * The sound: null for the app's own chime, "system" for the phone's
+     * alarm sound, or "file:<name>" for a sound copied into the app (see
+     * Sounds), so it also plays before the first unlock.
+     */
+    val sound: String? = null,
+    /** What the sound is called, to show in the editor. */
+    val soundName: String? = null,
+    /** Starts quietly and gets louder over a minute. */
+    val gradual: Boolean = false,
+    /** An unanswered ring stops by itself after this many minutes. */
+    val ringMinutes: Int = DEFAULT_RING_MINUTES,
 ) {
     val repeats: Boolean get() = days.isNotEmpty()
 
@@ -54,9 +71,16 @@ data class Alarm(
         if (armedFor != null) put("armedFor", armedFor)
         if (test) put("test", true)
         put("updatedAt", updatedAt)
+        if (pauseUntil != null) put("pauseUntil", pauseUntil)
+        if (sound != null) put("sound", sound)
+        if (soundName != null) put("soundName", soundName)
+        put("gradual", gradual)
+        put("ringMinutes", ringMinutes)
     }
 
     companion object {
+        const val DEFAULT_RING_MINUTES = 10
+
         fun fromJson(o: JSONObject): Alarm {
             val days = mutableSetOf<Int>()
             val a = o.optJSONArray("days")
@@ -81,6 +105,11 @@ data class Alarm(
                 armedFor = number(o, "armedFor"),
                 test = o.optBoolean("test", false),
                 updatedAt = o.optLong("updatedAt", 0),
+                pauseUntil = text(o, "pauseUntil"),
+                sound = text(o, "sound"),
+                soundName = text(o, "soundName"),
+                gradual = o.optBoolean("gradual", false),
+                ringMinutes = o.optInt("ringMinutes", DEFAULT_RING_MINUTES).coerceIn(1, 60),
             )
         }
 

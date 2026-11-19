@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
+import java.time.LocalDate
 import java.time.ZonedDateTime
 
 /**
@@ -27,14 +28,14 @@ object UpcomingAlarms {
     /** Keeps AlarmManager's request codes apart from the rings' own. */
     private const val CODE_OFFSET = 1_000_000
 
-    fun refresh(context: Context, alarms: List<Alarm>, now: ZonedDateTime) {
+    fun refresh(context: Context, alarms: List<Alarm>, now: ZonedDateTime, pauseAll: LocalDate?) {
         val nowMs = now.toInstant().toEpochMilli()
         val ringing = RingService.ringingId
         for (a in alarms) {
             val next = if (a.test || a.snoozeUntil != null || a.id == ringing) {
                 null
             } else {
-                AlarmSchedule.nextRing(a, now)
+                AlarmSchedule.nextRing(a, now, pauseAll)
             }
             val at = next?.at?.toInstant()?.toEpochMilli()
             when {

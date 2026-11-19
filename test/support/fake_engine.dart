@@ -19,6 +19,12 @@ ClockAlarm alarm(
   String? date,
   String? skipDate,
   int updatedAt = 0,
+  String? pauseUntil,
+  bool paused = false,
+  String? sound,
+  String? soundName,
+  bool gradual = false,
+  int ringMinutes = ClockAlarm.defaultRingMinutes,
 }) => ClockAlarm(
   id: id,
   hour: hour,
@@ -35,6 +41,12 @@ ClockAlarm alarm(
   date: date,
   skipDate: skipDate,
   updatedAt: updatedAt,
+  pauseUntil: pauseUntil,
+  paused: paused,
+  sound: sound,
+  soundName: soundName,
+  gradual: gradual,
+  ringMinutes: ringMinutes,
 );
 
 /// When a switched-on alarm rings next in the fake engine.
@@ -84,6 +96,65 @@ class FakeClockEngine implements ClockEngine {
     return editTime;
   }
 
+  /// The options of the last save beyond those in [calls].
+  Map<String, Object?> lastSave = {};
+
+  DateTime? pausedAllUntil;
+
+  /// What [pickSound] answers (null: cancelled).
+  PickedSound? soundToPick;
+
+  @override
+  Future<void> pause(String id, DateTime until) async {
+    _mayFail();
+    calls.add('pause $id ${dayKey(until)}');
+    _replace(
+      id,
+      (a) => alarm(
+        a.id,
+        hour: a.hour,
+        minute: a.minute,
+        days: a.days,
+        label: a.label,
+        pauseUntil: dayKey(until),
+        paused: true,
+        nextRing: DateTime(until.year, until.month, until.day + 1, a.hour),
+      ),
+    );
+  }
+
+  @override
+  Future<void> resume(String id) async {
+    _mayFail();
+    calls.add('resume $id');
+    _replace(
+      id,
+      (a) => alarm(
+        a.id,
+        hour: a.hour,
+        minute: a.minute,
+        days: a.days,
+        label: a.label,
+      ),
+    );
+  }
+
+  @override
+  Future<DateTime?> pauseAllUntil() async => pausedAllUntil;
+
+  @override
+  Future<void> setPauseAll(DateTime? until) async {
+    _mayFail();
+    calls.add('setPauseAll ${until == null ? 'off' : dayKey(until)}');
+    pausedAllUntil = until;
+  }
+
+  @override
+  Future<PickedSound?> pickSound(SoundKind kind) async {
+    calls.add('pickSound ${kind.name}');
+    return soundToPick;
+  }
+
   /// Imports refused, as while that alarm rings.
   final Set<String> ringingIds = {};
 
@@ -127,8 +198,20 @@ class FakeClockEngine implements ClockEngine {
     String label = '',
     bool vibrate = true,
     int snoozeMinutes = 10,
+    String? sound,
+    String? soundName,
+    bool gradual = false,
+    int ringMinutes = ClockAlarm.defaultRingMinutes,
+    DateTime? date,
   }) async {
     _mayFail();
+    lastSave = {
+      'sound': sound,
+      'soundName': soundName,
+      'gradual': gradual,
+      'ringMinutes': ringMinutes,
+      'date': date == null ? null : dayKey(date),
+    };
     final days0 = (days.toList()..sort()).join('');
     calls.add(
       'save ${id ?? 'new'} $hour:$minute [$days0] "$label" '
@@ -143,6 +226,11 @@ class FakeClockEngine implements ClockEngine {
       vibrate: vibrate,
       snoozeMinutes: snoozeMinutes,
       updatedAt: _editTimeAfter(alarms.where((a) => a.id == id).firstOrNull),
+      sound: sound,
+      soundName: sound == null ? null : soundName,
+      gradual: gradual,
+      ringMinutes: ringMinutes,
+      date: days.isEmpty && date != null ? dayKey(date) : null,
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);
     if (i >= 0) {

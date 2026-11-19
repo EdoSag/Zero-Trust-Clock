@@ -11,7 +11,6 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.RingtoneManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -20,7 +19,6 @@ import android.os.PowerManager
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
-import dev.sagron.zerotrustclock.R
 import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
 
@@ -93,11 +91,11 @@ class RingService : Service() {
         watchLock()
         holdAwake()
         stopSound()
-        startSound()
+        startSound(alarm)
         stopVibration()
         if (alarm.vibrate) startVibration()
         handler.removeCallbacks(timeout)
-        handler.postDelayed(timeout, RING_FOR_MS)
+        handler.postDelayed(timeout, alarm.ringMinutes * 60_000L)
         openRingScreenIfNotificationCannot()
         // Sets a repeating alarm's next day, and tells the open app.
         AlarmScheduler.rescheduleAll(this)
@@ -215,7 +213,7 @@ class RingService : Service() {
         }
     }
 
-    private fun startSound() {
+    private fun startSound(alarm: Alarm?) {
         val attributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -229,37 +227,39 @@ class RingService : Service() {
             focus = request
         } catch (_: Exception) {
         }
-        // The sound inside the app first: it is always there, also before
-        // the first unlock. The phone's own alarm sound is the fallback.
-        player = try {
-            MediaPlayer().apply {
-                setAudioAttributes(attributes)
-                resources.openRawResourceFd(R.raw.alarm_default).use { fd ->
-                    setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
-                }
-                isLooping = true
-                prepare()
-                start()
+        // The alarm's own sound, then the app's chime (always there, also
+        // before the first unlock), then the phone's alarm sound.
+        val p = Sounds.player(this, alarm?.sound, attributes)
+            ?: Sounds.player(this, null, attributes)
+            ?: Sounds.player(this, Sounds.SYSTEM, attributes)
+        player = p
+        try {
+            if (alarm?.gradual == true) {
+                volume = GRADUAL_START
+                p?.setVolume(volume, volume)
+                handler.postDelayed(louder, 1_000L)
             }
+            p?.start()
         } catch (_: Exception) {
+        }
+    }
+
+    /** "Gradually louder": from quiet to full over a minute. */
+    private var volume = 1f
+    private val louder: Runnable = object : Runnable {
+        override fun run() {
+            val p = player ?: return
+            volume = (volume + (1f - GRADUAL_START) / 60f).coerceAtMost(1f)
             try {
-                MediaPlayer().apply {
-                    setAudioAttributes(attributes)
-                    setDataSource(
-                        this@RingService,
-                        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
-                    )
-                    isLooping = true
-                    prepare()
-                    start()
-                }
+                p.setVolume(volume, volume)
             } catch (_: Exception) {
-                null
             }
+            if (volume < 1f) handler.postDelayed(this, 1_000L)
         }
     }
 
     private fun stopSound() {
+        handler.removeCallbacks(louder)
         try {
             player?.stop()
         } catch (_: Exception) {
@@ -307,7 +307,7 @@ class RingService : Service() {
         val power = getSystemService(PowerManager::class.java) ?: return
         wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ztclock:ring").apply {
             setReferenceCounted(false)
-            acquire(RING_FOR_MS + 60_000L)
+            acquire(MAX_RING_MS + 60_000L)
         }
     }
 
@@ -340,8 +340,9 @@ class RingService : Service() {
         const val ACTION_DISMISS = "dev.sagron.zerotrustclock.action.DISMISS"
         const val EXTRA_ID = "id"
 
-        /** An unanswered alarm stops by itself after this long. */
-        const val RING_FOR_MS = 10 * 60_000L
+        /** The longest an unanswered alarm rings ("Silence after" at most an hour). */
+        const val MAX_RING_MS = 60 * 60_000L
+        private const val GRADUAL_START = 0.05f
 
         /** The alarm ringing right now, if any. */
         @Volatile

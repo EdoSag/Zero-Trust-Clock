@@ -582,6 +582,114 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 alarm from your account was added. It stays off on this phone until you switch it on.} other{{count} alarms from your account were added. They stay off on this phone until you switch them on.}}'**
   String alarmsAdded(int count);
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @sound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get sound;
+
+  /// No description provided for @soundChime.
+  ///
+  /// In en, this message translates to:
+  /// **'ZT chime'**
+  String get soundChime;
+
+  /// No description provided for @soundSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s alarm sound'**
+  String get soundSystem;
+
+  /// No description provided for @soundRingtone.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a phone sound'**
+  String get soundRingtone;
+
+  /// No description provided for @soundFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an audio file'**
+  String get soundFile;
+
+  /// No description provided for @soundPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked sound'**
+  String get soundPicked;
+
+  /// No description provided for @soundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A sound you choose is copied into the app, so it also plays before the phone is first unlocked. If it can\'t play, the ZT chime rings instead.'**
+  String get soundHint;
+
+  /// No description provided for @gradual.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradually louder'**
+  String get gradual;
+
+  /// No description provided for @gradualHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts quietly and reaches full volume in a minute'**
+  String get gradualHint;
+
+  /// No description provided for @silenceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence after'**
+  String get silenceAfter;
+
+  /// No description provided for @pauseUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause until…'**
+  String get pauseUntil;
+
+  /// No description provided for @pauseUntilHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Silent through this day'**
+  String get pauseUntilHelp;
+
+  /// No description provided for @pausedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused until {day}'**
+  String pausedUntil(String day);
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @pauseAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause all alarms until…'**
+  String get pauseAll;
+
+  /// No description provided for @resumeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume all alarms'**
+  String get resumeAll;
+
+  /// No description provided for @pausedAllUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeating alarms are paused through {day}. Alarms set for one day still ring.'**
+  String pausedAllUntil(String day);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

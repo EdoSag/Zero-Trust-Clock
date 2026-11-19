@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.2.0)
+## What is in it now (0.3.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -21,6 +21,17 @@ Work happens on the `Dev` branch; `main` holds releases.
 - **Alarm check** (Settings, or the warning on the home screen): everything
   on the phone that can stop an alarm, each with a Fix button, a test alarm
   in 10 seconds and a restart test.
+- **Pause until** a date (a repeating alarm is silent through that day and
+  on again after it, by itself), and **Pause all alarms until** for a trip
+  (repeating alarms only; one set for a single day still rings).
+- **Alarm on a date**: an alarm without repeat days can ring on a picked day.
+- **Sounds**: the app's chime, the phone's alarm sound, a phone sound or any
+  audio file. A picked sound is copied into the app, so it plays before the
+  first unlock too; if it can't play, the chime rings, never silence.
+- **Gradually louder** and **Silence after** (1 to 30 minutes), per alarm.
+- **Slide to dismiss** on the ring screen, so a sleepy tap can't silence it.
+- **"Set an alarm for 7"** from assistants and other apps (Android's
+  standard alarm request).
 - **Upcoming alarm notification**, from two hours before a ring, with
   **Turn off once** (or **Dismiss** on an alarm that rings once). Silent,
   and the label is not shown on the lock screen.

@@ -1,5 +1,6 @@
 package dev.sagron.zerotrustclock
 
+import android.content.Intent
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -19,6 +20,13 @@ class MainActivity : FlutterFragmentActivity() {
         bridge?.dispose()
         bridge = null
         super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (bridge?.onActivityResult(requestCode, resultCode, data) == true) return
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onRequestPermissionsResult(

@@ -264,4 +264,80 @@ class AlarmScheduleTest {
         assertEquals("ok", read[0].id)
         assertEquals(setOf(1), read[0].days)
     }
+
+    // Pause until, and pause all.
+
+    @Test
+    fun pausedAlarmRingsAgainTheDayAfterThePause() {
+        val now = at("2026-11-18T06:00")
+        val a = AlarmSchedule.pause(alarm(days = everyDay), java.time.LocalDate.parse("2026-11-20"))
+        assertTrue(AlarmSchedule.paused(a, now))
+        assertEquals("2026-11-21T07:00", next(a, now))
+        // After the pause it is over by itself; tidy drops it.
+        val later = at("2026-11-21T08:00")
+        assertFalse(AlarmSchedule.paused(a, later))
+        assertNull(AlarmSchedule.tidy(a, later).pauseUntil)
+    }
+
+    @Test
+    fun pausingDropsAWaitingSkipAndSwitchingOnEndsThePause() {
+        val now = at("2026-11-18T06:00")
+        val skipped = AlarmSchedule.skipOnce(alarm(days = everyDay), now)
+        val paused = AlarmSchedule.pause(skipped, java.time.LocalDate.parse("2026-11-19"))
+        assertNull(paused.skipDate)
+        val on = AlarmSchedule.turnOn(AlarmSchedule.turnOff(paused), now)
+        assertNull(on.pauseUntil)
+        assertEquals("2026-11-18T07:00", next(on, now))
+    }
+
+    @Test
+    fun pauseAllSilencesRepeatingAlarmsOnly() {
+        val now = at("2026-11-18T06:00")
+        val until = java.time.LocalDate.parse("2026-11-22")
+        val repeating = alarm(days = weekdaysIL)
+        assertEquals(
+            "2026-11-23T07:00",
+            AlarmSchedule.nextRing(repeating, now, until)?.at?.toLocalDateTime()?.toString(),
+        )
+        assertTrue(AlarmSchedule.paused(repeating, now, until))
+        // An alarm set for one day is an explicit choice: it still rings.
+        val once = alarm(date = "2026-11-19")
+        assertEquals(
+            "2026-11-19T07:00",
+            AlarmSchedule.nextRing(once, now, until)?.at?.toLocalDateTime()?.toString(),
+        )
+        assertFalse(AlarmSchedule.paused(once, now, until))
+        // A one-time alarm can't be paused by itself either.
+        assertNull(AlarmSchedule.pause(once, until).pauseUntil)
+    }
+
+    @Test
+    fun turnOffOnceAfterAPauseSkipsTheFirstRingAfterIt() {
+        val now = at("2026-11-18T06:00")
+        val until = java.time.LocalDate.parse("2026-11-20")
+        val a = AlarmSchedule.skipOnce(alarm(days = everyDay), now, until)
+        assertEquals("2026-11-21", a.skipDate)
+        assertEquals(
+            "2026-11-22T07:00",
+            AlarmSchedule.nextRing(a, now, until)?.at?.toLocalDateTime()?.toString(),
+        )
+    }
+
+    @Test
+    fun newFieldsSurviveTheStore() {
+        val a = alarm(days = everyDay).copy(
+            pauseUntil = "2026-12-01",
+            sound = "file:x.ogg",
+            soundName = "Birds",
+            gradual = true,
+            ringMinutes = 5,
+        )
+        val back = Alarm.listFromJson(Alarm.listToJson(listOf(a)))[0]
+        assertEquals(a, back)
+        // Older entries (0.1.0) read with the defaults.
+        val old = Alarm.fromJson(org.json.JSONObject("""{"id":"o","code":1,"hour":7,"minute":0}"""))
+        assertEquals(Alarm.DEFAULT_RING_MINUTES, old.ringMinutes)
+        assertFalse(old.gradual)
+        assertNull(old.sound)
+    }
 }

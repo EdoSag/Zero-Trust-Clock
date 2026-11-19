@@ -33,10 +33,26 @@ object AlarmSchedule {
         ZonedDateTime.of(day, LocalTime.of(alarm.hour, alarm.minute), zone)
 
     /**
+     * The last silent day of a pause: the alarm's own "Pause until" or
+     * [pauseAll] ("Pause all alarms until"), whichever ends later. Only
+     * repeating alarms pause; one set for a single day still rings.
+     */
+    fun pausedThrough(alarm: Alarm, pauseAll: LocalDate?): LocalDate? {
+        if (!alarm.repeats) return null
+        return listOfNotNull(parseDay(alarm.pauseUntil), pauseAll).maxOrNull()
+    }
+
+    /** True while a pause keeps the alarm silent. */
+    fun paused(alarm: Alarm, now: ZonedDateTime, pauseAll: LocalDate? = null): Boolean {
+        val through = pausedThrough(alarm, pauseAll) ?: return false
+        return alarm.enabled && !through.isBefore(now.toLocalDate())
+    }
+
+    /**
      * The next regular ring after [now], without snooze. Null when the
      * alarm is off, or rings once and that time has passed.
      */
-    fun nextRing(alarm: Alarm, now: ZonedDateTime): Ring? {
+    fun nextRing(alarm: Alarm, now: ZonedDateTime, pauseAll: LocalDate? = null): Ring? {
         if (!alarm.enabled) return null
         val zone = now.zone
         if (!alarm.repeats) {
@@ -46,9 +62,11 @@ object AlarmSchedule {
         }
         val skip = parseDay(alarm.skipDate)
         val today = now.toLocalDate()
+        val paused = pausedThrough(alarm, pauseAll)
+        val first = if (paused != null && !paused.isBefore(today)) paused.plusDays(1) else today
         // Two weeks covers a skipped ring of a once-a-week alarm.
         for (d in 0L..15L) {
-            val day = today.plusDays(d)
+            val day = first.plusDays(d)
             if (day.dayOfWeek.value !in alarm.days) continue
             if (day == skip) continue
             val at = ringOn(alarm, day, zone)
@@ -61,10 +79,10 @@ object AlarmSchedule {
      * What AlarmManager is set to: the snooze end while snoozed, else the
      * next ring. Epoch milliseconds, or null when nothing is due.
      */
-    fun nextTrigger(alarm: Alarm, now: ZonedDateTime): Long? {
+    fun nextTrigger(alarm: Alarm, now: ZonedDateTime, pauseAll: LocalDate? = null): Long? {
         if (!alarm.enabled) return null
         alarm.snoozeUntil?.let { return it }
-        return nextRing(alarm, now)?.at?.toInstant()?.toEpochMilli()
+        return nextRing(alarm, now, pauseAll)?.at?.toInstant()?.toEpochMilli()
     }
 
     /** True while a "Turn off once" is still waiting for its skipped ring. */
@@ -74,13 +92,22 @@ object AlarmSchedule {
         return ringOn(alarm, skip, now.zone).isAfter(now)
     }
 
-    /** Switched on by hand: any skip or snooze is forgotten. */
+    /** Switched on by hand: any skip, pause or snooze is forgotten. */
     fun turnOn(alarm: Alarm, now: ZonedDateTime): Alarm = withTime(
-        alarm.copy(enabled = true), alarm.hour, alarm.minute, alarm.days, now,
+        alarm.copy(enabled = true, pauseUntil = null), alarm.hour, alarm.minute, alarm.days, now,
     )
 
     fun turnOff(alarm: Alarm): Alarm =
-        alarm.copy(enabled = false, skipDate = null, snoozeUntil = null, armedFor = null)
+        alarm.copy(enabled = false, skipDate = null, pauseUntil = null, snoozeUntil = null, armedFor = null)
+
+    /**
+     * "Pause until": silent through [until], on again the day after by
+     * itself (nothing has to run for that). A waiting skip is dropped.
+     */
+    fun pause(alarm: Alarm, until: LocalDate): Alarm =
+        if (!alarm.repeats) alarm else alarm.copy(pauseUntil = until.toString(), skipDate = null, snoozeUntil = null)
+
+    fun resume(alarm: Alarm): Alarm = alarm.copy(pauseUntil = null)
 
     /**
      * Sets the time and days. A changed alarm starts fresh: no skip, no
@@ -102,10 +129,10 @@ object AlarmSchedule {
      * rings once moves a day forward (Edo's choice, 2026-11-18). Either
      * way it stays on.
      */
-    fun skipOnce(alarm: Alarm, now: ZonedDateTime): Alarm {
+    fun skipOnce(alarm: Alarm, now: ZonedDateTime, pauseAll: LocalDate? = null): Alarm {
         if (!alarm.enabled) return alarm
         val fresh = alarm.copy(skipDate = null, snoozeUntil = null)
-        val next = nextRing(fresh, now) ?: return alarm
+        val next = nextRing(fresh, now, pauseAll) ?: return alarm
         return if (alarm.repeats) {
             fresh.copy(skipDate = next.day.toString())
         } else {
@@ -139,9 +166,14 @@ object AlarmSchedule {
         return tidy(done, now)
     }
 
-    /** Drops a skip whose day has passed. */
-    fun tidy(alarm: Alarm, now: ZonedDateTime): Alarm =
-        if (alarm.skipDate != null && !skipActive(alarm, now)) alarm.copy(skipDate = null) else alarm
+    /** Drops a skip whose day has passed, and a pause that has ended. */
+    fun tidy(alarm: Alarm, now: ZonedDateTime): Alarm {
+        var a = alarm
+        if (a.skipDate != null && !skipActive(a, now)) a = a.copy(skipDate = null)
+        val pause = parseDay(a.pauseUntil)
+        if (a.pauseUntil != null && (pause == null || pause.isBefore(now.toLocalDate()))) a = a.copy(pauseUntil = null)
+        return a
+    }
 
     /**
      * The time handed to AlarmManager has passed and the ring hasn't
@@ -160,7 +192,7 @@ object AlarmSchedule {
 
     fun at(ms: Long, zone: ZoneId): ZonedDateTime = Instant.ofEpochMilli(ms).atZone(zone)
 
-    private fun parseDay(day: String?): LocalDate? = try {
+    fun parseDay(day: String?): LocalDate? = try {
         if (day == null) null else LocalDate.parse(day)
     } catch (_: Exception) {
         null

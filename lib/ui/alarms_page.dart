@@ -142,6 +142,46 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
     );
   }
 
+  /// A day from tomorrow on, for "Pause until".
+  Future<DateTime?> _pickPauseDay(DateTime? current) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    return showDatePicker(
+      context: context,
+      initialDate: current ?? today.add(const Duration(days: 7)),
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 366)),
+      helpText: context.l10n.pauseUntilHelp,
+    );
+  }
+
+  Future<void> _pause(ClockAlarm alarm) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
+    final day = await _pickPauseDay(null);
+    if (day == null || !mounted) return;
+    if (!await _change(() => _engine.pause(alarm.id, day))) return;
+    if (!mounted) return;
+    showSnack(
+      messenger,
+      l.pausedUntil(dayText(context, day)),
+      actionLabel: l.undo,
+      onAction: () => _change(() => _engine.resume(alarm.id)),
+    );
+  }
+
+  Future<void> _pauseAll() async {
+    final current = ref.read(pauseAllProvider).value;
+    final day = await _pickPauseDay(current);
+    if (day == null || !mounted) return;
+    await _change(() => _engine.setPauseAll(day));
+    ref.invalidate(pauseAllProvider);
+  }
+
+  Future<void> _resumeAll() async {
+    await _change(() => _engine.setPauseAll(null));
+    ref.invalidate(pauseAllProvider);
+  }
+
   Future<void> _delete(ClockAlarm alarm) async {
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
@@ -197,6 +237,7 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
     final l = context.l10n;
     final alarms = ref.watch(alarmsProvider);
     final problems = ref.watch(alarmCheckProvider).value?.problems ?? 0;
+    final pausedAll = ref.watch(pauseAllProvider).value;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.alarms),
@@ -207,6 +248,15 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
             onPressed: () => Navigator.of(context).push<void>(
               MaterialPageRoute(builder: (_) => const ClockSettingsPage()),
             ),
+          ),
+          PopupMenuButton<bool>(
+            tooltip: l.moreOptions,
+            onSelected: (pause) => pause ? _pauseAll() : _resumeAll(),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: true, child: Text(l.pauseAll)),
+              if (pausedAll != null)
+                PopupMenuItem(value: false, child: Text(l.resumeAll)),
+            ],
           ),
         ],
       ),
@@ -233,6 +283,8 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
                   ),
                 if (problems > 0)
                   _MayNotRingCard(problems: problems, onOpen: _openCheck),
+                if (pausedAll != null)
+                  _PausedAllCard(until: pausedAll, onResume: _resumeAll),
                 if (list.isEmpty) const _NoAlarms(),
                 for (final alarm in list)
                   AlarmCard(
@@ -245,10 +297,60 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
                         _change(() => _engine.cancelSnooze(alarm.id)),
                     onEdit: () => _edit(alarm),
                     onDelete: () => _delete(alarm),
+                    onPause: () => _pause(alarm),
+                    onResume: () => _change(() => _engine.resume(alarm.id)),
                   ),
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// "Repeating alarms are paused until ...", with Resume.
+class _PausedAllCard extends StatelessWidget {
+  const _PausedAllCard({required this.until, required this.onResume});
+
+  final DateTime until;
+  final VoidCallback onResume;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Card(
+      color: colors.secondaryContainer,
+      margin: const EdgeInsetsDirectional.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.pause_circle_outline,
+                  color: colors.onSecondaryContainer,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l.pausedAllUntil(dayText(context, until)),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colors.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton(onPressed: onResume, child: Text(l.resume)),
+            ),
+          ],
         ),
       ),
     );

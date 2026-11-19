@@ -28,6 +28,7 @@ object AlarmScheduler {
         val nowMs = System.currentTimeMillis()
         val now = AlarmSchedule.at(nowMs, ZoneId.systemDefault())
         val ringing = RingService.ringingId
+        val pauseAll = EnginePrefs.pauseAllUntil(context)
         val missed = ArrayList<Alarm>()
         val alarms = AlarmStore.update(context) { list ->
             val it = list.listIterator()
@@ -50,7 +51,7 @@ object AlarmScheduler {
                 val trigger = if (a.id != ringing && AlarmSchedule.dueNow(a, nowMs)) {
                     a.armedFor // Late, but recent enough: ring now.
                 } else {
-                    AlarmSchedule.nextTrigger(a, now)
+                    AlarmSchedule.nextTrigger(a, now, pauseAll)
                 }
                 if (trigger == null) {
                     cancel(context, a)
@@ -66,7 +67,7 @@ object AlarmScheduler {
             list.toList()
         }
         try {
-            UpcomingAlarms.refresh(context, alarms, now)
+            UpcomingAlarms.refresh(context, alarms, now, pauseAll)
         } catch (_: Exception) {
             // Only the notification; the rings themselves are set.
         }

@@ -18,4 +18,6 @@
     <string name="channel_upcoming_about">Shown from two hours before an alarm, with Turn off once.</string>
     <string name="upcoming_title">Upcoming alarm, %1$s</string>
     <string name="upcoming_turn_off_once">Turn off once</string>
+    <string name="alarm_set_for">Alarm set for %1$s</string>
+    <string name="ring_slide_dismiss">Slide to dismiss</string>
 </resources>
