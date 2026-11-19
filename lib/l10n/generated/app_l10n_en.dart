@@ -282,4 +282,17 @@ class AppL10nEn extends AppL10n {
   @override
   String get restartTestStarted =>
       'Test alarm rings in 3 minutes. Restart the phone now and do not unlock it.';
+
+  @override
+  String alarmsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count alarms from your account were added. They stay off on this phone until you switch them on.',
+      one:
+          '1 alarm from your account was added. It stays off on this phone until you switch it on.',
+    );
+    return '$_temp0';
+  }
 }

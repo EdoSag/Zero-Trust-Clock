@@ -12,4 +12,8 @@
     <string name="missed_title">שעון מעורר הוחמץ</string>
     <string name="missed_text">השעון המעורר של %1$s לא צלצל בזמן או שלא נענה.</string>
     <string name="missed_test">השעון המעורר לבדיקה לא צלצל בזמן או שלא נענה.</string>
+    <string name="channel_upcoming">שעונים מעוררים קרובים</string>
+    <string name="channel_upcoming_about">מוצג שעתיים לפני שעון מעורר, עם כיבוי לפעם אחת.</string>
+    <string name="upcoming_title">שעון מעורר קרוב, %1$s</string>
+    <string name="upcoming_turn_off_once">כיבוי לפעם אחת</string>
 </resources>

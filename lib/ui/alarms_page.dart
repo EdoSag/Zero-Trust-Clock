@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../engine/alarm.dart';
 import '../engine/clock_engine.dart';
+import '../sync/alarm_sync_host.dart';
 import '../l10n/l10n.dart';
 import 'alarm_card.dart';
 import 'alarm_check_page.dart';
@@ -144,6 +145,12 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
   Future<void> _delete(ClockAlarm alarm) async {
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
+    // Noted first, so a sync round in between can't bring it back.
+    try {
+      await ref.read(deletedAlarmsProvider).add(alarm.id);
+    } on Object {
+      // Without the note it may come back from the account; still delete.
+    }
     if (!await _change(() => _engine.delete(alarm.id))) return;
     showSnack(
       messenger,

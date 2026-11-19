@@ -576,6 +576,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Test alarm rings in 3 minutes. Restart the phone now and do not unlock it.'**
   String get restartTestStarted;
+
+  /// No description provided for @alarmsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 alarm from your account was added. It stays off on this phone until you switch it on.} other{{count} alarms from your account were added. They stay off on this phone until you switch them on.}}'**
+  String alarmsAdded(int count);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

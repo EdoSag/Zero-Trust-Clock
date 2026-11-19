@@ -73,7 +73,7 @@ object AlarmEngine {
                 val changed = timed.copy(
                     vibrate = vibrate,
                     snoozeMinutes = snoozeMinutes,
-                    updatedAt = System.currentTimeMillis(),
+                    updatedAt = editedAt(old),
                 )
                 list[i] = changed
                 changed
@@ -105,12 +105,62 @@ object AlarmEngine {
             val i = list.indexOfFirst { it.id == id }
             if (i >= 0) {
                 AlarmScheduler.cancel(context, list[i])
+                UpcomingAlarms.forget(context, list[i])
                 list.removeAt(i)
             }
         }
         LabelStore.remove(context, id)
         AlarmNotifications.cancelSnoozed(context, id)
         AlarmScheduler.rescheduleAll(context)
+    }
+
+    /**
+     * Takes an alarm as the account's backup has it (another phone changed
+     * it, or this phone is restoring). Only what syncs is taken; a snooze
+     * on this phone stays unless the time changed or it is switched off.
+     * [enabled] is this phone's own switch: an alarm switched on elsewhere
+     * arrives off here. Nothing is changed while it rings; false then, and
+     * sync tries again later.
+     */
+    fun importSynced(
+        context: Context,
+        id: String,
+        hour: Int,
+        minute: Int,
+        days: Set<Int>,
+        date: String?,
+        skipDate: String?,
+        label: String,
+        vibrate: Boolean,
+        snoozeMinutes: Int,
+        enabled: Boolean,
+        updatedAt: Long,
+    ): Boolean {
+        if (id == RingService.ringingId) return false
+        AlarmStore.update(context) { list ->
+            val i = list.indexOfFirst { it.id == id }
+            val old = if (i >= 0) list[i] else null
+            val retimed = old == null || old.hour != hour || old.minute != minute || old.days != days
+            val keepSnooze = old?.snoozeUntil != null && enabled && !retimed
+            val alarm = (old ?: Alarm(id = id, code = (list.maxOfOrNull { it.code } ?: 0) + 1, hour = hour, minute = minute))
+                .copy(
+                    hour = hour,
+                    minute = minute,
+                    days = days,
+                    date = if (days.isEmpty()) date else null,
+                    skipDate = skipDate,
+                    vibrate = vibrate,
+                    snoozeMinutes = snoozeMinutes,
+                    enabled = enabled,
+                    snoozeUntil = if (keepSnooze) old?.snoozeUntil else null,
+                    updatedAt = updatedAt,
+                )
+            if (i >= 0) list[i] = alarm else list.add(alarm)
+            if (!keepSnooze) AlarmNotifications.cancelSnoozed(context, id)
+        }
+        LabelStore.set(context, id, label)
+        AlarmScheduler.rescheduleAll(context)
+        return true
     }
 
     /**
@@ -139,12 +189,19 @@ object AlarmEngine {
         AlarmScheduler.rescheduleAll(context)
     }
 
+    /**
+     * The time of an edit by hand: now, but always after the alarm's last
+     * edit. A version synced from a phone whose clock runs ahead must not
+     * make this edit look older than it, or sync would undo it.
+     */
+    private fun editedAt(alarm: Alarm): Long = maxOf(System.currentTimeMillis(), alarm.updatedAt + 1)
+
     private fun change(context: Context, id: String, how: (Alarm, ZonedDateTime) -> Alarm) {
         val now = now()
         AlarmStore.update(context) { list ->
             val i = list.indexOfFirst { it.id == id }
             if (i >= 0) {
-                list[i] = how(list[i], now).copy(updatedAt = System.currentTimeMillis())
+                list[i] = how(list[i], now).copy(updatedAt = editedAt(list[i]))
             }
         }
         AlarmNotifications.cancelSnoozed(context, id)

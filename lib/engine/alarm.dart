@@ -18,6 +18,9 @@ class ClockAlarm {
     this.nextRing,
     this.skipActive = false,
     this.ringing = false,
+    this.date,
+    this.skipDate,
+    this.updatedAt = 0,
   });
 
   final String id;
@@ -44,6 +47,16 @@ class ClockAlarm {
   /// Ringing right now.
   final bool ringing;
 
+  /// Rings once: the day it rings (yyyy-MM-dd).
+  final String? date;
+
+  /// "Turn off once": the day of the skipped ring (yyyy-MM-dd).
+  final String? skipDate;
+
+  /// When it was last changed by hand, by the clock of the phone that
+  /// changed it (epoch milliseconds). Sync keeps the newer side.
+  final int updatedAt;
+
   bool get repeats => days.isNotEmpty;
 
   factory ClockAlarm.fromJson(Map<String, dynamic> j) {
@@ -65,8 +78,30 @@ class ClockAlarm {
       nextRing: time(j['nextRing']),
       skipActive: j['skipActive'] as bool? ?? false,
       ringing: j['ringing'] as bool? ?? false,
+      date: j['date'] as String?,
+      skipDate: j['skipDate'] as String?,
+      updatedAt: (j['updatedAt'] as num?)?.toInt() ?? 0,
     );
   }
+
+  ClockAlarm copyWith({bool? enabled, String? label, int? updatedAt}) =>
+      ClockAlarm(
+        id: id,
+        hour: hour,
+        minute: minute,
+        days: days,
+        enabled: enabled ?? this.enabled,
+        label: label ?? this.label,
+        vibrate: vibrate,
+        snoozeMinutes: snoozeMinutes,
+        snoozeUntil: snoozeUntil,
+        nextRing: nextRing,
+        skipActive: skipActive,
+        ringing: ringing,
+        date: date,
+        skipDate: skipDate,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
 
   /// The engine's list, earliest time of day first.
   static List<ClockAlarm> listFromJson(String json) {

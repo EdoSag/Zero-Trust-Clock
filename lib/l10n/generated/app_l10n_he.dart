@@ -281,4 +281,16 @@ class AppL10nHe extends AppL10n {
   @override
   String get restartTestStarted =>
       'שעון מעורר לבדיקה יצלצל בעוד 3 דקות. הפעילו עכשיו את הטלפון מחדש ואל תפתחו אותו.';
+
+  @override
+  String alarmsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'נוספו $count שעונים מעוררים מהחשבון. הם כבויים בטלפון הזה עד שתפעילו אותם.',
+      one: 'נוסף שעון מעורר אחד מהחשבון. הוא כבוי בטלפון הזה עד שתפעילו אותו.',
+    );
+    return '$_temp0';
+  }
 }

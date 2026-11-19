@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.1.0)
+## What is in it now (0.2.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -21,8 +21,17 @@ Work happens on the `Dev` branch; `main` holds releases.
 - **Alarm check** (Settings, or the warning on the home screen): everything
   on the phone that can stop an alarm, each with a Fix button, a test alarm
   in 10 seconds and a restart test.
-- **No account needed.** Alarms stay on the phone. Sign-in for backup and
-  sync comes later.
+- **Upcoming alarm notification**, from two hours before a ring, with
+  **Turn off once** (or **Dismiss** on an alarm that rings once). Silent,
+  and the label is not shown on the lock screen.
+- **No account needed.** Alarms stay on the phone and ring without one.
+- **Optional sign-in** (Settings > Sign in or create an account) adds
+  end-to-end encrypted backup and sync through the shared Zero-Trust
+  account. An alarm arrives switched **off** on another phone until it is
+  switched on there: each phone has its own switch. Edits (time, days,
+  label, Turn off once) sync; the newer edit wins. Like every Zero-Trust
+  app, a signed-in Clock asks to unlock after a restart or auto-lock; the
+  alarms ring either way.
 - English and Hebrew, also on the ring screen and in notifications.
 
 ## How it is built
@@ -33,6 +42,8 @@ Work happens on the `Dev` branch; `main` holds releases.
 | Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
 | Screens | `lib/ui` | Flutter, on the shared core: alarm list, editor, Alarm check, settings. |
+| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. |
+| Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
 The engine is the only thing that decides when an alarm rings; the screens
 show what it reports. That is why it does not need Flutter, the account or
@@ -54,6 +65,11 @@ Where things are kept on the phone:
    alarm (3 minutes after you tapped).
 4. Set a repeating alarm a few minutes ahead, choose "Turn off once" and
    check it stays silent and shows the next day.
+5. Set an alarm less than two hours ahead: the "Upcoming alarm"
+   notification appears; its button skips that ring.
+6. Sign in from Settings on two phones: an alarm made on one arrives on
+   the other switched off; switching it on there leaves the first as it
+   was; a time change on either reaches the other.
 
 ## Development
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,21 +7,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
 import 'app/clock_config.dart';
+import 'app/clock_gate.dart';
+import 'app/email_links.dart';
 import 'engine/clock_engine.dart';
 import 'l10n/l10n.dart';
-import 'ui/alarms_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // The Zero-Trust account is optional here: alarms live on the phone and
-  // ring without it. It is still set up, for Settings and for sign-in
-  // (backup and sync) later. A failure must not keep the alarms away.
+  // ring without it. Signing in (Settings) adds encrypted backup and sync.
+  // A failure here must not keep the alarms away.
   try {
     await dotenv.load(fileName: '.env');
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
       publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
     );
+    unawaited(EmailLinks.listen());
   } on Object catch (e) {
     debugPrint('Account setup failed: $e');
   }
@@ -34,7 +38,7 @@ Future<void> main() async {
 }
 
 class ZeroTrustClockApp extends ConsumerStatefulWidget {
-  const ZeroTrustClockApp({super.key, this.home = const AlarmsPage()});
+  const ZeroTrustClockApp({super.key, this.home = const ClockGate()});
 
   final Widget home;
 
@@ -76,6 +80,12 @@ class _ZeroTrustClockAppState extends ConsumerState<ZeroTrustClockApp> {
           ...ZtLanguages.delegates,
         ],
         home: widget.home,
+        // Any touch on any screen counts as activity for auto-lock.
+        builder: (context, child) => Listener(
+          onPointerDown: (_) =>
+              ref.read(vaultControllerProvider.notifier).touch(),
+          child: child,
+        ),
       ),
     );
   }
