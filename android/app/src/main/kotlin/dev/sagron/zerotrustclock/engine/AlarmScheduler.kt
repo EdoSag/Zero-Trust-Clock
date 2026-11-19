@@ -73,6 +73,7 @@ object AlarmScheduler {
         }
         for (a in missed) AlarmNotifications.showMissed(Loc.wrap(context), a)
         Tiles.refresh(context)
+        Widgets.refresh(context)
         notifyChanged()
     }
 

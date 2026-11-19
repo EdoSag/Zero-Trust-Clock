@@ -57,6 +57,19 @@ object WorldZones {
         return out
     }
 
+    /** The city names of [ids] in the app's language. */
+    fun names(context: Context, ids: List<String>): Map<String, String> {
+        val names = TimeZoneNames.getInstance(ULocale.forLocale(locale(context)))
+        val out = HashMap<String, String>()
+        for (id in ids) {
+            try {
+                names.getExemplarLocationName(id)?.let { out[id] = it }
+            } catch (_: Exception) {
+            }
+        }
+        return out
+    }
+
     private fun country(id: String, locale: Locale): String = try {
         val region = TimeZone.getRegion(id)
         if (region == "001") "" else Locale("", region).getDisplayCountry(locale)
@@ -83,5 +96,6 @@ object WorldZones {
             .edit()
             .putString("worldCities", JSONArray(ids).toString())
             .apply()
+        Widgets.refresh(context)
     }
 }
