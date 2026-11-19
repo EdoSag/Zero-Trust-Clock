@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../engine/alarm.dart';
 import '../engine/clock_engine.dart';
+import '../holidays/holidays.dart';
 import '../l10n/l10n.dart';
 import 'alarm_text.dart';
+import 'holidays_page.dart';
 
 /// How the editor closed.
 enum AlarmEditorResult { saved, delete }
@@ -35,6 +37,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
   late bool _gradual = widget.alarm.gradual;
   late int _silenceAfter = widget.alarm.ringMinutes;
   late WakeTask? _task = widget.alarm.task;
+  late bool _skipHolidays = widget.alarm.skipHolidays;
 
   /// The day an alarm without repeat days rings; null: the next such time.
   late DateTime? _date = widget.alarm.repeats
@@ -178,6 +181,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             gradual: _gradual,
             ringMinutes: _silenceAfter,
             task: _task,
+            skipHolidays: _days.isNotEmpty && _skipHolidays,
             // Only a picked (or kept) day: saving a label alone does not
             // switch an alarm on.
             date: _days.isEmpty && _date != null ? _ringDay() : null,
@@ -187,6 +191,33 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
       if (mounted) setState(() => _saving = false);
       showSnack(messenger, l.couldNotSave);
     }
+  }
+
+  /// "Skip public holidays", for repeating alarms. Without a holiday
+  /// calendar it asks for one first.
+  Widget _holidaysSwitch(BuildContext context) {
+    final l = context.l10n;
+    final calendar = ref.watch(holidaysProvider).value?.calendar;
+    return SwitchListTile(
+      key: const ValueKey('skipHolidays'),
+      contentPadding: EdgeInsetsDirectional.zero,
+      secondary: const Icon(Icons.beach_access_outlined),
+      title: Text(l.skipHolidays),
+      subtitle: Text(calendar?.name ?? l.skipHolidaysPick),
+      value: _skipHolidays && calendar != null,
+      onChanged: (on) async {
+        if (on && calendar == null) {
+          await Navigator.of(
+            context,
+          ).push<void>(MaterialPageRoute(builder: (_) => const HolidaysPage()));
+          if (!mounted) return;
+          final picked = ref.read(holidaysProvider).value?.calendar;
+          setState(() => _skipHolidays = picked != null);
+          return;
+        }
+        setState(() => _skipHolidays = on);
+      },
+    );
   }
 
   @override
@@ -248,6 +279,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
                   ),
               ],
             ),
+            if (_days.isNotEmpty) _holidaysSwitch(context),
             if (_days.isEmpty) ...[
               const SizedBox(height: 4),
               Text(l.ringsOnce, style: soft),

@@ -29,6 +29,7 @@ ClockAlarm alarm(
   bool gradual = false,
   int ringMinutes = ClockAlarm.defaultRingMinutes,
   WakeTask? task,
+  bool skipHolidays = false,
 }) => ClockAlarm(
   id: id,
   hour: hour,
@@ -52,6 +53,7 @@ ClockAlarm alarm(
   gradual: gradual,
   ringMinutes: ringMinutes,
   task: task,
+  skipHolidays: skipHolidays,
 );
 
 /// When a switched-on alarm rings next in the fake engine.
@@ -208,6 +210,7 @@ class FakeClockEngine implements ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    bool skipHolidays = false,
     DateTime? date,
   }) async {
     _mayFail();
@@ -217,6 +220,7 @@ class FakeClockEngine implements ClockEngine {
       'gradual': gradual,
       'ringMinutes': ringMinutes,
       'task': task?.name,
+      'skipHolidays': skipHolidays,
       'date': date == null ? null : dayKey(date),
     };
     final days0 = (days.toList()..sort()).join('');
@@ -238,6 +242,7 @@ class FakeClockEngine implements ClockEngine {
       gradual: gradual,
       ringMinutes: ringMinutes,
       task: task,
+      skipHolidays: skipHolidays,
       date: days.isEmpty && date != null ? dayKey(date) : null,
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);
@@ -583,6 +588,19 @@ class FakeClockEngine implements ClockEngine {
   Future<void> setWorldCities(List<String> ids) async {
     calls.add('setWorldCities ${ids.join(',')}');
     widgetCities = ids;
+  }
+
+  // Public holidays.
+
+  List<String> holidayDays = [];
+
+  @override
+  Future<List<String>> holidays() async => holidayDays;
+
+  @override
+  Future<void> setHolidays(List<String> days) async {
+    calls.add('setHolidays ${days.join(',')}');
+    holidayDays = days;
   }
 
   // Screensaver.

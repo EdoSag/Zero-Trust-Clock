@@ -154,6 +154,7 @@ void main() {
       'gradual': true,
       'ringMinutes': 5,
       'task': null,
+      'skipHolidays': false,
       'date': null,
     });
   });

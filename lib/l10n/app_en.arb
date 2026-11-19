@@ -357,5 +357,25 @@
   "screensaver": "Night clock screensaver",
   "screensaverHint": "Shows the time and the next alarm while the phone charges. Choose \"Night clock\" in Android's screensaver settings.",
   "screensaverNight": "Dim red",
-  "screensaverNightHint": "Easy on the eyes in a dark room"
+  "screensaverNightHint": "Easy on the eyes in a dark room",
+  "publicHolidays": "Public holidays",
+  "publicHolidaysHint": "Days alarms with \"Skip public holidays\" stay silent",
+  "holidayCalendar": "Holiday calendar",
+  "noHolidays": "None",
+  "holidaysPrivacy": "Downloaded from Google's public holiday calendars, like any web page. No account is used and nothing about you is sent.",
+  "holidaysDownloading": "Downloading…",
+  "holidaysFailed": "Couldn't download. The last list still counts.",
+  "holidaysUpdated": "Updated {date}",
+  "@holidaysUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "refresh": "Refresh",
+  "holidaysTickedHint": "Days off are ticked. Untick any day your alarms should ring on.",
+  "holidaysTickHint": "Tick the days your alarms should skip. This calendar doesn't say which days are days off.",
+  "skipHolidays": "Skip public holidays",
+  "skipHolidaysPick": "Choose a holiday calendar first"
 }

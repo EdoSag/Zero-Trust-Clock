@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../engine/clock_engine.dart';
+import '../holidays/holidays.dart';
 import '../l10n/l10n.dart';
 import 'alarms_page.dart';
 import 'bedtime_page.dart';
@@ -112,6 +113,8 @@ class _ClockHomeState extends ConsumerState<ClockHome> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final tab = ref.watch(clockTabProvider);
+    // Loads the holidays, and downloads them again when a week old.
+    ref.watch(holidaysProvider);
     return Scaffold(
       body: switch (tab) {
         ClockTab.alarms => const AlarmsPage(),

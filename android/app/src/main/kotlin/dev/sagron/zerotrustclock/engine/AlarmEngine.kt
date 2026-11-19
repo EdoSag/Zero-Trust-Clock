@@ -21,6 +21,7 @@ object AlarmEngine {
     fun listJson(context: Context): String {
         val now = now()
         val pauseAll = EnginePrefs.pauseAllUntil(context)
+        val holidays = Holidays.days(context)
         val out = JSONArray()
         for (a in AlarmStore.load(context)) {
             if (a.test) continue
@@ -28,7 +29,7 @@ object AlarmEngine {
             o.remove("armedFor")
             o.remove("code")
             o.put("label", LabelStore.get(context, a.id))
-            val next = AlarmSchedule.nextRing(a, now, pauseAll)
+            val next = AlarmSchedule.nextRing(a, now, pauseAll, holidays)
             if (next != null) o.put("nextRing", next.at.toInstant().toEpochMilli())
             o.put("skipActive", AlarmSchedule.skipActive(a, now))
             o.put("paused", AlarmSchedule.paused(a, now, pauseAll))
@@ -52,6 +53,8 @@ object AlarmEngine {
         val ringMinutes: Int = Alarm.DEFAULT_RING_MINUTES,
         /** A wake-up task (WakeTasks), or null. */
         val task: String? = null,
+        /** Silent on this phone's public holidays (repeating alarms). */
+        val skipHolidays: Boolean = false,
         /** Rings once on this day (yyyy-MM-dd); null: the next such time. */
         val date: String? = null,
     )
@@ -104,6 +107,7 @@ object AlarmEngine {
                 gradual = options.gradual,
                 ringMinutes = options.ringMinutes.coerceIn(1, 60),
                 task = WakeTasks.parse(options.task),
+                skipHolidays = options.skipHolidays,
                 updatedAt = if (old == null) System.currentTimeMillis() else editedAt(old),
             )
             if (i >= 0) list[i] = alarm else list.add(alarm)
@@ -122,7 +126,7 @@ object AlarmEngine {
 
     /** "Turn off once". */
     fun skipOnce(context: Context, id: String) = change(context, id) { a, now ->
-        AlarmSchedule.skipOnce(a, now, EnginePrefs.pauseAllUntil(context))
+        AlarmSchedule.skipOnce(a, now, EnginePrefs.pauseAllUntil(context), Holidays.days(context))
     }
 
     /** "Pause until": silent through [until] (yyyy-MM-dd). */
@@ -188,6 +192,7 @@ object AlarmEngine {
         gradual: Boolean,
         ringMinutes: Int,
         task: String?,
+        skipHolidays: Boolean,
     ): Boolean {
         if (id == RingService.ringingId) return false
         AlarmStore.update(context) { list ->
@@ -211,6 +216,7 @@ object AlarmEngine {
                     gradual = gradual,
                     ringMinutes = ringMinutes.coerceIn(1, 60),
                     task = WakeTasks.parse(task),
+                    skipHolidays = skipHolidays,
                 )
             if (i >= 0) list[i] = alarm else list.add(alarm)
             if (!keepSnooze) AlarmNotifications.cancelSnoozed(context, id)

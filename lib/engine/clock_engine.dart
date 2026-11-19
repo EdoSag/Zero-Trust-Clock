@@ -29,6 +29,7 @@ abstract class ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    bool skipHolidays = false,
     DateTime? date,
   });
 
@@ -119,6 +120,12 @@ abstract class ClockEngine {
   /// The tab a notification or shortcut opened the app on (taken once).
   Future<String?> launchTab();
 
+  // Public holidays.
+
+  /// The days alarms with "Skip public holidays" stay silent on.
+  Future<List<String>> holidays();
+  Future<void> setHolidays(List<String> days);
+
   // Screensaver.
 
   /// The night clock screensaver is dim red (true) or soft white.
@@ -172,6 +179,17 @@ class MethodChannelClockEngine implements ClockEngine {
 
   @override
   Future<String?> launchTab() => _channel.invokeMethod<String>('launchTab');
+
+  @override
+  Future<List<String>> holidays() async => [
+    ...?(await _channel.invokeMethod<List<Object?>>(
+      'holidays',
+    ))?.whereType<String>(),
+  ];
+
+  @override
+  Future<void> setHolidays(List<String> days) =>
+      _channel.invokeMethod('setHolidays', {'days': days});
 
   @override
   Future<bool> screensaverNight() async =>
@@ -321,6 +339,7 @@ class MethodChannelClockEngine implements ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    bool skipHolidays = false,
     DateTime? date,
   }) async =>
       await _channel.invokeMethod<String>('save', {
@@ -336,6 +355,7 @@ class MethodChannelClockEngine implements ClockEngine {
         'gradual': gradual,
         'ringMinutes': ringMinutes,
         'task': task?.name,
+        'skipHolidays': skipHolidays,
         'date': date == null ? null : dayKey(date),
       }) ??
       '';
@@ -385,6 +405,7 @@ class MethodChannelClockEngine implements ClockEngine {
         'gradual': a.gradual,
         'ringMinutes': a.ringMinutes,
         'task': a.task?.name,
+        'skipHolidays': a.skipHolidays,
       }) ??
       false;
 

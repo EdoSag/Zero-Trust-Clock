@@ -607,4 +607,49 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get screensaverNightHint => 'נעים לעיניים בחדר חשוך';
+
+  @override
+  String get publicHolidays => 'חגים';
+
+  @override
+  String get publicHolidaysHint =>
+      'ימים שבהם שעונים עם \"דילוג על חגים\" לא מצלצלים';
+
+  @override
+  String get holidayCalendar => 'לוח חגים';
+
+  @override
+  String get noHolidays => 'בלי';
+
+  @override
+  String get holidaysPrivacy =>
+      'מורד מלוחות החגים הציבוריים של Google, כמו כל דף אינטרנט. לא נעשה שימוש בחשבון ושום דבר עליכם לא נשלח.';
+
+  @override
+  String get holidaysDownloading => 'מוריד…';
+
+  @override
+  String get holidaysFailed => 'ההורדה נכשלה. הרשימה האחרונה עדיין בתוקף.';
+
+  @override
+  String holidaysUpdated(String date) {
+    return 'עודכן ב-$date';
+  }
+
+  @override
+  String get refresh => 'רענון';
+
+  @override
+  String get holidaysTickedHint =>
+      'ימי החופש מסומנים. מבטלים את הסימון בכל יום שבו השעונים צריכים לצלצל.';
+
+  @override
+  String get holidaysTickHint =>
+      'מסמנים את הימים שבהם השעונים ידלגו. הלוח הזה לא מציין אילו ימים הם ימי חופש.';
+
+  @override
+  String get skipHolidays => 'דילוג על חגים';
+
+  @override
+  String get skipHolidaysPick => 'קודם בוחרים לוח חגים';
 }

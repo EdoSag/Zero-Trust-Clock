@@ -612,4 +612,50 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get screensaverNightHint => 'Easy on the eyes in a dark room';
+
+  @override
+  String get publicHolidays => 'Public holidays';
+
+  @override
+  String get publicHolidaysHint =>
+      'Days alarms with \"Skip public holidays\" stay silent';
+
+  @override
+  String get holidayCalendar => 'Holiday calendar';
+
+  @override
+  String get noHolidays => 'None';
+
+  @override
+  String get holidaysPrivacy =>
+      'Downloaded from Google\'s public holiday calendars, like any web page. No account is used and nothing about you is sent.';
+
+  @override
+  String get holidaysDownloading => 'Downloading…';
+
+  @override
+  String get holidaysFailed =>
+      'Couldn\'t download. The last list still counts.';
+
+  @override
+  String holidaysUpdated(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get holidaysTickedHint =>
+      'Days off are ticked. Untick any day your alarms should ring on.';
+
+  @override
+  String get holidaysTickHint =>
+      'Tick the days your alarms should skip. This calendar doesn\'t say which days are days off.';
+
+  @override
+  String get skipHolidays => 'Skip public holidays';
+
+  @override
+  String get skipHolidaysPick => 'Choose a holiday calendar first';
 }

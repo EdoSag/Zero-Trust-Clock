@@ -340,4 +340,38 @@ class AlarmScheduleTest {
         assertFalse(old.gradual)
         assertNull(old.sound)
     }
+
+    @Test
+    fun holidaysAreSkippedOnlyWhenAsked() {
+        val now = at("2026-11-18T08:00") // Wednesday, after today's ring.
+        val holidays = setOf(java.time.LocalDate.parse("2026-11-19"), java.time.LocalDate.parse("2026-11-22"))
+        val plain = AlarmSchedule.withTime(alarm(), 7, 0, weekdaysIL, now)
+        assertEquals("2026-11-19T07:00", AlarmSchedule.nextRing(plain, now, null, holidays)?.at?.toLocalDateTime()?.toString())
+        val skipping = plain.copy(skipHolidays = true)
+        // Thursday is a holiday, Friday and Saturday aren't its days,
+        // Sunday is a holiday too: Monday.
+        assertEquals("2026-11-23T07:00", AlarmSchedule.nextRing(skipping, now, null, holidays)?.at?.toLocalDateTime()?.toString())
+        // Turn off once then skips Monday, the next real ring.
+        val once = AlarmSchedule.skipOnce(skipping, now, null, holidays)
+        assertEquals("2026-11-23", once.skipDate)
+        assertEquals("2026-11-24T07:00", AlarmSchedule.nextRing(once, now, null, holidays)?.at?.toLocalDateTime()?.toString())
+    }
+
+    @Test
+    fun aWeekOfHolidaysOnAWeeklyAlarmStillFindsTheNextRing() {
+        val now = at("2026-11-18T08:00")
+        val weekly = AlarmSchedule.withTime(alarm(), 7, 0, setOf(4), now).copy(skipHolidays = true)
+        val holidays = (0L..20L).map { java.time.LocalDate.parse("2026-11-19").plusDays(it) }.toSet()
+        assertEquals("2026-12-10T07:00", AlarmSchedule.nextRing(weekly, now, null, holidays)?.at?.toLocalDateTime()?.toString())
+    }
+
+    @Test
+    fun aOneTimeAlarmRingsOnAHoliday() {
+        val now = at("2026-11-18T08:00")
+        val once = AlarmSchedule.withTime(alarm(), 7, 0, emptySet(), now).copy(skipHolidays = true)
+        val holidays = setOf(java.time.LocalDate.parse("2026-11-19"))
+        assertEquals("2026-11-19T07:00", AlarmSchedule.nextRing(once, now, null, holidays)?.at?.toLocalDateTime()?.toString())
+        assertTrue(Alarm.fromJson(once.toJson()).skipHolidays)
+        assertFalse(Alarm.fromJson(alarm().toJson()).skipHolidays)
+    }
 }

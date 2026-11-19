@@ -55,6 +55,8 @@ data class Alarm(
     val ringMinutes: Int = DEFAULT_RING_MINUTES,
     /** A wake-up task (see WakeTasks) to do before it can be dismissed. */
     val task: String? = null,
+    /** A repeating alarm stays silent on this phone's public holidays (see Holidays). */
+    val skipHolidays: Boolean = false,
 ) {
     val repeats: Boolean get() = days.isNotEmpty()
 
@@ -79,6 +81,7 @@ data class Alarm(
         put("gradual", gradual)
         put("ringMinutes", ringMinutes)
         if (task != null) put("task", task)
+        if (skipHolidays) put("skipHolidays", true)
     }
 
     companion object {
@@ -114,6 +117,7 @@ data class Alarm(
                 gradual = o.optBoolean("gradual", false),
                 ringMinutes = o.optInt("ringMinutes", DEFAULT_RING_MINUTES).coerceIn(1, 60),
                 task = WakeTasks.parse(text(o, "task")),
+                skipHolidays = o.optBoolean("skipHolidays", false),
             )
         }
 

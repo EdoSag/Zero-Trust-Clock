@@ -7,6 +7,7 @@ import '../app/account.dart';
 import '../engine/clock_engine.dart';
 import '../l10n/l10n.dart';
 import 'alarm_check_page.dart';
+import 'holidays_page.dart';
 
 /// The suite's settings screen. Clock works without an account, so with
 /// nobody signed in it shows what needs none (language, theme, the app's
@@ -39,6 +40,15 @@ class ClockSettingsPage extends ConsumerWidget {
           onTap: () => Navigator.of(context).push<void>(
             MaterialPageRoute(builder: (_) => const AlarmCheckPage()),
           ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.beach_access_outlined),
+          title: Text(l.publicHolidays),
+          subtitle: Text(l.publicHolidaysHint),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(
+            context,
+          ).push<void>(MaterialPageRoute(builder: (_) => const HolidaysPage())),
         ),
         ListTile(
           leading: const Icon(Icons.nightlight_outlined),
