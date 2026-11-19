@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
 import '../sync/alarm_sync_host.dart';
-import '../ui/alarms_page.dart';
+import '../ui/clock_home.dart';
 import 'account.dart';
 
 /// What the app opens on. Unlike the other apps, Clock needs no account:
@@ -12,9 +12,9 @@ import 'account.dart';
 /// asks to unlock after a cold start or auto-lock. The alarms ring either
 /// way: they are in the engine, not behind the lock.
 class ClockGate extends ConsumerStatefulWidget {
-  const ClockGate({super.key, this.home = const AlarmsPage()});
+  const ClockGate({super.key, this.home = const ClockHome()});
 
-  /// The alarms screen; tests pass their own.
+  /// The app's tabs; tests pass their own.
   final Widget home;
 
   @override

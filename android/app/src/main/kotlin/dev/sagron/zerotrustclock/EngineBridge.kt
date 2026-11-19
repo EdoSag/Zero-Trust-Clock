@@ -22,6 +22,10 @@ import dev.sagron.zerotrustclock.engine.EnginePrefs
 import dev.sagron.zerotrustclock.engine.Loc
 import dev.sagron.zerotrustclock.engine.RingService
 import dev.sagron.zerotrustclock.engine.Sounds
+import dev.sagron.zerotrustclock.engine.Tabs
+import dev.sagron.zerotrustclock.engine.TimerEngine
+import dev.sagron.zerotrustclock.engine.TimerNotifications
+import dev.sagron.zerotrustclock.engine.TimerRingService
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -39,10 +43,13 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
     init {
         channel.setMethodCallHandler(this)
         AlarmScheduler.onChanged = changed
+        TimerEngine.onChanged = changed
         try {
             AlarmNotifications.ensureChannels(Loc.wrap(activity))
+            TimerNotifications.ensureChannels(Loc.wrap(activity))
             // Opening the app is one more chance to set every alarm again.
             AlarmScheduler.rescheduleAll(activity)
+            TimerEngine.refresh(activity)
         } catch (_: Exception) {
         }
     }
@@ -50,6 +57,19 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
     fun dispose() {
         channel.setMethodCallHandler(null)
         if (AlarmScheduler.onChanged === changed) AlarmScheduler.onChanged = null
+        if (TimerEngine.onChanged === changed) TimerEngine.onChanged = null
+    }
+
+    /** The tab a notification or shortcut asked for, taken once. */
+    private fun takeTab(intent: Intent?): String? {
+        val tab = intent?.getStringExtra(Tabs.EXTRA) ?: return null
+        intent.removeExtra(Tabs.EXTRA)
+        return tab
+    }
+
+    fun onNewIntent(intent: Intent) {
+        val tab = takeTab(intent) ?: return
+        channel.invokeMethod("openTab", tab)
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -122,6 +142,33 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                     EnginePrefs.setLanguage(activity, call.argument<String>("code"))
                     AlarmNotifications.ensureChannels(Loc.wrap(activity))
                 }
+                "launchTab" -> result.success(takeTab(activity.intent))
+                "timers" -> result.success(TimerEngine.listJson(activity))
+                "timerAdd" -> result.success(
+                    TimerEngine.add(
+                        activity,
+                        (call.argument<Number>("lengthMs") ?: 0).toLong(),
+                        call.argument<String>("label") ?: "",
+                        call.argument<Boolean>("start") ?: true,
+                    ),
+                )
+                "timerStart" -> done(result) { TimerEngine.start(activity, id(call)) }
+                "timerPause" -> done(result) { TimerEngine.pause(activity, id(call)) }
+                "timerAddMinute" -> done(result) { TimerEngine.addMinute(activity, id(call)) }
+                "timerReset" -> done(result) { TimerEngine.reset(activity, id(call)) }
+                "timerLabel" -> done(result) {
+                    TimerEngine.setLabel(activity, id(call), call.argument<String>("label") ?: "")
+                }
+                "timerDelete" -> done(result) { TimerEngine.delete(activity, id(call)) }
+                "timerStopRinging" -> done(result) {
+                    TimerRingService.send(activity, TimerRingService.ACTION_STOP)
+                }
+                "stopwatch" -> result.success(TimerEngine.stopwatchJson(activity))
+                "stopwatchStart" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.start(now) } }
+                "stopwatchPause" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.pause(now) } }
+                "stopwatchLap" -> done(result) { TimerEngine.stopwatch(activity) { s, now -> s.lap(now) } }
+                "stopwatchReset" -> done(result) { TimerEngine.stopwatch(activity) { s, _ -> s.reset() } }
+                "now" -> result.success(TimerEngine.now())
                 "check" -> result.success(check())
                 "requestNotifications" -> requestNotifications(result)
                 "openSettings" -> done(result) { openSettings(call.argument<String>("which") ?: "") }

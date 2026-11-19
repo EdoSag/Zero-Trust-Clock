@@ -28,7 +28,7 @@ class AlarmReceiver : BroadcastReceiver() {
 }
 
 /**
- * Sets every alarm again after a restart (AlarmManager forgets them),
+ * Sets every alarm and timer again after a restart (AlarmManager forgets them),
  * after an app update, and when the clock or time zone changes.
  *
  * It also runs on LOCKED_BOOT_COMPLETED, which arrives before the first
@@ -52,6 +52,12 @@ class BootReceiver : BroadcastReceiver() {
             AlarmScheduler.rescheduleAll(context)
         } catch (_: Exception) {
             // Tried again on the next of these events, and when the app opens.
+        }
+        try {
+            // A timer that ended while the phone was off rings now.
+            TimerEngine.refresh(context)
+            TimerEngine.refreshStopwatch(context)
+        } catch (_: Exception) {
         }
     }
 

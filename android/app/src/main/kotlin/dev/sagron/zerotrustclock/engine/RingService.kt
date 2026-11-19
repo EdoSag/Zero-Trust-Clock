@@ -7,18 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
-import android.media.MediaPlayer
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
-import android.os.VibrationAttributes
-import android.os.VibrationEffect
-import android.os.Vibrator
 import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
 
@@ -32,10 +25,8 @@ class RingService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
     private val timeout = Runnable { end(Outcome.TIMEOUT) }
-    private var player: MediaPlayer? = null
-    private var vibrator: Vibrator? = null
+    private val ringer by lazy { Ringer(this, handler) }
     private var wakeLock: PowerManager.WakeLock? = null
-    private var focus: AudioFocusRequest? = null
     private var watchingLock = false
 
     /**
@@ -90,10 +81,7 @@ class RingService : Service() {
         AlarmNotifications.cancelSnoozed(this, alarm.id)
         watchLock()
         holdAwake()
-        stopSound()
-        startSound(alarm)
-        stopVibration()
-        if (alarm.vibrate) startVibration()
+        ringer.start(alarm.sound, alarm.gradual, alarm.vibrate)
         handler.removeCallbacks(timeout)
         handler.postDelayed(timeout, alarm.ringMinutes * 60_000L)
         openRingScreenIfNotificationCannot()
@@ -180,8 +168,7 @@ class RingService : Service() {
             return
         }
         handler.removeCallbacks(timeout)
-        stopSound()
-        stopVibration()
+        ringer.stop()
         ringingId = null
         val before = finishInStore(id, outcome)
         val text = Loc.wrap(this)
@@ -213,95 +200,6 @@ class RingService : Service() {
         }
     }
 
-    private fun startSound(alarm: Alarm?) {
-        val attributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        val audio = getSystemService(AudioManager::class.java)
-        try {
-            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                .setAudioAttributes(attributes)
-                .build()
-            audio?.requestAudioFocus(request)
-            focus = request
-        } catch (_: Exception) {
-        }
-        // The alarm's own sound, then the app's chime (always there, also
-        // before the first unlock), then the phone's alarm sound.
-        val p = Sounds.player(this, alarm?.sound, attributes)
-            ?: Sounds.player(this, null, attributes)
-            ?: Sounds.player(this, Sounds.SYSTEM, attributes)
-        player = p
-        try {
-            if (alarm?.gradual == true) {
-                volume = GRADUAL_START
-                p?.setVolume(volume, volume)
-                handler.postDelayed(louder, 1_000L)
-            }
-            p?.start()
-        } catch (_: Exception) {
-        }
-    }
-
-    /** "Gradually louder": from quiet to full over a minute. */
-    private var volume = 1f
-    private val louder: Runnable = object : Runnable {
-        override fun run() {
-            val p = player ?: return
-            volume = (volume + (1f - GRADUAL_START) / 60f).coerceAtMost(1f)
-            try {
-                p.setVolume(volume, volume)
-            } catch (_: Exception) {
-            }
-            if (volume < 1f) handler.postDelayed(this, 1_000L)
-        }
-    }
-
-    private fun stopSound() {
-        handler.removeCallbacks(louder)
-        try {
-            player?.stop()
-        } catch (_: Exception) {
-        }
-        try {
-            player?.release()
-        } catch (_: Exception) {
-        }
-        player = null
-        try {
-            focus?.let { getSystemService(AudioManager::class.java)?.abandonAudioFocusRequest(it) }
-        } catch (_: Exception) {
-        }
-        focus = null
-    }
-
-    private fun startVibration() {
-        val v = getSystemService(Vibrator::class.java) ?: return
-        val effect = VibrationEffect.createWaveform(longArrayOf(0, 600, 500), 0)
-        try {
-            if (Build.VERSION.SDK_INT >= 33) {
-                v.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_ALARM))
-            } else {
-                @Suppress("DEPRECATION")
-                v.vibrate(
-                    effect,
-                    AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build(),
-                )
-            }
-            vibrator = v
-        } catch (_: Exception) {
-        }
-    }
-
-    private fun stopVibration() {
-        try {
-            vibrator?.cancel()
-        } catch (_: Exception) {
-        }
-        vibrator = null
-    }
-
     private fun holdAwake() {
         if (wakeLock?.isHeld == true) return
         val power = getSystemService(PowerManager::class.java) ?: return
@@ -325,8 +223,7 @@ class RingService : Service() {
     override fun onDestroy() {
         unwatchLock()
         handler.removeCallbacks(timeout)
-        stopSound()
-        stopVibration()
+        ringer.stop()
         try {
             if (wakeLock?.isHeld == true) wakeLock?.release()
         } catch (_: Exception) {
@@ -342,7 +239,6 @@ class RingService : Service() {
 
         /** The longest an unanswered alarm rings ("Silence after" at most an hour). */
         const val MAX_RING_MS = 60 * 60_000L
-        private const val GRADUAL_START = 0.05f
 
         /** The alarm ringing right now, if any. */
         @Volatile

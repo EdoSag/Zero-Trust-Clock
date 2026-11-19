@@ -352,4 +352,93 @@ class AppL10nHe extends AppL10n {
   String pausedAllUntil(String day) {
     return 'השעונים המעוררים החוזרים מושהים עד סוף $day. שעונים מעוררים ליום אחד עדיין יצלצלו.';
   }
+
+  @override
+  String get timers => 'טיימרים';
+
+  @override
+  String get stopwatch => 'שעון עצר';
+
+  @override
+  String get addTimer => 'הוספת טיימר';
+
+  @override
+  String get start => 'התחלה';
+
+  @override
+  String get pause => 'השהיה';
+
+  @override
+  String get reset => 'איפוס';
+
+  @override
+  String get addMinute => '+1:00';
+
+  @override
+  String get stop => 'עצירה';
+
+  @override
+  String get timesUp => 'הזמן נגמר';
+
+  @override
+  String timerOf(String length) {
+    return 'טיימר $length';
+  }
+
+  @override
+  String get timerPaused => 'מושהה';
+
+  @override
+  String get timerLabel => 'תווית לטיימר';
+
+  @override
+  String get deleteTimer => 'מחיקת הטיימר';
+
+  @override
+  String get cancel => 'ביטול';
+
+  @override
+  String get quickTimers => 'טיימרים מהירים';
+
+  @override
+  String get saveQuickTimer => 'שמירה כטיימר מהיר';
+
+  @override
+  String get quickTimerSaved => 'נשמר כטיימר מהיר';
+
+  @override
+  String get quickTimerRemoved => 'הטיימר המהיר הוסר';
+
+  @override
+  String get quickTimersHint =>
+      'הקשה מתחילה טיימר. אפשר להסיר טיימר ששמרתם עם ×.';
+
+  @override
+  String get hoursUnit => 'ש׳';
+
+  @override
+  String get minutesUnit => 'ד׳';
+
+  @override
+  String get secondsUnit => 'שנ׳';
+
+  @override
+  String get deleteDigit => 'מחיקת ספרה';
+
+  @override
+  String get lap => 'הקפה';
+
+  @override
+  String lapNumber(int number) {
+    return 'הקפה $number';
+  }
+
+  @override
+  String get copyLaps => 'העתקת ההקפות';
+
+  @override
+  String get lapsCopied => 'ההקפות הועתקו';
+
+  @override
+  String get timerStarted => 'הטיימר התחיל';
 }

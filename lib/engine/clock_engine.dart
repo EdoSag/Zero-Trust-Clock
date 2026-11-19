@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'alarm.dart';
+import 'clock_timer.dart';
 
 /// The alarm engine on the phone. It keeps the alarms, hands them to
 /// Android and rings them, also with the app closed and before the
@@ -79,17 +80,127 @@ abstract class ClockEngine {
   /// Fires when the alarms changed outside the screens (one rang, was
   /// dismissed, was missed).
   Stream<void> get changes;
+
+  // Timers: run and rung by the engine, also with the app closed.
+
+  Future<List<ClockTimer>> timers();
+
+  /// A new timer, started unless [start] is false. Returns its id.
+  Future<String> addTimer(
+    Duration length, {
+    String label = '',
+    bool start = true,
+  });
+  Future<void> startTimer(String id);
+  Future<void> pauseTimer(String id);
+
+  /// "+1:00" (also on a ringing timer: it runs one more minute).
+  Future<void> addTimerMinute(String id);
+
+  /// Back to its length, not running. Stops it ringing too.
+  Future<void> resetTimer(String id);
+  Future<void> setTimerLabel(String id, String label);
+  Future<void> deleteTimer(String id);
+
+  /// "Stop" for every finished timer that rings.
+  Future<void> stopRingingTimers();
+
+  // The stopwatch, kept by the engine with its notification.
+
+  Future<StopwatchState> stopwatch();
+  Future<void> stopwatchStart();
+  Future<void> stopwatchPause();
+  Future<void> stopwatchLap();
+  Future<void> stopwatchReset();
+
+  /// The tab a notification or shortcut opened the app on (taken once).
+  Future<String?> launchTab();
+
+  /// A tab asked for while the app is already open.
+  Stream<String> get openTab;
 }
 
 class MethodChannelClockEngine implements ClockEngine {
   MethodChannelClockEngine() {
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'changed') _changes.add(null);
+      if (call.method == 'openTab' && call.arguments is String) {
+        _tabs.add(call.arguments as String);
+      }
     });
   }
 
   static const _channel = MethodChannel('dev.sagron.zerotrustclock/engine');
   final _changes = StreamController<void>.broadcast();
+  final _tabs = StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get openTab => _tabs.stream;
+
+  @override
+  Future<String?> launchTab() => _channel.invokeMethod<String>('launchTab');
+
+  @override
+  Future<List<ClockTimer>> timers() async => ClockTimer.listFromJson(
+    await _channel.invokeMethod<String>('timers') ?? '[]',
+  );
+
+  @override
+  Future<String> addTimer(
+    Duration length, {
+    String label = '',
+    bool start = true,
+  }) async =>
+      await _channel.invokeMethod<String>('timerAdd', {
+        'lengthMs': length.inMilliseconds,
+        'label': label,
+        'start': start,
+      }) ??
+      '';
+
+  @override
+  Future<void> startTimer(String id) =>
+      _channel.invokeMethod('timerStart', {'id': id});
+
+  @override
+  Future<void> pauseTimer(String id) =>
+      _channel.invokeMethod('timerPause', {'id': id});
+
+  @override
+  Future<void> addTimerMinute(String id) =>
+      _channel.invokeMethod('timerAddMinute', {'id': id});
+
+  @override
+  Future<void> resetTimer(String id) =>
+      _channel.invokeMethod('timerReset', {'id': id});
+
+  @override
+  Future<void> setTimerLabel(String id, String label) =>
+      _channel.invokeMethod('timerLabel', {'id': id, 'label': label});
+
+  @override
+  Future<void> deleteTimer(String id) =>
+      _channel.invokeMethod('timerDelete', {'id': id});
+
+  @override
+  Future<void> stopRingingTimers() => _channel.invokeMethod('timerStopRinging');
+
+  @override
+  Future<StopwatchState> stopwatch() async => StopwatchState.fromJson(
+    await _channel.invokeMethod<String>('stopwatch') ?? '{}',
+  );
+
+  @override
+  Future<void> stopwatchStart() => _channel.invokeMethod('stopwatchStart');
+
+  @override
+  Future<void> stopwatchPause() => _channel.invokeMethod('stopwatchPause');
+
+  @override
+  Future<void> stopwatchLap() => _channel.invokeMethod('stopwatchLap');
+
+  @override
+  Future<void> stopwatchReset() => _channel.invokeMethod('stopwatchReset');
 
   @override
   Stream<void> get changes => _changes.stream;
@@ -284,3 +395,54 @@ final alarmCheckProvider = FutureProvider<AlarmCheck>(
 final pauseAllProvider = FutureProvider<DateTime?>(
   (ref) => ref.watch(clockEngineProvider).pauseAllUntil(),
 );
+
+/// The timers, oldest first. Reloads when the engine says something
+/// changed (a timer finished, a notification button was pressed).
+class TimersController extends AsyncNotifier<List<ClockTimer>> {
+  @override
+  Future<List<ClockTimer>> build() {
+    final engine = ref.watch(clockEngineProvider);
+    final sub = engine.changes.listen((_) => refresh());
+    ref.onDispose(sub.cancel);
+    return engine.timers();
+  }
+
+  Future<void> refresh() async {
+    try {
+      final list = await ref.read(clockEngineProvider).timers();
+      if (ref.mounted) state = AsyncData(list);
+    } on Object {
+      // Keeps the last list.
+    }
+  }
+}
+
+final timersProvider =
+    AsyncNotifierProvider<TimersController, List<ClockTimer>>(
+      TimersController.new,
+    );
+
+/// The stopwatch as the engine has it.
+class StopwatchController extends AsyncNotifier<StopwatchState> {
+  @override
+  Future<StopwatchState> build() {
+    final engine = ref.watch(clockEngineProvider);
+    final sub = engine.changes.listen((_) => refresh());
+    ref.onDispose(sub.cancel);
+    return engine.stopwatch();
+  }
+
+  Future<void> refresh() async {
+    try {
+      final s = await ref.read(clockEngineProvider).stopwatch();
+      if (ref.mounted) state = AsyncData(s);
+    } on Object {
+      // Keeps the last state.
+    }
+  }
+}
+
+final stopwatchProvider =
+    AsyncNotifierProvider<StopwatchController, StopwatchState>(
+      StopwatchController.new,
+    );

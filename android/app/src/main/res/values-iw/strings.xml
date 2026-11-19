@@ -18,4 +18,22 @@
     <string name="upcoming_turn_off_once">כיבוי לפעם אחת</string>
     <string name="alarm_set_for">השעון המעורר נקבע ל-%1$s</string>
     <string name="ring_slide_dismiss">החליקו לסגירה</string>
+    <string name="channel_timers">טיימרים ושעון עצר</string>
+    <string name="channel_timers_about">מציג טיימרים פעילים ואת שעון העצר, עם הכפתורים שלהם.</string>
+    <string name="channel_timer_ringing">טיימרים שהסתיימו</string>
+    <string name="timer_of">טיימר %1$s</string>
+    <string name="timer_running">פועל</string>
+    <string name="timer_paused_left">מושהה, נותרו %1$s</string>
+    <string name="timer_pause">השהיה</string>
+    <string name="timer_resume">המשך</string>
+    <string name="timer_add_minute">+1:00</string>
+    <string name="timer_reset">איפוס</string>
+    <string name="timer_stop">עצירה</string>
+    <string name="timer_times_up">הזמן נגמר</string>
+    <string name="timer_missed">טיימר הסתיים</string>
+    <string name="timer_set_for">הטיימר נקבע ל-%1$s</string>
+    <string name="stopwatch">שעון עצר</string>
+    <string name="stopwatch_lap">הקפה %1$d</string>
+    <string name="stopwatch_lap_button">הקפה</string>
+    <string name="stopwatch_paused">נעצר ב-%1$s</string>
 </resources>
