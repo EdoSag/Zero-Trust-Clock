@@ -355,4 +355,93 @@ class AppL10nEn extends AppL10n {
   String pausedAllUntil(String day) {
     return 'Repeating alarms are paused through $day. Alarms set for one day still ring.';
   }
+
+  @override
+  String get timers => 'Timers';
+
+  @override
+  String get stopwatch => 'Stopwatch';
+
+  @override
+  String get addTimer => 'Add timer';
+
+  @override
+  String get start => 'Start';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get addMinute => '+1:00';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get timesUp => 'Time\'s up';
+
+  @override
+  String timerOf(String length) {
+    return '$length timer';
+  }
+
+  @override
+  String get timerPaused => 'Paused';
+
+  @override
+  String get timerLabel => 'Timer label';
+
+  @override
+  String get deleteTimer => 'Delete timer';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get quickTimers => 'Quick timers';
+
+  @override
+  String get saveQuickTimer => 'Save as a quick timer';
+
+  @override
+  String get quickTimerSaved => 'Saved as a quick timer';
+
+  @override
+  String get quickTimerRemoved => 'Quick timer removed';
+
+  @override
+  String get quickTimersHint =>
+      'Tap one to start it. Remove one you saved with its ×.';
+
+  @override
+  String get hoursUnit => 'h';
+
+  @override
+  String get minutesUnit => 'm';
+
+  @override
+  String get secondsUnit => 's';
+
+  @override
+  String get deleteDigit => 'Delete digit';
+
+  @override
+  String get lap => 'Lap';
+
+  @override
+  String lapNumber(int number) {
+    return 'Lap $number';
+  }
+
+  @override
+  String get copyLaps => 'Copy laps';
+
+  @override
+  String get lapsCopied => 'Laps copied';
+
+  @override
+  String get timerStarted => 'Timer started';
 }

@@ -81,7 +81,10 @@ void main() {
     await tester.pumpAndSettle();
     // English until another language is picked.
     expect(engine.language, 'en');
-    expect(find.text('Alarms'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.text('Alarms')),
+      findsOneWidget,
+    );
     expect(find.text('7:00 AM'), findsOneWidget);
 
     final container = ProviderScope.containerOf(
@@ -90,7 +93,13 @@ void main() {
     await container.read(ztLanguageProvider.notifier).set(const Locale('he'));
     await tester.pumpAndSettle();
     expect(engine.language, 'he');
-    expect(find.text('שעונים מעוררים'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('שעונים מעוררים'),
+      ),
+      findsOneWidget,
+    );
 
     // "Phone language": the ring screen follows the phone too.
     await container.read(ztLanguageProvider.notifier).set(null);

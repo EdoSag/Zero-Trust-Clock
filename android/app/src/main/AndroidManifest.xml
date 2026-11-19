@@ -75,8 +75,32 @@
             android:exported="false"
             android:directBootAware="true"
             android:foregroundServiceType="systemExempted"/>
-        <!-- "Set an alarm for 7" from assistants and other apps (Android's
-             standard alarm intents). Callers need SET_ALARM. -->
+        <!-- Timers: "Time's up" over the lock screen, the service that
+             rings finished timers, and the receiver for their ends and
+             notification buttons. -->
+        <activity
+            android:name=".engine.TimerRingActivity"
+            android:exported="false"
+            android:directBootAware="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/RingTheme"/>
+        <service
+            android:name=".engine.TimerRingService"
+            android:exported="false"
+            android:directBootAware="true"
+            android:foregroundServiceType="systemExempted"/>
+        <receiver
+            android:name=".engine.TimerReceiver"
+            android:exported="false"
+            android:directBootAware="true"/>
+        <!-- "Set an alarm for 7" and "set a timer for 5 minutes" from
+             assistants and other apps (Android's standard alarm intents).
+             Callers need SET_ALARM. -->
         <activity
             android:name=".engine.SetAlarmActivity"
             android:exported="true"
@@ -87,6 +111,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.SET_ALARM"/>
                 <action android:name="android.intent.action.SHOW_ALARMS"/>
+                <action android:name="android.intent.action.SET_TIMER"/>
+                <action android:name="android.intent.action.SHOW_TIMERS"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:zerotrust_clock/engine/alarm.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
+import 'package:zerotrust_clock/engine/clock_timer.dart';
 
 ClockAlarm alarm(
   String id, {
@@ -362,6 +363,174 @@ class FakeClockEngine implements ClockEngine {
   @override
   Future<void> openSettings(String which) async {
     calls.add('openSettings $which');
+  }
+
+  // Timers and the stopwatch.
+
+  final List<ClockTimer> timerList = [];
+  StopwatchState stopwatchState = const StopwatchState();
+  String? tabAtLaunch;
+  final _tabs = StreamController<String>.broadcast();
+  int _timerIds = 0;
+
+  /// As when a notification opens a tab while the app is open.
+  void openTabOutside(String tab) => _tabs.add(tab);
+
+  @override
+  Stream<String> get openTab => _tabs.stream;
+
+  @override
+  Future<String?> launchTab() async {
+    final tab = tabAtLaunch;
+    tabAtLaunch = null;
+    return tab;
+  }
+
+  @override
+  Future<List<ClockTimer>> timers() async => [...timerList];
+
+  void _timer(String id, ClockTimer Function(ClockTimer) how) {
+    final i = timerList.indexWhere((t) => t.id == id);
+    if (i >= 0) timerList[i] = how(timerList[i]);
+  }
+
+  ClockTimer _copy(
+    ClockTimer t, {
+    DateTime? endsAt,
+    Duration? left,
+    bool ringing = false,
+    String? label,
+  }) => ClockTimer(
+    id: t.id,
+    length: t.length,
+    label: label ?? t.label,
+    endsAt: endsAt,
+    left: left ?? t.length,
+    ringing: ringing,
+    createdAt: t.createdAt,
+  );
+
+  @override
+  Future<String> addTimer(
+    Duration length, {
+    String label = '',
+    bool start = true,
+  }) async {
+    _mayFail();
+    calls.add('addTimer ${length.inSeconds}s');
+    final t = ClockTimer(
+      id: 'timer-${++_timerIds}',
+      length: length,
+      label: label,
+      endsAt: start ? DateTime.now().add(length) : null,
+      createdAt: DateTime.now(),
+    );
+    timerList.add(t);
+    return t.id;
+  }
+
+  @override
+  Future<void> startTimer(String id) async {
+    calls.add('startTimer $id');
+    _timer(id, (t) => _copy(t, endsAt: DateTime.now().add(t.left)));
+  }
+
+  @override
+  Future<void> pauseTimer(String id) async {
+    calls.add('pauseTimer $id');
+    _timer(id, (t) => _copy(t, left: t.endsAt!.difference(DateTime.now())));
+  }
+
+  @override
+  Future<void> addTimerMinute(String id) async {
+    calls.add('addTimerMinute $id');
+    const minute = Duration(minutes: 1);
+    _timer(
+      id,
+      (t) => t.ringing
+          ? _copy(t, endsAt: DateTime.now().add(minute))
+          : t.endsAt != null
+          ? _copy(t, endsAt: t.endsAt!.add(minute))
+          : _copy(t, left: t.left + minute),
+    );
+  }
+
+  @override
+  Future<void> resetTimer(String id) async {
+    calls.add('resetTimer $id');
+    _timer(id, (t) => _copy(t));
+  }
+
+  @override
+  Future<void> setTimerLabel(String id, String label) async {
+    calls.add('setTimerLabel $id "$label"');
+    _timer(
+      id,
+      (t) => _copy(
+        t,
+        label: label,
+        endsAt: t.endsAt,
+        left: t.left,
+        ringing: t.ringing,
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteTimer(String id) async {
+    calls.add('deleteTimer $id');
+    timerList.removeWhere((t) => t.id == id);
+  }
+
+  @override
+  Future<void> stopRingingTimers() async {
+    calls.add('stopRingingTimers');
+    for (final t in [...timerList]) {
+      if (t.ringing) _timer(t.id, (t) => _copy(t));
+    }
+  }
+
+  @override
+  Future<StopwatchState> stopwatch() async => stopwatchState;
+
+  @override
+  Future<void> stopwatchStart() async {
+    calls.add('stopwatchStart');
+    final s = stopwatchState;
+    if (!s.running) {
+      stopwatchState = StopwatchState(
+        startedAt: DateTime.now(),
+        banked: s.banked,
+        laps: s.laps,
+      );
+    }
+  }
+
+  @override
+  Future<void> stopwatchPause() async {
+    calls.add('stopwatchPause');
+    final s = stopwatchState;
+    stopwatchState = StopwatchState(
+      banked: s.elapsed(DateTime.now()),
+      laps: s.laps,
+    );
+  }
+
+  @override
+  Future<void> stopwatchLap() async {
+    calls.add('stopwatchLap');
+    final s = stopwatchState;
+    stopwatchState = StopwatchState(
+      startedAt: s.startedAt,
+      banked: s.banked,
+      laps: [...s.laps, s.elapsed(DateTime.now())],
+    );
+  }
+
+  @override
+  Future<void> stopwatchReset() async {
+    calls.add('stopwatchReset');
+    stopwatchState = const StopwatchState();
   }
 
   /// As when an alarm rings or is dismissed outside the app.

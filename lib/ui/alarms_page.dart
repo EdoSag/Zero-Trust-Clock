@@ -11,7 +11,7 @@ import 'alarm_card.dart';
 import 'alarm_check_page.dart';
 import 'alarm_editor.dart';
 import 'alarm_text.dart';
-import 'settings_page.dart';
+import 'settings_button.dart';
 
 /// The home screen: every alarm, with the switch and "Turn off once".
 class AlarmsPage extends ConsumerStatefulWidget {
@@ -242,13 +242,7 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
       appBar: AppBar(
         title: Text(l.alarms),
         actions: [
-          IconButton(
-            tooltip: l.settings,
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(builder: (_) => const ClockSettingsPage()),
-            ),
-          ),
+          const SettingsButton(),
           PopupMenuButton<bool>(
             tooltip: l.moreOptions,
             onSelected: (pause) => pause ? _pauseAll() : _resumeAll(),
@@ -261,6 +255,7 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'addAlarm',
         tooltip: l.addAlarm,
         onPressed: _add,
         child: const Icon(Icons.add),

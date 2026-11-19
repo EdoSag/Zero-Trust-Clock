@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.3.0)
+## What is in it now (0.4.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -35,6 +35,15 @@ Work happens on the `Dev` branch; `main` holds releases.
 - **Upcoming alarm notification**, from two hours before a ring, with
   **Turn off once** (or **Dismiss** on an alarm that rings once). Silent,
   and the label is not shown on the lock screen.
+- **Timers.** Several at once, each with a label, Pause, +1:00 and Reset.
+  Type a length on the keypad or tap a quick timer (1, 3, 5, 10, 15, 30
+  minutes, plus your own). Timers run and ring in the engine, so they ring
+  with the app closed; each has a notification counting down with its
+  buttons, and "Time's up" opens over the lock screen.
+- **Stopwatch** with laps (newest on top, fastest and slowest marked) and
+  "Copy laps". It keeps counting with the app closed, in a notification
+  with Pause and Lap.
+- **"Set a timer for 5 minutes"** from assistants and other apps.
 - **No account needed.** Alarms stay on the phone and ring without one.
 - **Optional sign-in** (Settings > Sign in or create an account) adds
   end-to-end encrypted backup and sync through the shared Zero-Trust
@@ -49,10 +58,10 @@ Work happens on the `Dev` branch; `main` holds releases.
 
 | Part | Where | What it does |
 | --- | --- | --- |
-| Scheduler | `android/.../engine/core` | Plain Kotlin, no Android: when an alarm rings next (repeat days, Turn off once, snooze, clock and time zone changes). Unit tested. |
-| Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. |
+| Scheduler | `android/.../engine/core` | Plain Kotlin, no Android: when an alarm rings next (repeat days, Turn off once, snooze, clock and time zone changes), what each timer and stopwatch button does. Unit tested. |
+| Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. Timers (`TimerEngine`, exact AlarmManager wake-ups) and the stopwatch live here too, with their notifications. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
-| Screens | `lib/ui` | Flutter, on the shared core: alarm list, editor, Alarm check, settings. |
+| Screens | `lib/ui` | Flutter, on the shared core: Alarms, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
 | Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. |
 | Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
@@ -64,7 +73,10 @@ Where things are kept on the phone:
 
 - Alarm times and days: device-protected storage, readable before the first
   unlock, so alarms can be set again right after a restart.
-- Labels: the normal encrypted storage. A label is not readable, and not
+- Timers (with their labels) and the stopwatch: device-protected storage,
+  so a timer that ends before the first unlock still rings. Timer labels
+  stay off the lock screen.
+- Alarm labels: the normal encrypted storage. A label is not readable, and not
   shown, until the phone has been unlocked.
 
 ## Testing on a phone
@@ -81,6 +93,12 @@ Where things are kept on the phone:
 6. Sign in from Settings on two phones: an alarm made on one arrives on
    the other switched off; switching it on there leaves the first as it
    was; a time change on either reaches the other.
+7. Timers tab: start a 1-minute timer, lock the phone and wait for
+   "Time's up" over the lock screen; try +1:00 and Stop there. Start two
+   timers and pause one from its notification.
+8. "Hey Google, set a timer for 2 minutes": it starts in ZT Clock.
+9. Stopwatch: start, take laps, close the app (swipe it away), wait, open
+   it again from the notification: the time kept going.
 
 ## Development
 

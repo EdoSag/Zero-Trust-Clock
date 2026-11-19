@@ -16,27 +16,69 @@
   "delete": "Delete",
   "moreOptions": "More options",
   "offOnceNext": "Off once. Next: {day}",
-  "@offOnceNext": {"placeholders": {"day": {"type": "String"}}},
+  "@offOnceNext": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "offOnce": "Off once",
   "undo": "Undo",
   "alarmOff": "Alarm off",
   "justOnce": "Just once",
   "alarmDeleted": "Alarm deleted",
   "snoozedUntil": "Snoozed until {time}",
-  "@snoozedUntil": {"placeholders": {"time": {"type": "String"}}},
+  "@snoozedUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "dismiss": "Dismiss",
   "snooze": "Snooze",
   "ringingNow": "Ringing now",
   "ringsInDays": "Rings in {days} d {hours} h",
-  "@ringsInDays": {"placeholders": {"days": {"type": "int"}, "hours": {"type": "int"}}},
+  "@ringsInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "ringsInHours": "Rings in {hours} h {minutes} min",
-  "@ringsInHours": {"placeholders": {"hours": {"type": "int"}, "minutes": {"type": "int"}}},
+  "@ringsInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "ringsInMinutes": "Rings in {minutes} min",
-  "@ringsInMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@ringsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "ringsInUnderMinute": "Rings in less than a minute",
   "mayNotRing": "Alarms may not ring",
   "mayNotRingHint": "{count, plural, =1{1 thing on this phone needs attention.} other{{count} things on this phone need attention.}}",
-  "@mayNotRingHint": {"placeholders": {"count": {"type": "int"}}},
+  "@mayNotRingHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "openAlarmCheck": "Open Alarm check",
   "editAlarm": "Edit alarm",
   "changeTime": "Change time",
@@ -47,7 +89,13 @@
   "vibrate": "Vibrate",
   "snoozeLength": "Snooze length",
   "minutesShort": "{minutes} min",
-  "@minutesShort": {"placeholders": {"minutes": {"type": "int"}}},
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "save": "Save",
   "couldNotSave": "That did not work. Try again.",
   "alarmCheck": "Alarm check",
@@ -69,7 +117,16 @@
   "checkExactBad": "Not allowed. Alarms could ring late.",
   "checkVolume": "Alarm volume",
   "checkVolumeOk": "{level} of {max}",
-  "@checkVolumeOk": {"placeholders": {"level": {"type": "int"}, "max": {"type": "int"}}},
+  "@checkVolumeOk": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "checkVolumeBad": "At zero. Alarms only vibrate.",
   "checkSilence": "Do Not Disturb",
   "checkSilenceOk": "Alarms can ring",
@@ -80,9 +137,21 @@
   "checkRestart": "After a restart",
   "checkRestartNever": "No restart seen since the app was installed.",
   "checkRestartLocked": "Alarms were set again on {when}, before the phone was unlocked.",
-  "@checkRestartLocked": {"placeholders": {"when": {"type": "String"}}},
+  "@checkRestartLocked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "checkRestartUnlocked": "Alarms were set again on {when}, after the phone was unlocked.",
-  "@checkRestartUnlocked": {"placeholders": {"when": {"type": "String"}}},
+  "@checkRestartUnlocked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "tryIt": "Try it",
   "testIn10": "Test alarm in 10 seconds",
   "testIn10Hint": "Rings like a real alarm. Lock the phone first to see the alarm screen.",
@@ -91,7 +160,13 @@
   "restartTestHint": "Sets a test alarm 3 minutes from now. Restart the phone and leave it locked. The alarm should still ring.",
   "restartTestStarted": "Test alarm rings in 3 minutes. Restart the phone now and do not unlock it.",
   "alarmsAdded": "{count, plural, =1{1 alarm from your account was added. It stays off on this phone until you switch it on.} other{{count} alarms from your account were added. They stay off on this phone until you switch them on.}}",
-  "@alarmsAdded": {"placeholders": {"count": {"type": "int"}}},
+  "@alarmsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "date": "Date",
   "sound": "Sound",
   "soundChime": "ZT chime",
@@ -106,10 +181,64 @@
   "pauseUntil": "Pause until…",
   "pauseUntilHelp": "Silent through this day",
   "pausedUntil": "Paused until {day}",
-  "@pausedUntil": {"placeholders": {"day": {"type": "String"}}},
+  "@pausedUntil": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "resume": "Resume",
   "pauseAll": "Pause all alarms until…",
   "resumeAll": "Resume all alarms",
   "pausedAllUntil": "Repeating alarms are paused through {day}. Alarms set for one day still ring.",
-  "@pausedAllUntil": {"placeholders": {"day": {"type": "String"}}}
+  "@pausedAllUntil": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "timers": "Timers",
+  "stopwatch": "Stopwatch",
+  "addTimer": "Add timer",
+  "start": "Start",
+  "pause": "Pause",
+  "reset": "Reset",
+  "addMinute": "+1:00",
+  "stop": "Stop",
+  "timesUp": "Time's up",
+  "timerOf": "{length} timer",
+  "@timerOf": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "timerPaused": "Paused",
+  "timerLabel": "Timer label",
+  "deleteTimer": "Delete timer",
+  "cancel": "Cancel",
+  "quickTimers": "Quick timers",
+  "saveQuickTimer": "Save as a quick timer",
+  "quickTimerSaved": "Saved as a quick timer",
+  "quickTimerRemoved": "Quick timer removed",
+  "quickTimersHint": "Tap one to start it. Remove one you saved with its ×.",
+  "hoursUnit": "h",
+  "minutesUnit": "m",
+  "secondsUnit": "s",
+  "deleteDigit": "Delete digit",
+  "lap": "Lap",
+  "lapNumber": "Lap {number}",
+  "@lapNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "copyLaps": "Copy laps",
+  "lapsCopied": "Laps copied",
+  "timerStarted": "Timer started"
 }

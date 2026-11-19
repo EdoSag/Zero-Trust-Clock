@@ -690,6 +690,174 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Repeating alarms are paused through {day}. Alarms set for one day still ring.'**
   String pausedAllUntil(String day);
+
+  /// No description provided for @timers.
+  ///
+  /// In en, this message translates to:
+  /// **'Timers'**
+  String get timers;
+
+  /// No description provided for @stopwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopwatch'**
+  String get stopwatch;
+
+  /// No description provided for @addTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add timer'**
+  String get addTimer;
+
+  /// No description provided for @start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get start;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @addMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'+1:00'**
+  String get addMinute;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stop;
+
+  /// No description provided for @timesUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Time\'s up'**
+  String get timesUp;
+
+  /// No description provided for @timerOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{length} timer'**
+  String timerOf(String length);
+
+  /// No description provided for @timerPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get timerPaused;
+
+  /// No description provided for @timerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer label'**
+  String get timerLabel;
+
+  /// No description provided for @deleteTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete timer'**
+  String get deleteTimer;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @quickTimers.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick timers'**
+  String get quickTimers;
+
+  /// No description provided for @saveQuickTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as a quick timer'**
+  String get saveQuickTimer;
+
+  /// No description provided for @quickTimerSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as a quick timer'**
+  String get quickTimerSaved;
+
+  /// No description provided for @quickTimerRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick timer removed'**
+  String get quickTimerRemoved;
+
+  /// No description provided for @quickTimersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap one to start it. Remove one you saved with its ×.'**
+  String get quickTimersHint;
+
+  /// No description provided for @hoursUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get hoursUnit;
+
+  /// No description provided for @minutesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get minutesUnit;
+
+  /// No description provided for @secondsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'s'**
+  String get secondsUnit;
+
+  /// No description provided for @deleteDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete digit'**
+  String get deleteDigit;
+
+  /// No description provided for @lap.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap'**
+  String get lap;
+
+  /// No description provided for @lapNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap {number}'**
+  String lapNumber(int number);
+
+  /// No description provided for @copyLaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy laps'**
+  String get copyLaps;
+
+  /// No description provided for @lapsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Laps copied'**
+  String get lapsCopied;
+
+  /// No description provided for @timerStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer started'**
+  String get timerStarted;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
