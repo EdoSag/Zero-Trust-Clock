@@ -42,4 +42,16 @@
     <string name="shortcut_new_alarm">שעון מעורר חדש</string>
     <string name="shortcut_new_timer">טיימר חדש</string>
     <string name="shortcut_start_stopwatch">הפעלת שעון עצר</string>
+    <string name="widget_app_name">ZT Clock</string>
+    <string name="widget_clock_name">שעון והשעון המעורר הבא</string>
+    <string name="widget_clock_description">השעה, התאריך והשעון המעורר הבא, עם כיבוי לפעם אחת.</string>
+    <string name="widget_world_name">שעון עולמי</string>
+    <string name="widget_world_title">ZT Clock · עולם</string>
+    <string name="widget_world_description">השעה בערים שבלשונית השעון.</string>
+    <string name="widget_world_empty">הוסיפו ערים בלשונית השעון של ZT Clock כדי לראות אותן כאן.</string>
+    <string name="widget_analog_name">שעון מחוגים</string>
+    <string name="widget_analog_description">שעון עם מחוגים.</string>
+    <string name="widget_no_alarm">אין שעון מעורר</string>
+    <string name="widget_sample_alarm">ג׳ 7:00</string>
+    <string name="widget_sample_city">טוקיו</string>
 </resources>

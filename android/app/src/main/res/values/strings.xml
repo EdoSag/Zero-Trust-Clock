@@ -44,4 +44,16 @@
     <string name="shortcut_new_alarm">New alarm</string>
     <string name="shortcut_new_timer">New timer</string>
     <string name="shortcut_start_stopwatch">Start stopwatch</string>
+    <string name="widget_app_name">ZT Clock</string>
+    <string name="widget_clock_name">Clock and next alarm</string>
+    <string name="widget_clock_description">The time, the date and your next alarm, with Turn off once.</string>
+    <string name="widget_world_name">World clock</string>
+    <string name="widget_world_title">ZT Clock · World</string>
+    <string name="widget_world_description">The time in the cities of your Clock tab.</string>
+    <string name="widget_world_empty">Add cities in ZT Clock\'s Clock tab to see them here.</string>
+    <string name="widget_analog_name">Analog clock</string>
+    <string name="widget_analog_description">A clock face.</string>
+    <string name="widget_no_alarm">No alarm set</string>
+    <string name="widget_sample_alarm">Tue 7:00</string>
+    <string name="widget_sample_city">Tokyo</string>
 </resources>

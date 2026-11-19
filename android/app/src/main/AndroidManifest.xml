@@ -100,6 +100,35 @@
             android:name=".engine.TimerReceiver"
             android:exported="false"
             android:directBootAware="true"/>
+        <!-- Home screen widgets (engine/Widgets.kt), in the shared
+             Zero-Trust widget look. -->
+        <receiver
+            android:name=".engine.ClockWidget"
+            android:exported="false"
+            android:label="@string/widget_clock_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_clock_info"/>
+        </receiver>
+        <receiver
+            android:name=".engine.WorldClockWidget"
+            android:exported="false"
+            android:label="@string/widget_world_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_world_info"/>
+        </receiver>
+        <receiver
+            android:name=".engine.AnalogClockWidget"
+            android:exported="false"
+            android:label="@string/widget_analog_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_analog_info"/>
+        </receiver>
         <!-- Quick Settings tiles: the next alarm, and the stopwatch. -->
         <service
             android:name=".engine.NextAlarmTile"

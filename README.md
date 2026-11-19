@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.5.0)
+## What is in it now (0.6.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -50,6 +50,10 @@ Work happens on the `Dev` branch; `main` holds releases.
   to reorder, swipe to remove (with Undo).
 - **Quick Settings tiles**: Next alarm (opens the alarms) and Stopwatch
   (starts and pauses it).
+- **Home screen widgets**, in the shared Zero-Trust widget look: Clock and
+  next alarm (with Turn off once, and + for a new alarm), World clock (the
+  first four cities of the Clock tab, each with a live time) and an Analog
+  clock. No alarm labels on the home screen.
 - **Shortcuts** on the app icon (long-press): New alarm, New timer, Start
   stopwatch.
 - **No account needed.** Alarms stay on the phone and ring without one.
@@ -111,6 +115,8 @@ Where things are kept on the phone:
     the names follow.
 11. Add the Next alarm and Stopwatch tiles to Quick Settings; long-press the
     app icon for the shortcuts.
+12. Add the three widgets; tap Turn off once on the Clock widget and check
+    the alarm list; add a city and check the World clock widget.
 
 ## Development
 

@@ -26,6 +26,7 @@ import dev.sagron.zerotrustclock.engine.Tabs
 import dev.sagron.zerotrustclock.engine.TimerEngine
 import dev.sagron.zerotrustclock.engine.TimerNotifications
 import dev.sagron.zerotrustclock.engine.TimerRingService
+import dev.sagron.zerotrustclock.engine.Widgets
 import dev.sagron.zerotrustclock.engine.WorldZones
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -142,6 +143,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "setLanguage" -> done(result) {
                     EnginePrefs.setLanguage(activity, call.argument<String>("code"))
                     AlarmNotifications.ensureChannels(Loc.wrap(activity))
+                    TimerNotifications.ensureChannels(Loc.wrap(activity))
+                    Widgets.refresh(activity)
                 }
                 "launchTab" -> result.success(takeTab(activity.intent))
                 "timers" -> result.success(TimerEngine.listJson(activity))
