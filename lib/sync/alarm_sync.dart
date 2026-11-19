@@ -252,7 +252,10 @@ AlarmSyncPlan planAlarmSync({
       continue;
     } else if (v.alarm case final SyncedAlarm s) {
       if (s.editedAt > e.updatedAt) {
-        toEngine.add(s.toEngine(device));
+        // The edit is taken, but this phone's switch stays as it is here
+        // (the other phone may not have seen it yet); the next round tells
+        // the account.
+        toEngine.add(s.toEngine(device).copyWith(enabled: e.enabled));
       } else if (e.updatedAt > s.editedAt) {
         toVault.add(
           SyncedAlarm.fromEngine(e, device: device, onDevices: s.onDevices),
@@ -439,10 +442,11 @@ class AlarmSync {
   }
 
   Future<AlarmSyncResult> _round() async {
+    final deletedBefore = await deleted.read();
     final plan = planAlarmSync(
       engine: await engine.list(),
       vault: await vault.read(),
-      deletedHere: await deleted.read(),
+      deletedHere: deletedBefore,
       device: device,
     );
     for (final a in plan.toVault) {
@@ -452,14 +456,21 @@ class AlarmSync {
       await vault.delete(id);
     }
     var added = 0;
+    // Deleted here while this round ran: not brought back.
+    final deletedNow = await deleted.read();
     for (final a in plan.toEngine) {
-      // False while it rings; the next round takes it.
+      if (deletedNow.contains(a.id) && !deletedBefore.contains(a.id)) continue;
+      // False while it rings, or edited here meanwhile; the next round
+      // takes it.
       if (await engine.importSynced(a) && plan.added.contains(a.id)) added++;
     }
     for (final id in plan.deleteFromEngine) {
       await engine.delete(id);
     }
-    await deleted.write(plan.deletedHere);
+    // Only the notes this round dealt with are dropped; one added while it
+    // ran stays for the next round.
+    final dealtWith = deletedBefore.difference(plan.deletedHere);
+    await deleted.write((await deleted.read()).difference(dealtWith));
     return AlarmSyncResult(
       added: added,
       engineChanged:

@@ -57,8 +57,14 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Back from Android's Do Not Disturb access screen.
-    if (state == AppLifecycleState.resumed) ref.invalidate(dndAccessProvider);
+    // Back from Android's Do Not Disturb access screen: a night under way
+    // gets Do Not Disturb now, not only from the next one.
+    if (state != AppLifecycleState.resumed) return;
+    ref.invalidate(dndAccessProvider);
+    final s = ref.read(bedtimeProvider).value;
+    if (s != null && s.enabled && s.doNotDisturb) {
+      ref.read(bedtimeProvider.notifier).save(s).catchError((Object _) {});
+    }
   }
 
   Future<void> _run(Future<void> Function() work) async {
@@ -83,6 +89,17 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
   /// Saves the schedule. A wake-up alarm that is on follows its times and
   /// nights.
   Future<void> _save(BedtimeSchedule s) => _run(() async {
+    final before = ref.read(bedtimeProvider).value;
+    final remindedBefore =
+        before != null && before.enabled && before.reminderMinutes > 0;
+    if (s.enabled && s.reminderMinutes > 0 && !remindedBefore) {
+      // The reminder is a notification (Android 13 and later ask).
+      try {
+        await _engine.requestNotifications();
+      } on Object {
+        // The Alarm check screen shows it.
+      }
+    }
     final alarm = _wakeAlarm(s);
     if (alarm != null &&
         alarm.enabled &&
@@ -111,6 +128,7 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
       gradual: alarm?.gradual ?? false,
       ringMinutes: alarm?.ringMinutes ?? ClockAlarm.defaultRingMinutes,
       task: alarm?.task,
+      skipHolidays: alarm?.skipHolidays ?? false,
     );
     await ref.read(alarmsProvider.notifier).refresh();
     return id;
@@ -120,6 +138,11 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
     final alarm = _wakeAlarm(s);
     if (on) {
       final id = await _saveWakeAlarm(s, alarm);
+      // Saving keeps an unchanged alarm as it was: switched off stays off.
+      if (alarm != null && !alarm.enabled) {
+        await _engine.setEnabled(id, true);
+        await ref.read(alarmsProvider.notifier).refresh();
+      }
       if (id != s.wakeAlarmId) {
         await ref
             .read(bedtimeProvider.notifier)

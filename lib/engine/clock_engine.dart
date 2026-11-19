@@ -165,7 +165,12 @@ class MethodChannelClockEngine implements ClockEngine {
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'changed') _changes.add(null);
       if (call.method == 'openTab' && call.arguments is String) {
-        _tabs.add(call.arguments as String);
+        // Locked (the home screen isn't there): it waits for launchTab.
+        if (_tabs.hasListener) {
+          _tabs.add(call.arguments as String);
+        } else {
+          _waitingTab = call.arguments as String;
+        }
       }
     });
   }
@@ -177,8 +182,14 @@ class MethodChannelClockEngine implements ClockEngine {
   @override
   Stream<String> get openTab => _tabs.stream;
 
+  String? _waitingTab;
+
   @override
-  Future<String?> launchTab() => _channel.invokeMethod<String>('launchTab');
+  Future<String?> launchTab() async {
+    final waiting = _waitingTab;
+    _waitingTab = null;
+    return waiting ?? await _channel.invokeMethod<String>('launchTab');
+  }
 
   @override
   Future<List<String>> holidays() async => [

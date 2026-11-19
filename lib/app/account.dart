@@ -41,13 +41,19 @@ class PasswordRecovery extends Notifier<bool> {
   bool build() {
     ref.listen(authChangesProvider, (_, next) {
       if (next.value?.event == AuthChangeEvent.passwordRecovery) {
+        EmailLinks.takeRecovery();
         state = true;
       }
     });
-    return false;
+    // Opened from the link: the sign-in may have happened before this
+    // listened.
+    return EmailLinks.takeRecovery();
   }
 
-  void done() => state = false;
+  void done() {
+    EmailLinks.takeRecovery();
+    state = false;
+  }
 }
 
 /// A sign-in that still has to show its new recovery key (new account, or

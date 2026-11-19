@@ -27,6 +27,17 @@ abstract final class EmailLinks {
   static StreamSubscription<Uri>? _links;
   static final _used = <String>{};
 
+  /// A reset link signed in for recovery, maybe before the app's screens
+  /// were there to hear it (opened from the link): ClockGate takes it.
+  static bool _recovering = false;
+
+  /// True once after a reset link signed in for recovery.
+  static bool takeRecovery() {
+    final r = _recovering;
+    _recovering = false;
+    return r;
+  }
+
   /// Starts handling reset links. Call once, after Supabase.initialize.
   /// (Links that carry `?code=` instead, from the default email template,
   /// are handled by supabase_flutter itself.)
@@ -56,6 +67,7 @@ abstract final class EmailLinks {
         type: OtpType.recovery,
         tokenHash: tokenHash,
       );
+      _recovering = true;
     } on Object catch (e) {
       // Expired or already used: the sign-in screen stays, and Forgot
       // password sends a new link.

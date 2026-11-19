@@ -49,7 +49,8 @@ data class Bedtime(
             val day = now.toLocalDate().minusDays(back)
             if (day.dayOfWeek.value !in nights) continue
             val start = day.atTime(bed).atZone(now.zone)
-            val end = start.plus(length)
+            // The wake-up time on the clock, also on a night the clocks change.
+            val end = (if (wake <= bed) day.plusDays(1) else day).atTime(wake).atZone(now.zone)
             if (!now.isBefore(start) && now.isBefore(end)) return start to end
         }
         return null
