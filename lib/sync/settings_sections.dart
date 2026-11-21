@@ -225,6 +225,36 @@ class RingSection implements SettingsSection {
   ) => null;
 }
 
+/// Where home is, for the home time shown while travelling.
+class HomeSection implements SettingsSection {
+  HomeSection(this._ref);
+  final Ref _ref;
+
+  @override
+  String get name => HomeZoneController.settingsName;
+
+  @override
+  Map<String, Object?> get fresh => const {'zone': null};
+
+  @override
+  Future<Map<String, Object?>> read() async => {
+    'zone': await _ref.read(homeZoneProvider.future),
+  };
+
+  @override
+  Future<void> apply(Map<String, Object?> data) =>
+      _ref.read(homeZoneProvider.notifier).set(switch (data['zone']) {
+        final String id when id.isNotEmpty => id,
+        _ => null,
+      }, byHand: false);
+
+  @override
+  Map<String, Object?>? merge(
+    Map<String, Object?> here,
+    Map<String, Object?> account,
+  ) => null;
+}
+
 /// Every group of settings the account backs up.
 final settingsSectionsProvider = Provider<List<SettingsSection>>(
   (ref) => [
@@ -234,6 +264,7 @@ final settingsSectionsProvider = Provider<List<SettingsSection>>(
     HolidaysSection(ref),
     NightClockSection(ref),
     RingSection(ref),
+    HomeSection(ref),
   ],
 );
 

@@ -7,8 +7,11 @@ import '../app/account.dart';
 import '../app/edition.dart';
 import '../engine/clock_engine.dart';
 import '../l10n/l10n.dart';
+import '../world/world_cities.dart';
+import '../world/world_zone.dart';
 import 'alarm_check_page.dart';
 import 'holidays_page.dart';
+import 'world_clock_page.dart';
 
 /// The suite's settings screen. Clock works without an account, so with
 /// nobody signed in it shows what needs none (language, theme, the app's
@@ -23,6 +26,8 @@ class ClockSettingsPage extends ConsumerWidget {
     final night = ref.watch(screensaverNightProvider).value ?? true;
     final ring = ref.watch(ringSettingsProvider).value ?? const RingSettings();
     final offline = ref.watch(offlineEditionProvider);
+    final homeId = ref.watch(homeZoneProvider).value;
+    final home = ref.watch(homeZoneInfoProvider).value;
     return ZtSettingsPage(
       accountOptional: true,
       showSyncStatus: true,
@@ -98,6 +103,17 @@ class ClockSettingsPage extends ConsumerWidget {
                 .set(ring.copyWith(minVolume: picked));
           },
         ),
+        ListTile(
+          key: const ValueKey('homeZone'),
+          leading: const Icon(Icons.home_outlined),
+          title: Text(l.homeTimeZone),
+          subtitle: Text(
+            homeId == null
+                ? l.homeTimeZoneOff
+                : l.homeTimeZoneOn(home?.city ?? homeId),
+          ),
+          onTap: () => _pickHome(context, ref, homeId),
+        ),
         // Holiday calendars are downloaded, so not in the Offline edition.
         if (!offline)
           ListTile(
@@ -129,6 +145,86 @@ class ClockSettingsPage extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// What the home sheet answers: a zone id, or "off".
+const _homeOff = 'off';
+const _homePick = 'pick';
+
+/// "Home time zone": this phone's zone now, any city, or off.
+Future<void> _pickHome(
+  BuildContext context,
+  WidgetRef ref,
+  String? current,
+) async {
+  final l = context.l10n;
+  WorldZone? here;
+  try {
+    here = await ref.read(localZoneProvider.future);
+  } on Object {
+    here = null;
+  }
+  if (!context.mounted) return;
+  final navigator = Navigator.of(context);
+  final picked = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (context) => SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
+              child: Text(
+                l.homeTimeZone,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            if (here != null)
+              ListTile(
+                key: const ValueKey('homeHere'),
+                leading: const Icon(Icons.my_location),
+                title: Text(l.homeHere(here.city)),
+                selected: current == here.id,
+                onTap: () => Navigator.of(context).pop(here!.id),
+              ),
+            ListTile(
+              key: const ValueKey('homePick'),
+              leading: const Icon(Icons.search),
+              title: Text(l.homePickCity),
+              onTap: () => Navigator.of(context).pop(_homePick),
+            ),
+            if (current != null)
+              ListTile(
+                key: const ValueKey('homeOff'),
+                leading: const Icon(Icons.block),
+                title: Text(l.off),
+                onTap: () => Navigator.of(context).pop(_homeOff),
+              ),
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
+              child: Text(
+                l.homeTimeZoneAbout,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (picked == null) return;
+  var id = picked == _homeOff ? null : picked;
+  if (picked == _homePick) {
+    id = await navigator.push<String>(
+      MaterialPageRoute(builder: (_) => const CityPickerPage(forHome: true)),
+    );
+    if (id == null) return;
+  }
+  await ref.read(homeZoneProvider.notifier).set(id);
 }
 
 String volumeButtonsText(AppL10n l, VolumeButtons v) => switch (v) {

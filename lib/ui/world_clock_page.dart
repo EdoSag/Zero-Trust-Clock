@@ -58,7 +58,10 @@ class _WorldClockPageState extends ConsumerState<WorldClockPage> {
     _tick = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted) return;
       // Every ten minutes, the offsets again (daylight saving time).
-      if (++_ticks % 120 == 0) ref.invalidate(savedZonesProvider);
+      if (++_ticks % 120 == 0) {
+        ref.invalidate(savedZonesProvider);
+        ref.invalidate(homeZoneInfoProvider);
+      }
       setState(() {});
     });
   }
@@ -109,6 +112,9 @@ class _WorldClockPageState extends ConsumerState<WorldClockPage> {
         if (known[id] case final z?) z,
     ];
     final tag = Localizations.localeOf(context).toLanguageTag();
+    // Home's time, only while the phone is in another time zone.
+    final home = ref.watch(homeZoneInfoProvider).value;
+    final away = home != null && home.offset != now.timeZoneOffset;
     return Scaffold(
       appBar: AppBar(title: Text(l.clock), actions: const [SettingsButton()]),
       floatingActionButton: FloatingActionButton(
@@ -140,6 +146,10 @@ class _WorldClockPageState extends ConsumerState<WorldClockPage> {
                 ),
               ),
             ),
+            if (away)
+              SliverToBoxAdapter(
+                child: HomeRow(zone: home, now: now),
+              ),
             if (zones.hasValue && list.isEmpty)
               SliverToBoxAdapter(
                 child: Padding(
@@ -243,9 +253,42 @@ class CityRow extends StatelessWidget {
   }
 }
 
+/// Home's time while travelling: like a city, marked as home.
+class HomeRow extends StatelessWidget {
+  const HomeRow({super.key, required this.zone, required this.now});
+
+  final WorldZone zone;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      key: const ValueKey('homeTime'),
+      margin: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 8),
+      child: ListTile(
+        leading: Icon(Icons.home_outlined, color: theme.colorScheme.primary),
+        title: Text(
+          context.l10n.homeIn(zone.city),
+          style: theme.textTheme.titleMedium,
+        ),
+        subtitle: Text(zoneDifferenceText(context, zone, now)),
+        trailing: Text(
+          clockText(context, zone.timeAt(now)),
+          style: theme.textTheme.headlineMedium,
+        ),
+      ),
+    );
+  }
+}
+
 /// "Add city": search every city Android knows. Pops with its zone id.
+/// [forHome]: picking where home is, so a city of the world clock can be
+/// picked too.
 class CityPickerPage extends ConsumerStatefulWidget {
-  const CityPickerPage({super.key});
+  const CityPickerPage({super.key, this.forHome = false});
+
+  final bool forHome;
 
   @override
   ConsumerState<CityPickerPage> createState() => _CityPickerPageState();
@@ -301,7 +344,7 @@ class _CityPickerPageState extends ConsumerState<CityPickerPage> {
             itemCount: shown.length,
             itemBuilder: (context, i) {
               final z = shown[i];
-              final picked = saved.contains(z.id);
+              final picked = !widget.forHome && saved.contains(z.id);
               return ListTile(
                 enabled: !picked,
                 title: Text(z.city),

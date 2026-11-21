@@ -631,6 +631,12 @@ class FakeClockEngine implements ClockEngine {
   @override
   Future<List<WorldZone>> zones() async => zoneList;
 
+  /// The phone's own time zone.
+  String? phoneZone = 'Europe/London';
+
+  @override
+  Future<String?> localZone() async => phoneZone;
+
   @override
   Future<Map<String, Duration>> zoneOffsets(List<String> ids) async => {
     for (final z in zoneList)

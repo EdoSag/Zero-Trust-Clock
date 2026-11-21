@@ -196,6 +196,9 @@ class ClockAlarm {
   }
 }
 
+/// Phone makers whose own battery saving can stop a closed app.
+enum BatteryBrand { xiaomi, huawei, samsung }
+
 /// What can stop an alarm from ringing properly on this phone, as the
 /// Alarm check screen shows it.
 class AlarmCheck {
@@ -210,6 +213,7 @@ class AlarmCheck {
     this.ownerProfile = true,
     this.bootAt,
     this.bootLocked = false,
+    this.maker = '',
   });
 
   /// Notifications are on for the app.
@@ -239,6 +243,20 @@ class AlarmCheck {
   /// That happened before the phone's first unlock.
   final bool bootLocked;
 
+  /// The phone's maker and brand, lower case ("xiaomi redmi").
+  final String maker;
+
+  /// The maker's own battery saving that can stop a closed app, if this
+  /// phone is from one of them. Advice only: Android can't tell the app
+  /// how it is set, so it is not counted in [problems].
+  BatteryBrand? get batteryBrand {
+    bool any(List<String> names) => names.any(maker.contains);
+    if (any(const ['xiaomi', 'redmi', 'poco'])) return BatteryBrand.xiaomi;
+    if (any(const ['huawei', 'honor'])) return BatteryBrand.huawei;
+    if (any(const ['samsung'])) return BatteryBrand.samsung;
+    return null;
+  }
+
   factory AlarmCheck.fromMap(Map<Object?, Object?> m) {
     final boot = (m['bootAt'] as num?)?.toInt() ?? 0;
     return AlarmCheck(
@@ -252,6 +270,7 @@ class AlarmCheck {
       ownerProfile: m['ownerProfile'] as bool? ?? true,
       bootAt: boot > 0 ? DateTime.fromMillisecondsSinceEpoch(boot) : null,
       bootLocked: m['bootLocked'] as bool? ?? false,
+      maker: m['maker'] as String? ?? '',
     );
   }
 

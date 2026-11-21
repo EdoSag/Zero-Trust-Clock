@@ -147,6 +147,25 @@ class _AlarmCheckPageState extends ConsumerState<AlarmCheckPage>
                 ok: c.ownerProfile,
                 status: c.ownerProfile ? l.checkProfileOk : l.checkProfileBad,
               ),
+              if (c.batteryBrand case final brand?)
+                ListTile(
+                  key: const ValueKey('batteryHint'),
+                  leading: const Icon(Icons.battery_alert_outlined),
+                  title: Text(switch (brand) {
+                    BatteryBrand.xiaomi => l.batteryXiaomi,
+                    BatteryBrand.huawei => l.batteryHuawei,
+                    BatteryBrand.samsung => l.batterySamsung,
+                  }),
+                  subtitle: Text(switch (brand) {
+                    BatteryBrand.xiaomi => l.batteryXiaomiHint,
+                    BatteryBrand.huawei => l.batteryHuaweiHint,
+                    BatteryBrand.samsung => l.batterySamsungHint,
+                  }),
+                  trailing: TextButton(
+                    onPressed: () => _open('app'),
+                    child: Text(l.openAppSettings),
+                  ),
+                ),
               ListTile(
                 leading: const Icon(Icons.restart_alt),
                 title: Text(l.checkRestart),

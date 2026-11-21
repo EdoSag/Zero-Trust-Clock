@@ -243,6 +243,30 @@ class AppL10nEn extends AppL10n {
       'Secondary profile. When this profile is ended, its alarms do not ring.';
 
   @override
+  String get batteryXiaomi => 'Xiaomi, Redmi and POCO phones';
+
+  @override
+  String get batteryXiaomiHint =>
+      'These phones can stop an app that is closed, and its alarms with it. In the app\'s settings turn on Autostart, and set Battery saver to No restrictions.';
+
+  @override
+  String get batteryHuawei => 'Huawei and Honor phones';
+
+  @override
+  String get batteryHuaweiHint =>
+      'These phones close apps to save battery. In Settings > Battery > App launch, switch ZT Clock to Manage manually and leave Auto-launch and Run in background on.';
+
+  @override
+  String get batterySamsung => 'Samsung phones';
+
+  @override
+  String get batterySamsungHint =>
+      'Samsung puts apps you rarely open to sleep, and a sleeping app\'s alarms can be late. In the app\'s settings open Battery and pick Unrestricted, and keep ZT Clock out of Sleeping apps.';
+
+  @override
+  String get openAppSettings => 'Open';
+
+  @override
   String get checkRestart => 'After a restart';
 
   @override
@@ -504,6 +528,34 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get dragToReorder => 'Long-press to reorder, swipe to remove.';
+
+  @override
+  String homeIn(String city) {
+    return 'Home: $city';
+  }
+
+  @override
+  String get homeTimeZone => 'Home time zone';
+
+  @override
+  String get homeTimeZoneOff => 'Off';
+
+  @override
+  String homeTimeZoneOn(String city) {
+    return '$city. Its time shows in the Clock tab while the phone is in another time zone.';
+  }
+
+  @override
+  String homeHere(String city) {
+    return 'This phone\'s time zone now ($city)';
+  }
+
+  @override
+  String get homePickCity => 'Pick a city';
+
+  @override
+  String get homeTimeZoneAbout =>
+      'When you travel and the phone changes time zone, the Clock tab also shows the time at home. At home nothing is added.';
 
   @override
   String get bedtime => 'Bedtime';
