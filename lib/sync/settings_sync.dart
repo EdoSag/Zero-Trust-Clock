@@ -308,6 +308,17 @@ class SettingsSync {
       // and the round it started sends it.
       Future<void> settle(int at) =>
           edits.setEditedAtIf(name, was: savedAt, at: at);
+      // Asked right before the account's copy is written over the group:
+      // a change made by hand since this round read it must stay. It is
+      // left for the next round, which sees its newer time.
+      Future<bool> changedMeanwhile() async {
+        if (await edits.editedAt(name) == savedAt &&
+            _same(await section.read(), here)) {
+          return false;
+        }
+        _again = true;
+        return true;
+      }
 
       if (theirs == null) {
         if (hereAt > 0) {
@@ -339,12 +350,14 @@ class SettingsSync {
           : null;
       if (hereAt == 0) {
         // Nothing set up here: a new phone, or a group left as it came.
+        if (await changedMeanwhile()) continue;
         await section.apply(theirs.data);
         await settle(theirs.editedAt);
         changed = true;
       } else if (both != null) {
         // This phone and the account meet for the first time, each with
         // its own: both are kept.
+        if (await changedMeanwhile()) continue;
         final at = edits.nowMillis();
         if (!_same(both, here)) {
           await section.apply(both);
@@ -355,6 +368,7 @@ class SettingsSync {
           await vault.save(SyncedSettings(id: id, editedAt: at, data: both));
         }
       } else if (theirs.editedAt > hereAt) {
+        if (await changedMeanwhile()) continue;
         await section.apply(theirs.data);
         await settle(theirs.editedAt);
         changed = true;

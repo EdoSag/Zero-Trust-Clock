@@ -33,8 +33,70 @@ class SlowPrefs implements PreferencesStore {
   }
 }
 
+/// Preferences where something happens while one key is being read,
+/// once: a change made by hand in the middle of a backup round.
+class BusyPrefs implements PreferencesStore {
+  BusyPrefs(this.key);
+
+  final String key;
+  final Map<String, String> values = {};
+  Future<void> Function()? meanwhile;
+
+  @override
+  Future<String?> read(String key) async {
+    final now = key == this.key ? meanwhile : null;
+    if (now != null) {
+      meanwhile = null;
+      await now();
+    }
+    return values[key];
+  }
+
+  @override
+  Future<void> write(String key, String value) async => values[key] = value;
+}
+
 void main() {
   group('settings backup', () {
+    test('a change made while the account\'s newer copy is on its way in '
+        'is not written over, and is sent next', () async {
+      final vault = FakeSettingsVault()
+        ..put('words', 200, {
+          'words': ['theirs'],
+        });
+      final prefs = BusyPrefs('clock_settings_met_by_account');
+      final phone = WordsPhone(vault, store: prefs);
+      await phone.edit(['old'], 100);
+      // The round has read the group; the user changes it before the
+      // account's copy is put in.
+      prefs.meanwhile = () => phone.edit(['mine'], 300);
+      await phone.sync.run();
+      expect(phone.section.words, ['mine']);
+      expect(await phone.edits.editedAt('words'), 300);
+      // The same run went round once more and sent it.
+      expect(vault.items['words']!.editedAt, 300);
+      expect(vault.items['words']!.data, {
+        'words': ['mine'],
+      });
+    });
+
+    test('the same on a first meeting that keeps both lists', () async {
+      final vault = FakeSettingsVault()
+        ..put('words', 200, {
+          'words': ['theirs'],
+        });
+      final prefs = BusyPrefs('clock_settings_met_by_account');
+      final phone = WordsPhone(vault, merges: true, store: prefs);
+      await phone.edit(['old'], 100);
+      prefs.meanwhile = () => phone.edit(['mine'], 300);
+      await phone.sync.run();
+      // Merged from what the user has now, not from what was read before.
+      expect(phone.section.words, ['mine', 'theirs']);
+      expect(vault.items['words']!.data, {
+        'words': ['mine', 'theirs'],
+      });
+    });
+
     test('changed and changed back later: the later time is sent, and an '
         'older change elsewhere does not win', () async {
       final vault = FakeSettingsVault()
