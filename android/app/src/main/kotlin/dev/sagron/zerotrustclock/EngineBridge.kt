@@ -17,6 +17,7 @@ import android.os.UserManager
 import android.provider.Settings
 import dev.sagron.zerotrustclock.engine.AlarmEngine
 import dev.sagron.zerotrustclock.engine.BedtimeEngine
+import dev.sagron.zerotrustclock.engine.SleepLog
 import dev.sagron.zerotrustclock.engine.Holidays
 import dev.sagron.zerotrustclock.engine.Screensaver
 import dev.sagron.zerotrustclock.engine.SleepSoundService
@@ -60,6 +61,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             AlarmScheduler.rescheduleAll(activity)
             TimerEngine.refresh(activity)
             BedtimeEngine.refresh(activity)
+            // Nights that could not be written to Health Connect yet.
+            SleepLog.flush(activity)
         } catch (_: Exception) {
         }
     }
@@ -213,6 +216,10 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                     BedtimeEngine.save(activity, Bedtime.fromJson(call.argument<String>("json")))
                 }
                 "dndAccess" -> result.success(BedtimeEngine.hasDndAccess(activity))
+                "sleepAccess" -> result.success(
+                    mapOf("available" to SleepLog.available(activity), "allowed" to SleepLog.allowed(activity)),
+                )
+                "requestSleepAccess" -> requestSleepAccess(result)
                 "sleepSound" -> result.success(
                     SleepSoundService.state?.let { mapOf("kind" to it.kind, "endsAt" to it.endsAt) },
                 )
@@ -293,11 +300,41 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
     }
 
+    private var pendingSleep: MethodChannel.Result? = null
+
+    /** Asks to write sleep to Health Connect (Android 14 and later). */
+    private fun requestSleepAccess(result: MethodChannel.Result) {
+        if (!SleepLog.available(activity)) {
+            result.success(false)
+            return
+        }
+        if (SleepLog.allowed(activity)) {
+            result.success(true)
+            return
+        }
+        pendingSleep?.success(false)
+        pendingSleep = result
+        try {
+            activity.requestPermissions(arrayOf(SleepLog.PERMISSION), REQUEST_SLEEP)
+        } catch (_: Exception) {
+            pendingSleep = null
+            result.success(false)
+        }
+    }
+
     fun onPermissionsResult(requestCode: Int, grantResults: IntArray) {
-        if (requestCode != REQUEST_NOTIFICATIONS) return
         val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-        pendingPermission?.success(granted)
-        pendingPermission = null
+        when (requestCode) {
+            REQUEST_NOTIFICATIONS -> {
+                pendingPermission?.success(granted)
+                pendingPermission = null
+            }
+            REQUEST_SLEEP -> {
+                pendingSleep?.success(granted)
+                pendingSleep = null
+                if (granted) SleepLog.flush(activity)
+            }
+        }
     }
 
     private var pendingSound: MethodChannel.Result? = null
@@ -404,6 +441,9 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             "doNotDisturb" -> Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS)
             "screensaver" -> Intent(Settings.ACTION_DREAM_SETTINGS)
             "dndAccess" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+            // The app's own page in Health Connect (Android 14 and later).
+            "healthConnect" -> Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS")
+                .putExtra(Intent.EXTRA_PACKAGE_NAME, pkg)
             else -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app)
         }
         try {
@@ -418,5 +458,6 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         const val REQUEST_RINGTONE = 7302
         const val REQUEST_FILE = 7303
         const val REQUEST_SCAN = 7304
+        const val REQUEST_SLEEP = 7305
     }
 }

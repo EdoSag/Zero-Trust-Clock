@@ -334,6 +334,20 @@
       }
     }
   },
+  "sunrise": "Sunrise before the alarm",
+  "sunriseHint": "The screen lights up slowly for {minutes} minutes before the wake-up alarm. Not when you are already using the phone.",
+  "@sunriseHint": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sunriseNeedsAlarm": "Needs the wake-up alarm.",
+  "saveSleep": "Save sleep to Health Connect",
+  "saveSleepHint": "Each night is saved as sleep, from bedtime until you dismiss the wake-up alarm. Apps you allow in Health Connect can read it. Not backed up.",
+  "saveSleepNotAllowed": "ZT Clock is not allowed to save sleep in Health Connect.",
+  "saveSleepNeedsAccess": "Needs permission to write sleep in Health Connect.",
   "sleepSounds": "Sleep sounds",
   "sleepSoundsHint": "Made on the phone, on the media volume. They fade out at the end.",
   "soundWhite": "White noise",

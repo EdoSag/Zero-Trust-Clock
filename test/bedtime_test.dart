@@ -64,11 +64,29 @@ void main() {
         reminderMinutes: 30,
         doNotDisturb: true,
         wakeAlarmId: 'a1',
+        sunrise: true,
+        saveSleep: true,
       );
       final back = BedtimeSchedule.fromJson(s.toJson());
       expect(back.toJson(), s.toJson());
       expect(back.nights, {1, 3});
+      expect(back.sunrise, isTrue);
+      expect(back.saveSleep, isTrue);
       expect(BedtimeSchedule.fromJson('{}').reminderMinutes, 15);
+      // A schedule from before these switches: both off.
+      expect(BedtimeSchedule.fromJson('{}').sunrise, isFalse);
+      expect(BedtimeSchedule.fromJson('{}').saveSleep, isFalse);
+    });
+
+    test('the sunrise and saving sleep are this phone\'s own', () {
+      const here = BedtimeSchedule(sunrise: true, saveSleep: true);
+      expect(here.backup.keys, isNot(contains('sunrise')));
+      expect(here.backup.keys, isNot(contains('saveSleep')));
+      // Another phone's schedule arrives: the times change, these stay.
+      final merged = here.withBackup(const BedtimeSchedule(bedHour: 22).backup);
+      expect(merged.bedHour, 22);
+      expect(merged.sunrise, isTrue);
+      expect(merged.saveSleep, isTrue);
     });
   });
 
@@ -176,6 +194,184 @@ void main() {
         tester.getRect(find.byKey(const ValueKey('bedtimeDnd'))).bottom,
       ),
     );
+  });
+
+  Future<void> show(WidgetTester tester, String key) async {
+    await tester.ensureVisible(find.byKey(ValueKey(key)));
+    await frames(tester);
+  }
+
+  SwitchListTile tile(WidgetTester tester, String key) =>
+      tester.widget<SwitchListTile>(find.byKey(ValueKey(key)));
+
+  testWidgets('the sunrise needs the wake-up alarm, and sits under it', (
+    tester,
+  ) async {
+    final engine = FakeClockEngine()
+      ..schedule = const BedtimeSchedule(nights: weekdays);
+    await openBedtime(tester, engine);
+    await show(tester, 'sunrise');
+    // No wake-up alarm yet: the switch is locked and says why.
+    expect(tile(tester, 'sunrise').onChanged, isNull);
+    expect(find.text('Needs the wake-up alarm.'), findsOneWidget);
+    // One under the other, the same width: alarm, then sunrise.
+    final alarm = tester.getRect(find.byKey(const ValueKey('wakeAlarm')));
+    final sunrise = tester.getRect(find.byKey(const ValueKey('sunrise')));
+    expect(sunrise.top, greaterThanOrEqualTo(alarm.bottom));
+    expect(sunrise.left, alarm.left);
+    expect(sunrise.right, alarm.right);
+
+    await show(tester, 'wakeAlarm');
+    await tester.tap(find.byKey(const ValueKey('wakeAlarm')));
+    await frames(tester);
+    await show(tester, 'sunrise');
+    expect(find.text('Needs the wake-up alarm.'), findsNothing);
+    expect(find.textContaining('for 15 minutes before'), findsOneWidget);
+    engine.calls.clear();
+    await tester.tap(find.byKey(const ValueKey('sunrise')));
+    await frames(tester);
+    expect(engine.schedule.sunrise, isTrue);
+    expect(tile(tester, 'sunrise').value, isTrue);
+    // It opens from a notification.
+    expect(engine.calls, contains('requestNotifications'));
+
+    // The alarm switched off: the sunrise can still be switched off.
+    await show(tester, 'wakeAlarm');
+    await tester.tap(find.byKey(const ValueKey('wakeAlarm')));
+    await frames(tester);
+    await show(tester, 'sunrise');
+    expect(tile(tester, 'sunrise').onChanged, isNotNull);
+    await tester.tap(find.byKey(const ValueKey('sunrise')));
+    await frames(tester);
+    expect(engine.schedule.sunrise, isFalse);
+    expect(tile(tester, 'sunrise').onChanged, isNull);
+  });
+
+  testWidgets('saving sleep asks Health Connect, and stays off when refused', (
+    tester,
+  ) async {
+    final engine = FakeClockEngine()..grantSleep = false;
+    await openBedtime(tester, engine);
+    await show(tester, 'saveSleep');
+    // Last in the card, under the sunrise.
+    final sunrise = tester.getRect(find.byKey(const ValueKey('sunrise')));
+    final sleep = tester.getRect(find.byKey(const ValueKey('saveSleep')));
+    expect(sleep.top, greaterThanOrEqualTo(sunrise.bottom));
+    expect(sleep.left, sunrise.left);
+    expect(sleep.right, sunrise.right);
+
+    await tester.tap(find.byKey(const ValueKey('saveSleep')));
+    await frames(tester);
+    expect(engine.calls, contains('requestSleepAccess'));
+    expect(engine.schedule.saveSleep, isFalse);
+    expect(tile(tester, 'saveSleep').value, isFalse);
+    expect(
+      find.text('ZT Clock is not allowed to save sleep in Health Connect.'),
+      findsOneWidget,
+    );
+    // The message goes away by itself.
+    await tester.pump(const Duration(seconds: 10));
+    await frames(tester);
+    expect(
+      find.text('ZT Clock is not allowed to save sleep in Health Connect.'),
+      findsNothing,
+    );
+
+    // Allowed this time.
+    engine.grantSleep = true;
+    await tester.tap(find.byKey(const ValueKey('saveSleep')));
+    await frames(tester);
+    expect(engine.schedule.saveSleep, isTrue);
+    expect(tile(tester, 'saveSleep').value, isTrue);
+    expect(find.byKey(const ValueKey('sleepAccess')), findsNothing);
+
+    // Off again needs no question.
+    engine.calls.clear();
+    await tester.tap(find.byKey(const ValueKey('saveSleep')));
+    await frames(tester);
+    expect(engine.schedule.saveSleep, isFalse);
+    expect(engine.calls, isNot(contains('requestSleepAccess')));
+  });
+
+  testWidgets('permission taken away: a note under the switch, with Allow', (
+    tester,
+  ) async {
+    final engine = FakeClockEngine()
+      ..schedule = const BedtimeSchedule(saveSleep: true)
+      ..grantSleep = false;
+    await openBedtime(tester, engine);
+    await show(tester, 'sleepAccess');
+    final note = find.byKey(const ValueKey('sleepAccess'));
+    expect(
+      tester.getRect(note).top,
+      greaterThanOrEqualTo(
+        tester.getRect(find.byKey(const ValueKey('saveSleep'))).bottom,
+      ),
+    );
+    final allow = find.descendant(of: note, matching: find.text('Allow'));
+    // The button is at the end of the note's row, inside the card.
+    expect(
+      tester.getRect(allow).right,
+      lessThanOrEqualTo(tester.getRect(note).right),
+    );
+    expect(
+      tester.getRect(allow).left,
+      greaterThan(
+        tester
+            .getRect(
+              find.descendant(
+                of: note,
+                matching: find.textContaining('Needs permission'),
+              ),
+            )
+            .left,
+      ),
+    );
+    // Android no longer asks: the app's page in Health Connect opens.
+    await tester.tap(allow);
+    await frames(tester);
+    expect(engine.calls, contains('requestSleepAccess'));
+    expect(engine.calls.last, 'openSettings healthConnect');
+
+    // Allowed from the question: the note goes.
+    engine.grantSleep = true;
+    engine.calls.clear();
+    await tester.tap(allow);
+    await frames(tester);
+    expect(engine.calls, isNot(contains('openSettings healthConnect')));
+    expect(find.byKey(const ValueKey('sleepAccess')), findsNothing);
+  });
+
+  testWidgets('no Health Connect on this phone: no switch for it', (
+    tester,
+  ) async {
+    final engine = FakeClockEngine()..sleepAvailable = false;
+    await openBedtime(tester, engine);
+    await show(tester, 'sunrise');
+    expect(find.byKey(const ValueKey('saveSleep')), findsNothing);
+    expect(find.text('Save sleep to Health Connect'), findsNothing);
+  });
+
+  testWidgets('in Hebrew the sunrise and sleep switches are on the left', (
+    tester,
+  ) async {
+    tallPhone(tester);
+    final engine = FakeClockEngine();
+    await tester.pumpWidget(
+      testApp(engine, home: const BedtimePage(), locale: hebrew),
+    );
+    await frames(tester);
+    await show(tester, 'saveSleep');
+    expect(find.text('זריחה לפני השעון המעורר'), findsOneWidget);
+    expect(find.text('שמירת השינה ב-Health Connect'), findsOneWidget);
+    for (final key in ['sunrise', 'saveSleep']) {
+      final row = find.byKey(ValueKey(key));
+      final toggle = find.descendant(of: row, matching: find.byType(Switch));
+      expect(
+        tester.getCenter(toggle).dx,
+        lessThan(tester.getRect(row).center.dx),
+      );
+    }
   });
 
   testWidgets('sleep sounds play for the picked time, then Stop', (

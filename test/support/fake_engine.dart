@@ -688,6 +688,22 @@ class FakeClockEngine implements ClockEngine {
   @override
   Future<bool> dndAccess() async => hasDndAccess;
 
+  /// Health Connect: on this phone, allowed, and what asking answers.
+  bool sleepAvailable = true;
+  bool sleepAllowed = false;
+  bool grantSleep = true;
+
+  @override
+  Future<SleepAccess> sleepAccess() async =>
+      SleepAccess(available: sleepAvailable, allowed: sleepAllowed);
+
+  @override
+  Future<bool> requestSleepAccess() async {
+    calls.add('requestSleepAccess');
+    if (grantSleep) sleepAllowed = true;
+    return sleepAllowed;
+  }
+
   @override
   Future<SleepSoundState?> sleepSound() async => playing;
 

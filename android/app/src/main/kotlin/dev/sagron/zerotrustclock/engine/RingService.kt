@@ -194,6 +194,14 @@ class RingService : Service() {
         if (outcome == Outcome.SNOOZE) {
             AlarmStore.load(this).firstOrNull { it.id == id }?.let { AlarmNotifications.showSnoozed(text, it) }
         }
+        if (outcome == Outcome.DISMISS) {
+            try {
+                // The bedtime's wake-up alarm: last night ends now.
+                SleepLog.onAlarmDismissed(this, id)
+            } catch (_: Exception) {
+                // Only the sleep entry.
+            }
+        }
         AlarmScheduler.rescheduleAll(this)
         onEnded?.let { listener -> handler.post { listener() } }
         stopNow()

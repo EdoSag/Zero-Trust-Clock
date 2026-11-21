@@ -553,6 +553,31 @@ class AppL10nHe extends AppL10n {
   }
 
   @override
+  String get sunrise => 'זריחה לפני השעון המעורר';
+
+  @override
+  String sunriseHint(int minutes) {
+    return 'המסך מתבהר לאט במשך $minutes דקות לפני שעון ההשכמה. לא כשאתם כבר משתמשים בטלפון.';
+  }
+
+  @override
+  String get sunriseNeedsAlarm => 'נדרש שעון מעורר להשכמה.';
+
+  @override
+  String get saveSleep => 'שמירת השינה ב-Health Connect';
+
+  @override
+  String get saveSleepHint =>
+      'כל לילה נשמר כשינה, משעת השינה ועד שמכבים את שעון ההשכמה. אפליקציות שתאשרו ב-Health Connect יוכלו לקרוא אותו. לא מגובה.';
+
+  @override
+  String get saveSleepNotAllowed =>
+      'ל-ZT Clock אין הרשאה לשמור שינה ב-Health Connect.';
+
+  @override
+  String get saveSleepNeedsAccess => 'נדרשת הרשאה לכתוב שינה ב-Health Connect.';
+
+  @override
   String get sleepSounds => 'צלילי שינה';
 
   @override

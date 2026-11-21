@@ -13,6 +13,8 @@ class BedtimeSchedule {
     this.reminderMinutes = 15,
     this.doNotDisturb = false,
     this.wakeAlarmId,
+    this.sunrise = false,
+    this.saveSleep = false,
   });
 
   final bool enabled;
@@ -28,6 +30,15 @@ class BedtimeSchedule {
 
   /// The alarm made from this schedule to wake up, if any.
   final String? wakeAlarmId;
+
+  /// The screen lights up slowly before the wake-up alarm.
+  final bool sunrise;
+
+  /// Each night is saved to Health Connect as sleep.
+  final bool saveSleep;
+
+  /// How long before the wake-up alarm the sunrise starts.
+  static const sunriseMinutes = 15;
 
   int get _bed => bedHour * 60 + bedMinute;
   int get _wake => wakeHour * 60 + wakeMinute;
@@ -53,6 +64,8 @@ class BedtimeSchedule {
     int? reminderMinutes,
     bool? doNotDisturb,
     String? wakeAlarmId,
+    bool? sunrise,
+    bool? saveSleep,
   }) => BedtimeSchedule(
     enabled: enabled ?? this.enabled,
     bedHour: bedHour ?? this.bedHour,
@@ -63,11 +76,14 @@ class BedtimeSchedule {
     reminderMinutes: reminderMinutes ?? this.reminderMinutes,
     doNotDisturb: doNotDisturb ?? this.doNotDisturb,
     wakeAlarmId: wakeAlarmId ?? this.wakeAlarmId,
+    sunrise: sunrise ?? this.sunrise,
+    saveSleep: saveSleep ?? this.saveSleep,
   );
 
   /// What the account backs up: the times, the nights, the reminder and
-  /// the wake-up alarm. Whether the schedule is on, and Do Not Disturb,
-  /// are each phone's own (like an alarm's switch).
+  /// the wake-up alarm. Whether the schedule is on, Do Not Disturb, the
+  /// sunrise and saving sleep are each phone's own (like an alarm's
+  /// switch).
   Map<String, Object?> get backup => {
     'bedHour': bedHour,
     'bedMinute': bedMinute,
@@ -92,6 +108,8 @@ class BedtimeSchedule {
     return BedtimeSchedule(
       enabled: enabled,
       doNotDisturb: doNotDisturb,
+      sunrise: sunrise,
+      saveSleep: saveSleep,
       bedHour: field('bedHour', bedHour, 23),
       bedMinute: field('bedMinute', bedMinute, 59),
       wakeHour: field('wakeHour', wakeHour, 23),
@@ -115,6 +133,8 @@ class BedtimeSchedule {
     'reminderMinutes': reminderMinutes,
     'doNotDisturb': doNotDisturb,
     'wakeAlarmId': ?wakeAlarmId,
+    'sunrise': sunrise,
+    'saveSleep': saveSleep,
   });
 
   static BedtimeSchedule fromJson(String json) {
@@ -132,8 +152,18 @@ class BedtimeSchedule {
       reminderMinutes: (m['reminderMinutes'] as num?)?.toInt() ?? 15,
       doNotDisturb: m['doNotDisturb'] as bool? ?? false,
       wakeAlarmId: m['wakeAlarmId'] as String?,
+      sunrise: m['sunrise'] as bool? ?? false,
+      saveSleep: m['saveSleep'] as bool? ?? false,
     );
   }
+}
+
+/// Saving sleep to Health Connect: whether this phone has it (Android 14
+/// and later), and whether the user let the app write sleep.
+class SleepAccess {
+  const SleepAccess({this.available = false, this.allowed = false});
+  final bool available;
+  final bool allowed;
 }
 
 enum SleepSound { white, pink, brown }
