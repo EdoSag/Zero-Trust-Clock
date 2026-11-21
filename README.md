@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.13.0)
+## What is in it now (0.14.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -52,12 +52,19 @@ Work happens on the `Dev` branch; `main` holds releases.
   time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
   named in the app's language, found by city or country, offline. Long-press
   to reorder, swipe to remove (with Undo).
-- **Quick Settings tiles**: Next alarm (opens the alarms) and Stopwatch
-  (starts and pauses it).
+- **Quick Settings tiles**: Next alarm (opens the alarms), Timer (says
+  when the next timer ends; a tap opens the keypad for a new one, or the
+  timers when one is going) and Stopwatch (starts and pauses it).
 - **Home screen widgets**, in the shared Zero-Trust widget look: Clock and
   next alarm (with Turn off once, and + for a new alarm), World clock (the
-  first four cities of the Clock tab, each with a live time) and an Analog
-  clock. No alarm labels on the home screen.
+  first four cities of the Clock tab, each with a live time), an Analog
+  clock, Timer (the timer that ends next, counting down, with Pause, +1:00,
+  Resume, Reset or Stop; with no timer, 1:00, 5:00 and 10:00 start one with
+  a tap) and Stopwatch (counting, with Start, Pause, Lap and Reset). No
+  alarm or timer labels on the home screen.
+- **Live status on Android 16**: a running timer or the stopwatch counts in
+  a chip in the status bar, and can be switched off in Android's
+  notification settings for the app.
 - **Skip public holidays** (repeating alarms): pick a holiday calendar in
   Settings > Public holidays (the same public calendars as ZT Calendar,
   downloaded with no account and refreshed weekly). Days off are ticked;
@@ -150,8 +157,12 @@ Where things are kept on the phone:
     the names follow.
 11. Add the Next alarm and Stopwatch tiles to Quick Settings; long-press the
     app icon for the shortcuts.
-12. Add the three widgets; tap Turn off once on the Clock widget and check
-    the alarm list; add a city and check the World clock widget.
+12. Add the five widgets; tap Turn off once on the Clock widget and check
+    the alarm list; add a city and check the World clock widget. On the
+    Timer widget tap 1:00, then Pause, Resume and +1:00, and let it ring:
+    the widget says "Time's up" with Stop. On the Stopwatch widget tap
+    Start, Lap, Pause and Reset. Restart the phone with a timer running:
+    the widget counts on from the right time.
 13. Bedtime tab: switch the schedule on with bedtime 16 minutes ahead and
     the 15-minute reminder, and wait for the reminder. Switch on Do Not
     Disturb, allow the access, and check it turns on at bedtime and off at
@@ -176,6 +187,9 @@ Where things are kept on the phone:
 20. Signed in on two phones: add two cities and a quick timer on one,
     change the bedtime times and pick a holiday calendar. They appear on
     the other within a moment; bedtime arrives switched off there.
+21. Android 16: start a timer and leave the app. Its time counts down in a
+    chip in the status bar. Add the Timer tile to Quick Settings: it says
+    "Until" and the end time.
 
 ## Development
 

@@ -71,6 +71,21 @@ class TimerMathTest {
     }
 
     @Test
+    fun theWidgetShowsTheRingingThenTheSoonestThenPausedThenSet() {
+        assertNull(TimerMath.featured(emptyList()))
+        val set = fiveMin.copy(id = "set", code = 1, createdAt = 1)
+        val newerSet = fiveMin.copy(id = "set2", code = 2, createdAt = 9)
+        assertEquals("set2", TimerMath.featured(listOf(set, newerSet))!!.id)
+        val paused = TimerMath.pause(TimerMath.start(fiveMin.copy(id = "paused", code = 3), 0), 1_000)
+        assertEquals("paused", TimerMath.featured(listOf(set, newerSet, paused))!!.id)
+        val late = TimerMath.start(fiveMin.copy(id = "late", code = 4), 50_000)
+        val soon = TimerMath.start(fiveMin.copy(id = "soon", code = 5, lengthMs = 60_000, leftMs = 60_000), 50_000)
+        assertEquals("soon", TimerMath.featured(listOf(set, paused, late, soon))!!.id)
+        val ringing = TimerMath.ring(TimerMath.start(fiveMin.copy(id = "ringing", code = 6), 0))
+        assertEquals("ringing", TimerMath.featured(listOf(set, paused, late, soon, ringing))!!.id)
+    }
+
+    @Test
     fun stopwatchCountsLapsAndPauses() {
         var s = Stopwatch().start(1_000)
         s = s.lap(3_000)

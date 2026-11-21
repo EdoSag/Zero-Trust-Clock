@@ -10,7 +10,7 @@ WHAT IT DOES
 • Stopwatch with laps that keeps counting with the app closed.
 • World clock with every city, named in your language, and how far ahead or behind it is.
 • Bedtime: a reminder before bed, Do Not Disturb through the night, a wake-up alarm, and sleep sounds with a timer.
-• Home-screen widgets (clock and next alarm, world clock, analog), Quick Settings tiles and app shortcuts.
+• Home-screen widgets (clock and next alarm, world clock, analog, timer, stopwatch), Quick Settings tiles and app shortcuts.
 • Works with "set an alarm" and "set a timer" from your assistant and other apps.
 • Works without an account. Sign in to back up and sync alarms; a synced alarm arrives switched off on your other phones.
 

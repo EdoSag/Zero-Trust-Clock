@@ -14,6 +14,9 @@
     <!-- The ringing alarm's notification and its screen over the lock screen. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- Android 16: a running timer or the stopwatch counts in a live chip
+         in the status bar. Given at install; the user can switch it off. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
     <!-- The service that rings. "System exempted" is the type Android
          keeps for apps continuing an exact alarm. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -137,7 +140,25 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_analog_info"/>
         </receiver>
-        <!-- Quick Settings tiles: the next alarm, and the stopwatch. -->
+        <receiver
+            android:name=".engine.TimerWidget"
+            android:exported="false"
+            android:label="@string/widget_timer_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_timer_info"/>
+        </receiver>
+        <receiver
+            android:name=".engine.StopwatchWidget"
+            android:exported="false"
+            android:label="@string/widget_stopwatch_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_stopwatch_info"/>
+        </receiver>
+        <!-- Quick Settings tiles: the next alarm, the timer, and the stopwatch. -->
         <service
             android:name=".engine.ClockScreensaver"
             android:exported="true"
@@ -155,6 +176,16 @@
             android:exported="true"
             android:icon="@drawable/ic_stat_alarm"
             android:label="@string/tile_next_alarm"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".engine.TimerTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_timer"
+            android:label="@string/tile_timer"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE"/>

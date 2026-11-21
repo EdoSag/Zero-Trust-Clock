@@ -109,6 +109,18 @@ object TimerMath {
     fun due(list: List<ClockTimer>, now: Long): List<ClockTimer> =
         list.filter { it.running && it.endsAt!! <= now }
 
+    /**
+     * The one timer a small place (the widget, the tile) shows: one that
+     * rings, else the running one that ends first, else a paused one, else
+     * one that is set but not started (the newest of each). Null with no
+     * timers.
+     */
+    fun featured(list: List<ClockTimer>): ClockTimer? =
+        list.filter { it.ringing }.minByOrNull { it.endsAt ?: 0 }
+            ?: list.filter { it.running }.minByOrNull { it.endsAt!! }
+            ?: list.filter { it.paused }.maxByOrNull { it.createdAt }
+            ?: list.maxByOrNull { it.createdAt }
+
     /** A number for AlarmManager that no other timer uses. */
     fun freeCode(list: List<ClockTimer>): Int {
         val used = list.map { it.code }.toSet()
