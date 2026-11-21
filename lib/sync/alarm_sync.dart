@@ -32,6 +32,7 @@ class SyncedAlarm {
     this.gradual = false,
     this.ringMinutes = ClockAlarm.defaultRingMinutes,
     this.task,
+    this.taskCode,
     this.skipHolidays = false,
   });
 
@@ -55,6 +56,10 @@ class SyncedAlarm {
   final bool gradual;
   final int ringMinutes;
   final WakeTask? task;
+
+  /// The scan task's saved code (a hash), so the same code dismisses the
+  /// alarm on every phone.
+  final String? taskCode;
   final bool skipHolidays;
 
   factory SyncedAlarm.fromJson(
@@ -84,6 +89,7 @@ class SyncedAlarm {
         ((j['ringMinutes'] as num?)?.toInt() ?? ClockAlarm.defaultRingMinutes)
             .clamp(1, 60),
     task: WakeTask.parse(j['task']),
+    taskCode: j['taskCode'] as String?,
     skipHolidays: j['skipHolidays'] as bool? ?? false,
   );
 
@@ -103,6 +109,7 @@ class SyncedAlarm {
     'gradual': gradual,
     'ringMinutes': ringMinutes,
     'task': task?.name,
+    'taskCode': taskCode,
     'skipHolidays': skipHolidays,
   };
 
@@ -128,6 +135,7 @@ class SyncedAlarm {
     gradual: a.gradual,
     ringMinutes: a.ringMinutes,
     task: a.task,
+    taskCode: a.task == WakeTask.scan ? a.taskCode : null,
     skipHolidays: a.skipHolidays,
   );
 
@@ -148,6 +156,7 @@ class SyncedAlarm {
     gradual: gradual,
     ringMinutes: ringMinutes,
     task: task,
+    taskCode: taskCode,
     skipHolidays: skipHolidays,
   );
 

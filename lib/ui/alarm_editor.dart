@@ -10,6 +10,15 @@ import '../l10n/l10n.dart';
 import 'alarm_text.dart';
 import 'holidays_page.dart';
 
+/// The name of one of the app's own sounds ([builtInSounds]).
+String builtInSoundName(AppL10n l, String sound) => switch (sound) {
+  'builtin:bells' => l.soundBells,
+  'builtin:beeps' => l.soundBeeps,
+  'builtin:sunrise' => l.soundSunrise,
+  'builtin:buzzer' => l.soundBuzzer,
+  _ => l.soundChime,
+};
+
 /// How the editor closed.
 enum AlarmEditorResult { saved, delete }
 
@@ -39,6 +48,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
   late bool _gradual = widget.alarm.gradual;
   late int _silenceAfter = widget.alarm.ringMinutes;
   late WakeTask? _task = widget.alarm.task;
+  late String? _taskCode = widget.alarm.taskCode;
   late bool _skipHolidays = widget.alarm.skipHolidays;
 
   /// The day an alarm without repeat days rings; null: the next such time.
@@ -108,6 +118,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
   String _soundText(AppL10n l) => switch (_sound) {
     null => l.soundChime,
     'system' => l.soundSystem,
+    final s when builtInSounds.contains(s) => builtInSoundName(l, s),
     _ => (_soundName ?? '').isEmpty ? l.soundPicked : _soundName!,
   };
 
@@ -118,6 +129,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
 
   Future<void> _chooseSound() async {
     final l = context.l10n;
+    final engine = ref.read(clockEngineProvider);
     final choice = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -129,8 +141,28 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // The app's own sounds, each with a button to hear it.
+              for (final sound in <String?>[null, ...builtInSounds])
+                ListTile(
+                  key: ValueKey('sound-${sound ?? 'chime'}'),
+                  leading: Icon(
+                    sound == _sound ? Icons.check : Icons.alarm,
+                    color: sound == _sound
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  title: Text(
+                    sound == null ? l.soundChime : builtInSoundName(l, sound),
+                  ),
+                  trailing: IconButton(
+                    tooltip: l.play,
+                    icon: const Icon(Icons.play_arrow),
+                    onPressed: () => engine.previewSound(sound),
+                  ),
+                  onTap: () => Navigator.of(context).pop(sound ?? 'chime'),
+                ),
+              const Divider(height: 8),
               for (final (key, icon, text) in [
-                ('chime', Icons.alarm, l.soundChime),
                 ('system', Icons.phone_android, l.soundSystem),
                 ('ringtone', Icons.library_music_outlined, l.soundRingtone),
                 ('file', Icons.audio_file_outlined, l.soundFile),
@@ -152,12 +184,20 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
         ),
       ),
     );
+    // Whatever was playing stops with the list.
+    try {
+      await engine.stopPreview();
+    } on Object {
+      // Nothing was playing.
+    }
     if (choice == null || !mounted) return;
     switch (choice) {
       case 'chime':
         _setSound(null, null);
       case 'system':
         _setSound('system', null);
+      case final s when builtInSounds.contains(s):
+        _setSound(s, null);
       default:
         final picked = await ref
             .read(clockEngineProvider)
@@ -190,6 +230,7 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             gradual: _gradual,
             ringMinutes: _silenceAfter,
             task: _task,
+            taskCode: _task == WakeTask.scan ? _taskCode : null,
             skipHolidays: _days.isNotEmpty && _skipHolidays,
             // Only a picked (or kept) day: saving a label alone does not
             // switch an alarm on, or move a snoozed one to its next day.
@@ -202,6 +243,37 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
       if (mounted) setState(() => _saving = false);
       showSnack(messenger, l.couldNotSave);
     }
+  }
+
+  /// Picks the wake-up task. "Scan a code" first needs a code: the
+  /// camera opens to save one, and without one the task stays as it was.
+  Future<void> _pickTask(WakeTask? task) async {
+    if (task != WakeTask.scan || _taskCode != null) {
+      setState(() => _task = task);
+      return;
+    }
+    await _scanCode();
+  }
+
+  /// Saves a (new) code for the scan task.
+  Future<void> _scanCode() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
+    String? code;
+    try {
+      code = await ref.read(clockEngineProvider).scanCode();
+    } on Object {
+      code = null;
+    }
+    if (!mounted) return;
+    if (code == null) {
+      showSnack(messenger, l.wakeTaskScanNone);
+      return;
+    }
+    setState(() {
+      _taskCode = code;
+      _task = WakeTask.scan;
+    });
   }
 
   /// "Skip public holidays", for repeating alarms. Without a holiday
@@ -391,14 +463,27 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
                   (null, l.wakeTaskNone),
                   (WakeTask.math, l.wakeTaskMath),
                   (WakeTask.shake, l.wakeTaskShake),
+                  (WakeTask.scan, l.wakeTaskScan),
                 ])
                   ChoiceChip(
                     label: Text(name),
                     selected: _task == task,
-                    onSelected: (_) => setState(() => _task = task),
+                    onSelected: (_) => _pickTask(task),
                   ),
               ],
             ),
+            if (_task == WakeTask.scan)
+              ListTile(
+                key: const ValueKey('scanCode'),
+                contentPadding: EdgeInsetsDirectional.zero,
+                leading: const Icon(Icons.qr_code_scanner),
+                title: Text(l.wakeTaskScanSaved),
+                subtitle: Text(l.wakeTaskScanHint),
+                trailing: TextButton(
+                  onPressed: _scanCode,
+                  child: Text(l.wakeTaskScanAgain),
+                ),
+              ),
             const SizedBox(height: 28),
             FilledButton(
               onPressed: _saving ? null : _save,

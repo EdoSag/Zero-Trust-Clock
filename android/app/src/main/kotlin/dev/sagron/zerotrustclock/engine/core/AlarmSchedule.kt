@@ -178,8 +178,9 @@ object AlarmSchedule {
         }
     }
 
-    fun snooze(alarm: Alarm, now: ZonedDateTime): Alarm = alarm.copy(
-        snoozeUntil = now.toInstant().toEpochMilli() + alarm.snoozeMinutes * 60_000L,
+    fun snooze(alarm: Alarm, now: ZonedDateTime, minutes: Int? = null): Alarm = alarm.copy(
+        snoozeUntil = now.toInstant().toEpochMilli() +
+            (minutes?.takeIf { it > 0 }?.coerceAtMost(60) ?: alarm.snoozeMinutes) * 60_000L,
     )
 
     /**

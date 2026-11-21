@@ -21,6 +21,7 @@ class ClockSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final night = ref.watch(screensaverNightProvider).value ?? true;
+    final ring = ref.watch(ringSettingsProvider).value ?? const RingSettings();
     final offline = ref.watch(offlineEditionProvider);
     return ZtSettingsPage(
       accountOptional: true,
@@ -52,6 +53,50 @@ class ClockSettingsPage extends ConsumerWidget {
           onTap: () => Navigator.of(context).push<void>(
             MaterialPageRoute(builder: (_) => const AlarmCheckPage()),
           ),
+        ),
+        ListTile(
+          key: const ValueKey('volumeButtons'),
+          leading: const Icon(Icons.volume_up_outlined),
+          title: Text(l.volumeButtons),
+          subtitle: Text(volumeButtonsText(l, ring.volumeButtons)),
+          onTap: () async {
+            final picked = await chooseOne<VolumeButtons>(
+              context,
+              title: l.volumeButtons,
+              about: l.volumeButtonsAbout,
+              current: ring.volumeButtons,
+              choices: [
+                for (final v in VolumeButtons.values)
+                  (v, volumeButtonsText(l, v)),
+              ],
+            );
+            if (picked == null) return;
+            await ref
+                .read(ringSettingsProvider.notifier)
+                .set(ring.copyWith(volumeButtons: picked));
+          },
+        ),
+        ListTile(
+          key: const ValueKey('minVolume'),
+          leading: const Icon(Icons.notifications_active_outlined),
+          title: Text(l.minVolume),
+          subtitle: Text(minVolumeText(l, ring.minVolume)),
+          onTap: () async {
+            final picked = await chooseOne<int>(
+              context,
+              title: l.minVolume,
+              about: l.minVolumeAbout,
+              current: ring.minVolume,
+              choices: [
+                for (final p in RingSettings.minVolumeChoices)
+                  (p, minVolumeText(l, p)),
+              ],
+            );
+            if (picked == null) return;
+            await ref
+                .read(ringSettingsProvider.notifier)
+                .set(ring.copyWith(minVolume: picked));
+          },
         ),
         // Holiday calendars are downloaded, so not in the Offline edition.
         if (!offline)
@@ -85,3 +130,59 @@ class ClockSettingsPage extends ConsumerWidget {
     );
   }
 }
+
+String volumeButtonsText(AppL10n l, VolumeButtons v) => switch (v) {
+  VolumeButtons.volume => l.volumeButtonsVolume,
+  VolumeButtons.snooze => l.snooze,
+  VolumeButtons.dismiss => l.dismiss,
+};
+
+String minVolumeText(AppL10n l, int percent) =>
+    percent <= 0 ? l.minVolumeOff : l.minVolumePercent(percent);
+
+/// A short list to pick one of, from the bottom: the current one is
+/// ticked. Null when closed without picking.
+Future<T?> chooseOne<T>(
+  BuildContext context, {
+  required String title,
+  required String about,
+  required T current,
+  required List<(T, String)> choices,
+}) => showModalBottomSheet<T>(
+  context: context,
+  showDragHandle: true,
+  // Scrolls on a small phone or with large text.
+  isScrollControlled: true,
+  builder: (context) => SafeArea(
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
+            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          for (final (value, text) in choices)
+            ListTile(
+              leading: Icon(
+                value == current
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: value == current
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              title: Text(text),
+              selected: value == current,
+              onTap: () => Navigator.of(context).pop(value),
+            ),
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
+            child: Text(about, style: Theme.of(context).textTheme.bodySmall),
+          ),
+        ],
+      ),
+    ),
+  ),
+);

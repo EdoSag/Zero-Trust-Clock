@@ -55,6 +55,8 @@ data class Alarm(
     val ringMinutes: Int = DEFAULT_RING_MINUTES,
     /** A wake-up task (see WakeTasks) to do before it can be dismissed. */
     val task: String? = null,
+    /** For the scan task: the saved code, as WakeTasks.codeHash keeps it. */
+    val taskCode: String? = null,
     /** A repeating alarm stays silent on this phone's public holidays (see Holidays). */
     val skipHolidays: Boolean = false,
 ) {
@@ -81,6 +83,7 @@ data class Alarm(
         put("gradual", gradual)
         put("ringMinutes", ringMinutes)
         if (task != null) put("task", task)
+        if (taskCode != null) put("taskCode", taskCode)
         if (skipHolidays) put("skipHolidays", true)
     }
 
@@ -116,7 +119,8 @@ data class Alarm(
                 soundName = text(o, "soundName"),
                 gradual = o.optBoolean("gradual", false),
                 ringMinutes = o.optInt("ringMinutes", DEFAULT_RING_MINUTES).coerceIn(1, 60),
-                task = WakeTasks.parse(text(o, "task")),
+                task = WakeTasks.parse(text(o, "task"), text(o, "taskCode")),
+                taskCode = WakeTasks.parseCode(text(o, "taskCode")),
                 skipHolidays = o.optBoolean("skipHolidays", false),
             )
         }

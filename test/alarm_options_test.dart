@@ -149,6 +149,7 @@ void main() {
     await tester.tap(save);
     await tester.pumpAndSettle();
     expect(engine.lastSave, {
+      'taskCode': null,
       'sound': 'file:x.ogg',
       'soundName': 'Birds',
       'gradual': true,

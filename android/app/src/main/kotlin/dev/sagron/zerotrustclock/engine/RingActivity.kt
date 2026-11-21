@@ -7,11 +7,13 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
@@ -19,8 +21,10 @@ import android.widget.EditText
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import dev.sagron.zerotrustclock.R
+import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.MathProblem
 import dev.sagron.zerotrustclock.engine.core.ShakeCounter
+import dev.sagron.zerotrustclock.engine.core.VolumeButtons
 import dev.sagron.zerotrustclock.engine.core.WakeTasks
 
 /**
@@ -43,6 +47,9 @@ class RingActivity : Activity(), SensorEventListener {
     private var taskFor: String? = null
     private var listening = false
 
+    /** The camera could not be used for the scan task: sums instead. */
+    private var scanFailed = false
+
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(Loc.wrap(base))
     }
@@ -53,6 +60,8 @@ class RingActivity : Activity(), SensorEventListener {
         setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_ring)
+        // The volume buttons change the alarm volume, not the music's.
+        volumeControlStream = AudioManager.STREAM_ALARM
         // Back does not silence an alarm: only Snooze and Dismiss do.
         if (Build.VERSION.SDK_INT >= 33) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
@@ -63,9 +72,8 @@ class RingActivity : Activity(), SensorEventListener {
             RingService.send(this, RingService.ACTION_SNOOZE)
         }
         // Dismiss is a slide, so a sleepy tap can't silence the alarm.
-        findViewById<SlideToDismiss>(R.id.ring_dismiss).onDismiss = {
-            if (ringingTask() != null) startTask() else RingService.send(this, RingService.ACTION_DISMISS)
-        }
+        findViewById<SlideToDismiss>(R.id.ring_dismiss).onDismiss = { dismiss() }
+        findViewById<View>(R.id.ring_task_scan).setOnClickListener { openScanner() }
         findViewById<EditText>(R.id.ring_task_answer).addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -76,8 +84,10 @@ class RingActivity : Activity(), SensorEventListener {
             if (savedInstanceState.getString(STATE_FOR) == RingService.ringingId) {
                 solved = savedInstanceState.getInt(STATE_SOLVED)
                 shakesDone = savedInstanceState.getInt(STATE_SHAKES)
+                scanFailed = savedInstanceState.getBoolean(STATE_SCAN_FAILED)
             }
-            startTask()
+            // Not straight back into the camera: its button is on screen.
+            startTask(openScanner = false)
         } else if (intent?.getBooleanExtra(EXTRA_TASK, false) == true) {
             startTask()
         }
@@ -96,21 +106,50 @@ class RingActivity : Activity(), SensorEventListener {
         outState.putInt(STATE_SOLVED, solved)
         outState.putInt(STATE_SHAKES, shakes.count)
         outState.putString(STATE_FOR, taskFor)
+        outState.putBoolean(STATE_SCAN_FAILED, scanFailed)
     }
 
-    private fun ringingTask(): String? {
+    private fun ringingAlarm(): Alarm? {
         val id = RingService.ringingId ?: return null
-        return AlarmStore.load(this).firstOrNull { it.id == id }?.task
+        return AlarmStore.load(this).firstOrNull { it.id == id }
+    }
+
+    private fun ringingTask(): String? = ringingAlarm()?.task
+
+    /** The slider, or a volume button set to dismiss: the task first, when there is one. */
+    private fun dismiss() {
+        if (ringingTask() != null) startTask() else RingService.send(this, RingService.ACTION_DISMISS)
+    }
+
+    /**
+     * The volume buttons snooze or dismiss when the settings say so; a
+     * dismiss still goes through the wake-up task.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val volume = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+        val what = if (volume) EnginePrefs.volumeButtons(this) else VolumeButtons.VOLUME
+        if (what == VolumeButtons.VOLUME) return super.dispatchKeyEvent(event)
+        if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
+            if (what == VolumeButtons.SNOOZE) RingService.send(this, RingService.ACTION_SNOOZE) else dismiss()
+        }
+        return true
     }
 
     /** Swaps the slider for the alarm's wake-up task. */
-    private fun startTask() {
+    private fun startTask(openScanner: Boolean = true) {
         var kind = ringingTask() ?: return
         val sensors = getSystemService(SensorManager::class.java)
         if (kind == WakeTasks.SHAKE && sensors?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) == null) {
             kind = WakeTasks.MATH // No motion sensor: sums instead.
         }
-        if (task == kind && taskFor == RingService.ringingId) return
+        if (kind == WakeTasks.SCAN && (scanFailed || !ScanActivity.canScan(this))) {
+            kind = WakeTasks.MATH // No camera to scan with: sums instead.
+        }
+        if (task == kind && taskFor == RingService.ringingId) {
+            if (kind == WakeTasks.SCAN && openScanner) openScanner()
+            return
+        }
         if (task != null) resetTask()
         task = kind
         taskFor = RingService.ringingId
@@ -118,7 +157,16 @@ class RingActivity : Activity(), SensorEventListener {
         findViewById<View>(R.id.ring_task).visibility = View.VISIBLE
         val title = findViewById<TextView>(R.id.ring_task_title)
         val answer = findViewById<EditText>(R.id.ring_task_answer)
-        if (kind == WakeTasks.MATH) {
+        val scan = findViewById<View>(R.id.ring_task_scan)
+        val sum = findViewById<View>(R.id.ring_task_problem)
+        scan.visibility = if (kind == WakeTasks.SCAN) View.VISIBLE else View.GONE
+        sum.visibility = if (kind == WakeTasks.SCAN) View.GONE else View.VISIBLE
+        if (kind == WakeTasks.SCAN) {
+            title.text = getString(R.string.ring_task_scan)
+            answer.visibility = View.GONE
+            findViewById<TextView>(R.id.ring_task_progress).text = ""
+            if (openScanner) openScanner()
+        } else if (kind == WakeTasks.MATH) {
             title.text = getString(R.string.ring_task_math, WakeTasks.MATH_PROBLEMS)
             answer.visibility = View.VISIBLE
             nextProblem(wrong = false)
@@ -134,6 +182,29 @@ class RingActivity : Activity(), SensorEventListener {
             showShakes()
             listen()
         }
+    }
+
+    /**
+     * The camera, to scan the alarm's saved code. It dismisses the alarm
+     * itself when it sees the code; this screen then closes with the ring.
+     */
+    private fun openScanner() {
+        val alarm = ringingAlarm()
+        val code = alarm?.taskCode
+        if (task != WakeTasks.SCAN || code == null) return
+        try {
+            startActivity(ScanActivity.wakeIntent(this, alarm.id, code))
+        } catch (_: Exception) {
+            scanUnavailable()
+        }
+    }
+
+    /** The camera can't be used: the task becomes sums, so the alarm can still be dismissed. */
+    private fun scanUnavailable() {
+        if (task != WakeTasks.SCAN) return
+        scanFailed = true
+        task = null
+        startTask()
     }
 
     private fun nextProblem(wrong: Boolean) {
@@ -206,6 +277,12 @@ class RingActivity : Activity(), SensorEventListener {
         show()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Back from a camera that could not be used: sums instead.
+        if (ScanActivity.takeUnavailable(RingService.ringingId)) scanUnavailable()
+    }
+
     override fun onStop() {
         unlisten()
         if (RingService.onEnded === closeWhenEnded) RingService.onEnded = null
@@ -222,6 +299,7 @@ class RingActivity : Activity(), SensorEventListener {
         taskFor = null
         solved = 0
         shakesDone = 0
+        scanFailed = false
         problem = null
         shakes = ShakeCounter()
         val answer = findViewById<EditText>(R.id.ring_task_answer)
@@ -247,6 +325,7 @@ class RingActivity : Activity(), SensorEventListener {
         private const val STATE_SOLVED = "solved"
         private const val STATE_SHAKES = "shakes"
         private const val STATE_FOR = "taskFor"
+        private const val STATE_SCAN_FAILED = "scanFailed"
 
         fun taskIntent(context: Context): Intent = Intent(context, RingActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)

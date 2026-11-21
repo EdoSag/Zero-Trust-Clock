@@ -30,6 +30,7 @@ ClockAlarm alarm(
   bool gradual = false,
   int ringMinutes = ClockAlarm.defaultRingMinutes,
   WakeTask? task,
+  String? taskCode,
   bool skipHolidays = false,
 }) => ClockAlarm(
   id: id,
@@ -54,6 +55,7 @@ ClockAlarm alarm(
   gradual: gradual,
   ringMinutes: ringMinutes,
   task: task,
+  taskCode: taskCode,
   skipHolidays: skipHolidays,
 );
 
@@ -163,6 +165,38 @@ class FakeClockEngine implements ClockEngine {
     return soundToPick;
   }
 
+  /// What [scanCode] answers (null: nothing scanned).
+  String? codeToScan;
+
+  @override
+  Future<String?> scanCode() async {
+    calls.add('scanCode');
+    return codeToScan;
+  }
+
+  @override
+  Future<void> previewSound(String? sound) async {
+    calls.add('previewSound ${sound ?? 'chime'}');
+  }
+
+  @override
+  Future<void> stopPreview() async {
+    calls.add('stopPreview');
+  }
+
+  RingSettings ring = const RingSettings();
+
+  @override
+  Future<RingSettings> ringSettings() async => ring;
+
+  @override
+  Future<void> setRingSettings(RingSettings settings) async {
+    calls.add(
+      'setRingSettings ${settings.volumeButtons.name} ${settings.minVolume}',
+    );
+    ring = settings;
+  }
+
   /// Imports refused, as while that alarm rings.
   final Set<String> ringingIds = {};
 
@@ -185,6 +219,8 @@ class FakeClockEngine implements ClockEngine {
       date: a.date,
       skipDate: a.skipDate,
       updatedAt: a.updatedAt,
+      task: a.task,
+      taskCode: a.taskCode,
     );
     if (i >= 0) {
       alarms[i] = copy;
@@ -213,11 +249,13 @@ class FakeClockEngine implements ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
   }) async {
     _mayFail();
     lastSave = {
+      'taskCode': taskCode,
       'sound': sound,
       'soundName': soundName,
       'gradual': gradual,
@@ -256,6 +294,7 @@ class FakeClockEngine implements ClockEngine {
       gradual: gradual,
       ringMinutes: ringMinutes,
       task: task,
+      taskCode: taskCode,
       skipHolidays: skipHolidays,
       date: newDate,
     );

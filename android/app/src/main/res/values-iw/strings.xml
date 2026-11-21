@@ -83,4 +83,16 @@
     <string name="ring_task_progress">%1$d מתוך %2$d</string>
     <string name="ring_task_wrong">לא בדיוק. נסו שוב.</string>
     <string name="screensaver_name">שעון לילה</string>
+    <string name="ring_task_scan">סורקים את הקוד כדי לכבות</string>
+    <string name="ring_task_scan_button">פתיחת המצלמה</string>
+    <string name="scan_hint_wake">כוונו את המצלמה אל הקוד ששמרתם לשעון המעורר הזה.</string>
+    <string name="scan_hint_save">כוונו את המצלמה אל קוד QR או ברקוד. בחרו קוד שנמצא רחוק מהמיטה.</string>
+    <string name="scan_wrong">זה קוד אחר.</string>
+    <string name="scan_light">תאורה</string>
+    <string name="scan_light_off">כיבוי התאורה</string>
+    <string name="scan_back">חזרה</string>
+    <string name="scan_no_camera">ל-ZT Clock אין גישה למצלמה. אפשר לאשר אותה בהגדרות הטלפון.</string>
+    <string name="no_alarm_ringing">אין שעון מעורר שמצלצל</string>
+    <string name="no_timer_ringing">אין טיימר שמצלצל</string>
+    <string name="snooze_ended">הנודניק בוטל</string>
 </resources>

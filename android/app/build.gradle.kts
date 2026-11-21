@@ -94,6 +94,9 @@ flutter {
 }
 
 dependencies {
+    // Reads QR codes and barcodes for the "scan a code" wake-up task, on
+    // the phone: plain Java, no Google services (Apache 2.0).
+    implementation("com.google.zxing:core:3.5.3")
     // The alarm scheduler's unit tests (engine/core is plain Kotlin).
     // org.json is part of Android; on the test machine it comes from here.
     testImplementation("junit:junit:4.13.2")

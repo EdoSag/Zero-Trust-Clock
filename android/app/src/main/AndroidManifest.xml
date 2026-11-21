@@ -28,6 +28,14 @@
     <!-- Sleep sounds play on with the screen off. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- The "scan a code" wake-up task: asked for only when that task is
+         picked. Frames are read on the phone and never kept. A phone
+         without a camera can still install the app. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false"/>
 
     <application
         android:supportsRtl="true"
@@ -73,6 +81,16 @@
             android:turnScreenOn="true"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
+            android:theme="@style/RingTheme"/>
+        <!-- The camera for the "scan a code" wake-up task: saving a code
+             from the editor, and scanning it over the lock screen. -->
+        <activity
+            android:name=".engine.ScanActivity"
+            android:exported="false"
+            android:directBootAware="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:screenOrientation="portrait"
             android:theme="@style/RingTheme"/>
         <service
             android:name=".engine.RingService"
@@ -216,6 +234,9 @@
                 <action android:name="android.intent.action.SHOW_ALARMS"/>
                 <action android:name="android.intent.action.SET_TIMER"/>
                 <action android:name="android.intent.action.SHOW_TIMERS"/>
+                <action android:name="android.intent.action.DISMISS_ALARM"/>
+                <action android:name="android.intent.action.SNOOZE_ALARM"/>
+                <action android:name="android.intent.action.DISMISS_TIMER"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>

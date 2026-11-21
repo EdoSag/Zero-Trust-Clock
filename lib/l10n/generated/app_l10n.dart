@@ -1284,6 +1284,102 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'No internet permission. No account, no sync, no downloads: nothing leaves this phone.'**
   String get offlineEditionHint;
+
+  /// No description provided for @soundBells.
+  ///
+  /// In en, this message translates to:
+  /// **'Bells'**
+  String get soundBells;
+
+  /// No description provided for @soundBeeps.
+  ///
+  /// In en, this message translates to:
+  /// **'Beeps'**
+  String get soundBeeps;
+
+  /// No description provided for @soundSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get soundSunrise;
+
+  /// No description provided for @soundBuzzer.
+  ///
+  /// In en, this message translates to:
+  /// **'Buzzer'**
+  String get soundBuzzer;
+
+  /// No description provided for @wakeTaskScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a code'**
+  String get wakeTaskScan;
+
+  /// No description provided for @wakeTaskScanSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Code saved'**
+  String get wakeTaskScanSaved;
+
+  /// No description provided for @wakeTaskScanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the same QR code or barcode to dismiss. Keep it away from the bed. If the camera can\'t be used, the alarm asks for sums instead.'**
+  String get wakeTaskScanHint;
+
+  /// No description provided for @wakeTaskScanAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan another'**
+  String get wakeTaskScanAgain;
+
+  /// No description provided for @wakeTaskScanNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No code was scanned'**
+  String get wakeTaskScanNone;
+
+  /// No description provided for @volumeButtons.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume buttons'**
+  String get volumeButtons;
+
+  /// No description provided for @volumeButtonsVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the volume'**
+  String get volumeButtonsVolume;
+
+  /// No description provided for @volumeButtonsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'What the volume buttons do while an alarm rings on its own screen. A wake-up task is still asked for.'**
+  String get volumeButtonsAbout;
+
+  /// No description provided for @minVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring at least this loud'**
+  String get minVolume;
+
+  /// No description provided for @minVolumeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: the phone\'s alarm volume'**
+  String get minVolumeOff;
+
+  /// No description provided for @minVolumePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of the loudest'**
+  String minVolumePercent(int percent);
+
+  /// No description provided for @minVolumeAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'If the phone\'s alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.'**
+  String get minVolumeAbout;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
