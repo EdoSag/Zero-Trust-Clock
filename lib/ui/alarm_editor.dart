@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/edition.dart';
 import '../engine/alarm.dart';
 import '../engine/clock_engine.dart';
 import '../holidays/holidays.dart';
@@ -289,7 +290,8 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
                   ),
               ],
             ),
-            if (_days.isNotEmpty) _holidaysSwitch(context),
+            if (_days.isNotEmpty && !ref.watch(offlineEditionProvider))
+              _holidaysSwitch(context),
             if (_days.isEmpty) ...[
               const SizedBox(height: 4),
               Text(l.ringsOnce, style: soft),

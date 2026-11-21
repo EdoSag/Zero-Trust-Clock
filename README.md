@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.11.0)
+## What is in it now (0.12.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -89,6 +89,11 @@ Work happens on the `Dev` branch; `main` holds releases.
   app, a signed-in Clock asks to unlock after a restart or auto-lock; the
   alarms ring either way.
 - English and Hebrew, also on the ring screen and in notifications.
+- **Offline edition** (`zero-trust-clock-offline-…apk` in each release):
+  the same clock with no internet permission at all, so no account, no
+  sync and no downloads (no holiday calendars, no Log to ZT Time). It is
+  its own app, "ZT Clock Offline", and can sit next to the full one.
+  Settings says which edition is installed.
 
 ## How it is built
 
@@ -159,6 +164,9 @@ Where things are kept on the phone:
     the clock-plus icon, pick the project and Log. Open ZT Time: the entry
     is there with that length. Do the same from a 1-minute timer when it
     rings.
+19. Install the Offline APK next to the full one: it appears as "ZT Clock
+    Offline", Android's app info shows no network permission, Settings has
+    "Offline edition" and no sign-in, and a test alarm rings.
 
 ## Development
 
@@ -166,8 +174,14 @@ Where things are kept on the phone:
 flutter pub get
 flutter analyze
 flutter test test/
-cd android && ./gradlew :app:testDebugUnitTest   # the scheduler's tests
+cd android && ./gradlew :app:testFullDebugUnitTest   # the scheduler's tests
 ```
+
+Two editions are built from the one project (`android/app/build.gradle.kts`):
+`flutter build apk --flavor full` (the default) and `--flavor offline`. The
+Offline edition's manifest (`android/app/src/offline`) takes the INTERNET
+permission out, `lib/app/edition.dart` hides what would need it, and CI
+checks the built APK has no network permission.
 
 Flutter 3.47.9 (the suite's pinned version). Strings are in
 `lib/l10n/app_en.arb` and `app_he.arb`; the native ring screen and

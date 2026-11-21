@@ -685,4 +685,11 @@ class AppL10nEn extends AppL10n {
   @override
   String get couldNotLog =>
       'Couldn\'t log it. Check the connection and try again.';
+
+  @override
+  String get offlineEdition => 'Offline edition';
+
+  @override
+  String get offlineEditionHint =>
+      'No internet permission. No account, no sync, no downloads: nothing leaves this phone.';
 }

@@ -1,7 +1,12 @@
-# Builds a signed release APK on every push to main and publishes it as a
-# GitHub Release, so the app can be downloaded and installed without Google
-# Play. Pull requests get the same build as a downloadable artifact (no
-# release), which shows a change still builds before it is merged.
+# Builds the signed release APKs on every push to main and publishes them as
+# a GitHub Release, so the app can be downloaded and installed without Google
+# Play. Two editions (android/app/build.gradle.kts):
+#
+#   full     the clock with the optional Zero-Trust account
+#   offline  the same clock with no INTERNET permission, account or sync
+#
+# Pull requests get the same builds as downloadable artifacts (no release),
+# which shows a change still builds before it is merged.
 #
 # One-time setup (Settings > Secrets and variables > Actions > New secret):
 #   ANDROID_KEYSTORE_BASE64   the release keystore, base64 encoded
@@ -135,14 +140,43 @@ jobs:
           # versionCode must grow with every build so updates install over
           # the previous APK; 1000 + run number stays above old pubspec codes.
           BUILD=$((1000 + GITHUB_RUN_NUMBER))
-          flutter build apk --release --build-number="$BUILD"
+          flutter build apk --release --flavor full --build-number="$BUILD"
           APK="$APP_SLUG-$VERSION-build$BUILD.apk"
-          cp build/app/outputs/flutter-apk/app-release.apk "$APK"
+          cp build/app/outputs/flutter-apk/app-full-release.apk "$APK"
           {
             echo "VERSION=$VERSION"
             echo "BUILD=$BUILD"
             echo "APK=$APK"
           } >> "$GITHUB_ENV"
+
+      - name: Build the Offline edition APK
+        # The same clock with no INTERNET permission: no account, no sync,
+        # no downloads. Its own app id, so it installs next to the full one.
+        run: |
+          set -e
+          flutter build apk --release --flavor offline --build-number="$BUILD"
+          OFFLINE_APK="$APP_SLUG-offline-$VERSION-build$BUILD.apk"
+          cp build/app/outputs/flutter-apk/app-offline-release.apk "$OFFLINE_APK"
+          echo "OFFLINE_APK=$OFFLINE_APK" >> "$GITHUB_ENV"
+
+      - name: Check what each edition contains
+        # The promise of the Offline edition, checked on the built file: its
+        # own app id and no INTERNET permission. Both must hold the alarm
+        # engine's permissions.
+        run: |
+          set -e
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          "$AAPT2" dump permissions "$OFFLINE_APK" | tee offline-permissions.txt
+          "$AAPT2" dump permissions "$APK" | tee full-permissions.txt
+          fail() { echo "::error::$1"; exit 1; }
+          grep -q "package: dev.sagron.zerotrustclock.offline" offline-permissions.txt || fail "The Offline edition has the wrong app id."
+          ! grep -q "android.permission.INTERNET" offline-permissions.txt || fail "The Offline edition asks for the INTERNET permission."
+          ! grep -q "android.permission.ACCESS_NETWORK_STATE" offline-permissions.txt || fail "The Offline edition asks for the network state permission."
+          grep -q "android.permission.USE_EXACT_ALARM" offline-permissions.txt || fail "The Offline edition is missing the exact alarm permission."
+          grep -q "package: dev.sagron.zerotrustclock$" full-permissions.txt || fail "The full edition has the wrong app id."
+          grep -q "android.permission.INTERNET" full-permissions.txt || fail "The full edition is missing the INTERNET permission."
+          grep -q "android.permission.USE_EXACT_ALARM" full-permissions.txt || fail "The full edition is missing the exact alarm permission."
+          echo "Both editions contain what they should."
 
       - name: Build the Google Play bundle
         # Google Play takes an .aab, not an .apk. Built for releases (and
@@ -151,9 +185,9 @@ jobs:
         if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
         run: |
           set -e
-          flutter build appbundle --release --build-number="$BUILD"
+          flutter build appbundle --release --flavor full --build-number="$BUILD"
           AAB="$APP_SLUG-$VERSION-build$BUILD.aab"
-          cp build/app/outputs/bundle/release/app-release.aab "$AAB"
+          cp build/app/outputs/bundle/fullRelease/*.aab "$AAB"
           echo "AAB=$AAB" >> "$GITHUB_ENV"
 
       - name: Test the alarm scheduler
@@ -163,7 +197,7 @@ jobs:
         # also puts the Gradle wrapper in place.
         run: |
           cd android
-          ./gradlew :app:testDebugUnitTest --console=plain
+          ./gradlew :app:testFullDebugUnitTest --console=plain
 
       - uses: actions/upload-artifact@v4
         if: env.AAB != ''
@@ -178,6 +212,12 @@ jobs:
           path: ${{ env.APK }}
           retention-days: 14
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OFFLINE_APK }}
+          path: ${{ env.OFFLINE_APK }}
+          retention-days: 14
+
       - name: Publish the GitHub Release
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
@@ -185,12 +225,14 @@ jobs:
         run: |
           TAG="v$VERSION-build$BUILD"
           SUBJECT=$(git log -1 --pretty=%s)
-          gh release create "$TAG" "$APK" ${AAB:+"$AAB"} \
+          gh release create "$TAG" "$APK" "$OFFLINE_APK" ${AAB:+"$AAB"} \
             --target "$GITHUB_SHA" \
             --title "$APP_TITLE $VERSION (build $BUILD)" \
             --notes "Latest change: $SUBJECT
 
           Download **$APK** below and open it on your phone to install or update. Android may ask you to allow installs from this source the first time.
+
+          **$OFFLINE_APK** is the Offline edition: the same clock with no internet permission, no account and no sync. It installs as a separate app.
 
           The .aab file is for uploading to the Google Play Console; phones install the .apk." \
             --latest
