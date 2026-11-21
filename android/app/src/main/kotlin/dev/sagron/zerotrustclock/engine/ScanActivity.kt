@@ -236,6 +236,11 @@ class ScanActivity : Activity(), TextureView.SurfaceTextureListener {
                         main.post {
                             opening = false
                             if (camera === device) camera = null
+                            // Taken by another app or switched off by a
+                            // policy, also instead of ever opening: no
+                            // frames will come. The alarm asks for sums.
+                            // Not when this screen itself is leaving.
+                            if (resumed) unavailable()
                         }
                     }
 

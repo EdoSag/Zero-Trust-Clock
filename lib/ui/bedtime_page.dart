@@ -116,20 +116,11 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
       a.length == b.length && a.containsAll(b);
 
   Future<String> _saveWakeAlarm(BedtimeSchedule s, ClockAlarm? alarm) async {
-    final id = await _engine.save(
-      id: alarm?.id,
-      hour: s.wakeHour,
-      minute: s.wakeMinute,
-      days: s.wakeDays,
-      label: alarm?.label ?? context.l10n.wakeUp,
-      vibrate: alarm?.vibrate ?? true,
-      snoozeMinutes: alarm?.snoozeMinutes ?? 10,
-      sound: alarm?.sound,
-      soundName: alarm?.soundName,
-      gradual: alarm?.gradual ?? false,
-      ringMinutes: alarm?.ringMinutes ?? ClockAlarm.defaultRingMinutes,
-      task: alarm?.task,
-      skipHolidays: alarm?.skipHolidays ?? false,
+    final id = await saveWakeAlarm(
+      _engine,
+      s,
+      alarm,
+      label: context.l10n.wakeUp,
     );
     await ref.read(alarmsProvider.notifier).refresh();
     return id;
