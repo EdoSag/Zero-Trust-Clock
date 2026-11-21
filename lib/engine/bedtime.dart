@@ -65,6 +65,46 @@ class BedtimeSchedule {
     wakeAlarmId: wakeAlarmId ?? this.wakeAlarmId,
   );
 
+  /// What the account backs up: the times, the nights, the reminder and
+  /// the wake-up alarm. Whether the schedule is on, and Do Not Disturb,
+  /// are each phone's own (like an alarm's switch).
+  Map<String, Object?> get backup => {
+    'bedHour': bedHour,
+    'bedMinute': bedMinute,
+    'wakeHour': wakeHour,
+    'wakeMinute': wakeMinute,
+    'nights': nights.toList()..sort(),
+    'reminderMinutes': reminderMinutes,
+    'wakeAlarmId': wakeAlarmId,
+  };
+
+  /// This schedule with the account's [backup] put in.
+  BedtimeSchedule withBackup(Map<String, Object?> backup) {
+    int field(String key, int now, int max) => switch (backup[key]) {
+      final num n when n >= 0 && n <= max => n.toInt(),
+      _ => now,
+    };
+    final days = {
+      if (backup['nights'] case final List nights)
+        for (final d in nights)
+          if (d is num && d >= 1 && d <= 7) d.toInt(),
+    };
+    return BedtimeSchedule(
+      enabled: enabled,
+      doNotDisturb: doNotDisturb,
+      bedHour: field('bedHour', bedHour, 23),
+      bedMinute: field('bedMinute', bedMinute, 59),
+      wakeHour: field('wakeHour', wakeHour, 23),
+      wakeMinute: field('wakeMinute', wakeMinute, 59),
+      nights: days.isEmpty ? nights : days,
+      reminderMinutes: field('reminderMinutes', reminderMinutes, 180),
+      wakeAlarmId: switch (backup['wakeAlarmId']) {
+        final String id => id,
+        _ => wakeAlarmId,
+      },
+    );
+  }
+
   String toJson() => jsonEncode({
     'enabled': enabled,
     'bedHour': bedHour,

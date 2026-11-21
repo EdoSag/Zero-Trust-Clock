@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.12.0)
+## What is in it now (0.13.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -85,9 +85,15 @@ Work happens on the `Dev` branch; `main` holds releases.
   end-to-end encrypted backup and sync through the shared Zero-Trust
   account. An alarm arrives switched **off** on another phone until it is
   switched on there: each phone has its own switch. Edits (time, days,
-  label, Turn off once) sync; the newer edit wins. Like every Zero-Trust
-  app, a signed-in Clock asks to unlock after a restart or auto-lock; the
-  alarms ring either way.
+  label, Turn off once) sync; the newer edit wins. The rest is backed up
+  too, so a new phone looks like the old one: the world clock's cities
+  (in order), saved quick timers, the bedtime schedule, the holiday
+  calendar with its ticked days, and the night clock's dim red. For each
+  the newer change wins; a phone that already has its own cities or quick
+  timers keeps them next to the account's the first time. Whether bedtime
+  is on, and its Do Not Disturb, stay each phone's own, like an alarm's
+  switch. Like every Zero-Trust app, a signed-in Clock asks to unlock
+  after a restart or auto-lock; the alarms ring either way.
 - English and Hebrew, also on the ring screen and in notifications.
 - **Offline edition** (`zero-trust-clock-offline-…apk` in each release):
   the same clock with no internet permission at all, so no account, no
@@ -103,7 +109,7 @@ Work happens on the `Dev` branch; `main` holds releases.
 | Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. Timers (`TimerEngine`, exact AlarmManager wake-ups) and the stopwatch live here too, with their notifications. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
 | Screens | `lib/ui` | Flutter, on the shared core: Alarms, Clock, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
-| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. |
+| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. The settings groups (`kind = 'settings'`, ids `settings-cities`, `-quick-timers`, `-bedtime`, `-holidays`, `-night-clock`) go the same way, newer change first. |
 | Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
 The engine is the only thing that decides when an alarm rings; the screens
@@ -167,6 +173,9 @@ Where things are kept on the phone:
 19. Install the Offline APK next to the full one: it appears as "ZT Clock
     Offline", Android's app info shows no network permission, Settings has
     "Offline edition" and no sign-in, and a test alarm rings.
+20. Signed in on two phones: add two cities and a quick timer on one,
+    change the bedtime times and pick a holiday calendar. They appear on
+    the other within a moment; bedtime arrives switched off there.
 
 ## Development
 

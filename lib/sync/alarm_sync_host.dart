@@ -8,6 +8,8 @@ import '../engine/clock_engine.dart';
 import '../l10n/l10n.dart';
 import '../ui/alarm_text.dart';
 import 'alarm_sync.dart';
+import 'settings_sections.dart';
+import 'settings_sync.dart';
 
 final deletedAlarmsProvider = Provider<DeletedAlarms>(
   (ref) => DeletedAlarms(ref.watch(ztPreferencesStoreProvider)),
@@ -37,9 +39,10 @@ final alarmSyncProvider = FutureProvider<AlarmSync?>((ref) async {
   );
 });
 
-/// Keeps the alarms and the account in step while the account is open:
-/// after every change on this phone, and whenever another phone's change
-/// arrives. Without an account it does nothing.
+/// Keeps the alarms and the settings (cities, quick timers, bedtime,
+/// holiday calendar, night clock) in step with the account while it is
+/// open: after every change on this phone, and whenever another phone's
+/// change arrives. Without an account it does nothing.
 class AlarmSyncHost extends ConsumerStatefulWidget {
   const AlarmSyncHost({super.key, required this.child});
 
@@ -56,6 +59,9 @@ class _AlarmSyncHostState extends ConsumerState<AlarmSyncHost> {
   Timer? _soon;
   StreamSubscription<void>? _vaultChanges;
   ProviderSubscription<AsyncValue<AlarmSync?>>? _sync;
+  StreamSubscription<void>? _settingsChanges;
+  StreamSubscription<void>? _settingsEdits;
+  ProviderSubscription<AsyncValue<SettingsSync?>>? _settings;
 
   @override
   void initState() {
@@ -65,6 +71,15 @@ class _AlarmSyncHostState extends ConsumerState<AlarmSyncHost> {
       _vaultChanges = next.value?.vault.changes.listen((_) => _schedule());
       _schedule();
     }, fireImmediately: true);
+    _settings = ref.listenManual(settingsSyncProvider, (_, next) {
+      _settingsChanges?.cancel();
+      _settingsChanges = next.value?.vault.changes.listen((_) => _schedule());
+      _schedule();
+    }, fireImmediately: true);
+    _settingsEdits = ref
+        .read(settingsEditsProvider)
+        .changes
+        .listen((_) => _schedule());
   }
 
   @override
@@ -72,6 +87,9 @@ class _AlarmSyncHostState extends ConsumerState<AlarmSyncHost> {
     _soon?.cancel();
     _vaultChanges?.cancel();
     _sync?.close();
+    _settingsChanges?.cancel();
+    _settingsEdits?.cancel();
+    _settings?.close();
     super.dispose();
   }
 
@@ -82,6 +100,18 @@ class _AlarmSyncHostState extends ConsumerState<AlarmSyncHost> {
 
   Future<void> _run() async {
     if (!mounted) return;
+    await _runAlarms();
+    if (!mounted) return;
+    try {
+      // The screens follow by themselves: a restore goes through the same
+      // controllers they watch.
+      await ref.read(settingsSyncProvider).value?.run();
+    } on Object {
+      // Locked mid-round, or offline: the next change or unlock retries.
+    }
+  }
+
+  Future<void> _runAlarms() async {
     final sync = ref.read(alarmSyncProvider).value;
     if (sync == null) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
