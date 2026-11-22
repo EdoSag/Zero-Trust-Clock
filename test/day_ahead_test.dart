@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zerotrust_clock/app/account.dart';
+import 'package:zerotrust_clock/app/clock_gate.dart';
 import 'package:zerotrust_clock/engine/alarm.dart';
 import 'package:zerotrust_clock/engine/clock_engine.dart';
 import 'package:zerotrust_clock/linked/day_ahead.dart';
@@ -140,6 +142,25 @@ void main() {
       final byDay = timedEventsByDay(read.events, today: today);
       expect(firstEventPlan(byDay, earliest: 300), {'2026-11-19': 600});
       expect(firstEventPlan(byDay, earliest: 0), {'2026-11-19': 240});
+    });
+
+    test('a repeating event in another zone ends where it says', () {
+      // Daily at 09:00 in Tokyo, the last one on 19 November (00:00 UTC).
+      final e = LinkedEvent.fromJson(
+        event(
+          '2026-11-17T00:00:00.000Z',
+          end: '2026-11-17T01:00:00.000Z',
+          rrule: 'FREQ=DAILY;UNTIL=20261119T000000Z',
+          tz: 'Asia/Tokyo',
+        ),
+      )!;
+      final starts = e.startsBetween(
+        DateTime.utc(2026, 11, 16).toLocal(),
+        DateTime.utc(2026, 11, 25).toLocal(),
+      );
+      expect(starts, [
+        for (final d in [17, 18, 19]) DateTime.utc(2026, 11, d).toLocal(),
+      ]);
     });
 
     test('hidden calendars are left out; subscribed ones count', () {
@@ -373,6 +394,52 @@ void main() {
       expect(items.reads, isNotEmpty);
     });
 
+    testWidgets('an alarm linked while a refresh runs gets its plan', (
+      tester,
+    ) async {
+      final engine = FakeClockEngine(
+        alarms: [
+          alarm('old', days: {1}),
+        ],
+      );
+      final items = _GatedItems({LinkedApp.calendar: const []});
+      late DayAhead dayAhead;
+      late AppL10n l;
+      await tester.pumpWidget(
+        testApp(
+          engine,
+          home: Consumer(
+            builder: (context, ref, _) {
+              dayAhead = ref.read(dayAheadProvider);
+              l = AppL10n.of(context);
+              return const SizedBox();
+            },
+          ),
+          overrides: [
+            linkedItemsProvider.overrideWithValue(items),
+            linkedKeysProvider.overrideWith(_Unlocked.new),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        final gate = items.gate = Completer<void>();
+        final first = dayAhead.refresh(l, force: true);
+        // The first run has read the alarms and waits on ZT Tasks.
+        while (!items.reads.contains(LinkedApp.tasks)) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        expect(engine.calendarPlans, isNull);
+        engine.alarms.add(
+          alarm('new', days: {1}, calendar: const CalendarLink()),
+        );
+        final second = dayAhead.refresh(l, force: true);
+        gate.complete();
+        await Future.wait([first, second]);
+      });
+      expect(engine.calendarPlans!.keys, ['new']);
+    });
+
     testWidgets('locked or signed out: nothing is read', (tester) async {
       final engine = FakeClockEngine();
       final items = FakeLinkedItems(const {});
@@ -581,6 +648,30 @@ void main() {
     });
   });
 
+  testWidgets('signing out from the unlock screen forgets the morning '
+      'screen', (tester) async {
+    final engine = FakeClockEngine()..morningBrief = '{}';
+    await tester.pumpWidget(
+      testApp(
+        engine,
+        home: const ClockGate(),
+        overrides: [
+          signedInProvider.overrideWith((ref) => ref.watch(_signedIn)),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Signed in and locked: the unlock screen, no day-ahead host.
+    expect(find.byType(DayAheadHost), findsNothing);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ClockGate)),
+    );
+    container.read(_signedIn.notifier).set(false);
+    await tester.pumpAndSettle();
+    expect(engine.calls, contains('setMorningBrief null'));
+    expect(engine.morningBrief, isNull);
+  });
+
   testWidgets('morning screen setting', (tester) async {
     final engine = FakeClockEngine();
     await tester.pumpWidget(testApp(engine, home: const ClockSettingsPage()));
@@ -611,4 +702,31 @@ class _Unlocked extends LinkedKeys {
   Map<LinkedApp, Uint8List> build() => {
     for (final app in LinkedApp.values) app: Uint8List(32),
   };
+}
+
+/// Holds ZT Tasks' read until [gate] completes.
+class _GatedItems extends FakeLinkedItems {
+  _GatedItems(super.items);
+  Completer<void>? gate;
+
+  @override
+  Future<List<LinkedItem>?> read(LinkedApp app) async {
+    final result = await super.read(app);
+    final g = gate;
+    if (app == LinkedApp.tasks && g != null) {
+      gate = null;
+      await g.future;
+    }
+    return result;
+  }
+}
+
+/// Signed in until a test signs out.
+final _signedIn = NotifierProvider<_SignedIn, bool>(_SignedIn.new);
+
+class _SignedIn extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void set(bool value) => state = value;
 }

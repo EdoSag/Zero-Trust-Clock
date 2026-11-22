@@ -130,9 +130,15 @@ class LinkedEvent {
     }
     final zone = allDay ? null : zoneFor(timeZone);
     if (zone == null) return rule.between(start, from, to, exclude: exceptions);
+    // The rule runs on the zone's wall clock, so its end (an instant, read
+    // as phone time) is moved onto that clock too.
+    final until = rule.until;
+    final wallRule = until == null
+        ? rule
+        : rule.copyWith(until: _wallClockIn(zone, until));
     const slack = Duration(days: 2);
     return [
-      for (final w in rule.between(
+      for (final w in wallRule.between(
         _wallClockIn(zone, start),
         _wallClockIn(zone, from).subtract(slack),
         _wallClockIn(zone, to).add(slack),

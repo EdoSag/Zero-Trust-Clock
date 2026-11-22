@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
 import '../engine/alarm.dart';
-import '../app/account.dart';
 import '../engine/clock_engine.dart';
 import '../l10n/l10n.dart';
 import 'day_ahead.dart';
@@ -221,6 +220,10 @@ class DayAhead {
   DateTime? _lastRun;
   Future<void>? _running;
 
+  /// A forced refresh asked for while a run was going: that run may have
+  /// read the alarms before the change, so it runs once more.
+  bool _again = false;
+
   static const minGap = Duration(minutes: 5);
 
   /// [l10n] names goals without a name of their own.
@@ -230,9 +233,20 @@ class DayAhead {
       return Future.value();
     }
     final running = _running;
-    if (running != null) return running;
-    _lastRun = now;
-    return _running = _run(now, l10n).whenComplete(() => _running = null);
+    if (running != null) {
+      if (force) _again = true;
+      return running;
+    }
+    return _running = _runUntilDone(l10n).whenComplete(() => _running = null);
+  }
+
+  Future<void> _runUntilDone(AppL10n l10n) async {
+    do {
+      _again = false;
+      final now = DateTime.now();
+      _lastRun = now;
+      await _run(now, l10n);
+    } while (_again);
   }
 
   Future<void> _run(DateTime now, AppL10n l) async {
@@ -318,17 +332,6 @@ class _DayAheadHostState extends ConsumerState<DayAheadHost>
         if (mounted) unawaited(_refresh(force: true));
       });
     }, fireImmediately: true);
-    ref.listenManual(signedInProvider, (was, now) {
-      // Signed out: the morning screen forgets what it knew.
-      if (was == true && !now) {
-        unawaited(
-          ref
-              .read(clockEngineProvider)
-              .setMorningBrief(null)
-              .catchError((_) {}),
-        );
-      }
-    });
   }
 
   @override
