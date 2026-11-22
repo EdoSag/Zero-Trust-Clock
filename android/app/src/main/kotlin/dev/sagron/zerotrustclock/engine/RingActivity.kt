@@ -32,7 +32,25 @@ import dev.sagron.zerotrustclock.engine.core.WakeTasks
  * views (no Flutter), so it also opens before the phone's first unlock.
  */
 class RingActivity : Activity(), SensorEventListener {
-    private val closeWhenEnded: () -> Unit = { finish() }
+    private val closeWhenEnded: () -> Unit = { closeOrMorning() }
+
+    /** Dismissed on this screen (not snoozed, timed out or from elsewhere). */
+    private var dismissedHere = false
+
+    /** The day ahead follows a dismiss made here, when Settings say so. */
+    private fun closeOrMorning() {
+        if (dismissedHere && RingService.ringingId == null) {
+            dismissedHere = false
+            try {
+                if (MorningBrief.shouldShow(this)) {
+                    startActivity(Intent(this, MorningActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
+            } catch (_: Exception) {
+                // Only the morning screen.
+            }
+        }
+        finish()
+    }
 
     /** The wake-up task on screen (WakeTasks), or null. */
     private var task: String? = null
@@ -118,7 +136,12 @@ class RingActivity : Activity(), SensorEventListener {
 
     /** The slider, or a volume button set to dismiss: the task first, when there is one. */
     private fun dismiss() {
-        if (ringingTask() != null) startTask() else RingService.send(this, RingService.ACTION_DISMISS)
+        if (ringingTask() != null) {
+            startTask()
+        } else {
+            dismissedHere = true
+            RingService.send(this, RingService.ACTION_DISMISS)
+        }
     }
 
     /**
@@ -263,6 +286,7 @@ class RingActivity : Activity(), SensorEventListener {
     private fun done() {
         unlisten()
         task = null
+        dismissedHere = true
         RingService.send(this, RingService.ACTION_DISMISS, taskDone = true)
     }
 

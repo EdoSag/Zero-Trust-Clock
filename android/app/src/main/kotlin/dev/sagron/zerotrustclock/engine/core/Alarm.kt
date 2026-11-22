@@ -59,8 +59,37 @@ data class Alarm(
     val taskCode: String? = null,
     /** A repeating alarm stays silent on this phone's public holidays (see Holidays). */
     val skipHolidays: Boolean = false,
+    /**
+     * A shift pattern instead of weekdays: one character per day of the
+     * cycle, '1' rings and '0' is a day off ("11000000": two days on, six
+     * off). Day 1 of the cycle is [cycleStart]. [days] is empty then.
+     */
+    val cycle: String? = null,
+    /** The first day of the shift pattern's cycle (yyyy-MM-dd). */
+    val cycleStart: String? = null,
+    /** Linked to ZT Calendar: rings in time for the day's first event. */
+    val calendar: CalendarLink? = null,
+    /**
+     * The day's first event as ZT Calendar had it the last time the app
+     * read it: minutes after midnight, by day (yyyy-MM-dd). A day up to
+     * [calendarThrough] that isn't here has no event. Times only: what the
+     * events are stays in the app. This phone only.
+     */
+    val calendarPlan: Map<String, Int> = emptyMap(),
+    /** The last day [calendarPlan] covers; after it the usual time rings. */
+    val calendarThrough: String? = null,
+    /** Smart wake window: may ring up to this many minutes early when the phone feels movement. 0: off. */
+    val smartWake: Int = 0,
+    /**
+     * A ring at or before this moment already happened (epoch
+     * milliseconds): the smart wake window rang early for it.
+     */
+    val servedUntil: Long? = null,
 ) {
-    val repeats: Boolean get() = days.isNotEmpty()
+    val repeats: Boolean get() = days.isNotEmpty() || shift != null
+
+    /** The shift pattern, when it is a valid one. */
+    val shift: ShiftPattern? get() = ShiftPattern.of(cycle, cycleStart)
 
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
@@ -85,6 +114,15 @@ data class Alarm(
         if (task != null) put("task", task)
         if (taskCode != null) put("taskCode", taskCode)
         if (skipHolidays) put("skipHolidays", true)
+        if (cycle != null) put("cycle", cycle)
+        if (cycleStart != null) put("cycleStart", cycleStart)
+        calendar?.let { put("calendar", it.toJson()) }
+        if (calendarPlan.isNotEmpty()) {
+            put("calendarPlan", JSONObject().also { o -> calendarPlan.toSortedMap().forEach { (k, v) -> o.put(k, v) } })
+        }
+        if (calendarThrough != null) put("calendarThrough", calendarThrough)
+        if (smartWake > 0) put("smartWake", smartWake)
+        if (servedUntil != null) put("servedUntil", servedUntil)
     }
 
     companion object {
@@ -122,7 +160,25 @@ data class Alarm(
                 task = WakeTasks.parse(text(o, "task"), text(o, "taskCode")),
                 taskCode = WakeTasks.parseCode(text(o, "taskCode")),
                 skipHolidays = o.optBoolean("skipHolidays", false),
+                cycle = text(o, "cycle"),
+                cycleStart = text(o, "cycleStart"),
+                calendar = o.optJSONObject("calendar")?.let { CalendarLink.fromJson(it) },
+                calendarPlan = plan(o.optJSONObject("calendarPlan")),
+                calendarThrough = text(o, "calendarThrough"),
+                smartWake = SmartWake.parse(o.optInt("smartWake", 0)),
+                servedUntil = number(o, "servedUntil"),
             )
+        }
+
+        /** Days with their first event, minutes after midnight. */
+        fun plan(o: JSONObject?): Map<String, Int> {
+            if (o == null) return emptyMap()
+            val out = HashMap<String, Int>()
+            for (k in o.keys()) {
+                val v = o.optInt(k, -1)
+                if (v in 0 until 24 * 60 && AlarmSchedule.parseDay(k) != null) out[k] = v
+            }
+            return out
         }
 
         fun listToJson(alarms: List<Alarm>): String =

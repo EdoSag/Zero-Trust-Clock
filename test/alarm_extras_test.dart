@@ -168,6 +168,7 @@ void main() {
       expect(find.text('Code saved'), findsOneWidget);
 
       // Sums and back: no new scan is asked for.
+      await scrollTo(tester, find.widgetWithText(ChoiceChip, 'Solve 3 sums'));
       await tester.tap(find.widgetWithText(ChoiceChip, 'Solve 3 sums'));
       await tester.pumpAndSettle();
       expect(find.text('Code saved'), findsNothing);
@@ -320,6 +321,7 @@ void main() {
       expect(vault.items['ring']!.data, {
         'volumeButtons': 'snooze',
         'minVolume': 50,
+        'morning': 'counts',
       });
       await b.sync();
       expect(b.engine.ring.volumeButtons, VolumeButtons.snooze);

@@ -22,10 +22,12 @@ import dev.sagron.zerotrustclock.engine.Holidays
 import dev.sagron.zerotrustclock.engine.Screensaver
 import dev.sagron.zerotrustclock.engine.SleepSoundService
 import dev.sagron.zerotrustclock.engine.core.Bedtime
+import dev.sagron.zerotrustclock.engine.core.CalendarLink
 import dev.sagron.zerotrustclock.engine.AlarmNotifications
 import dev.sagron.zerotrustclock.engine.AlarmScheduler
 import dev.sagron.zerotrustclock.engine.EnginePrefs
 import dev.sagron.zerotrustclock.engine.Loc
+import dev.sagron.zerotrustclock.engine.MorningBrief
 import dev.sagron.zerotrustclock.engine.RingService
 import dev.sagron.zerotrustclock.engine.ScanActivity
 import dev.sagron.zerotrustclock.engine.SoundPreview
@@ -109,6 +111,10 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             taskCode = call.argument<String>("taskCode"),
                             skipHolidays = call.argument<Boolean>("skipHolidays") ?: false,
                             date = call.argument<String>("date"),
+                            cycle = call.argument<String>("cycle"),
+                            cycleStart = call.argument<String>("cycleStart"),
+                            calendar = calendarLink(call),
+                            smartWake = call.argument<Int>("smartWake") ?: 0,
                         ),
                     )
                     result.success(id)
@@ -135,8 +141,18 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             call.argument<String>("task"),
                             call.argument<Boolean>("skipHolidays") ?: false,
                             call.argument<String>("taskCode"),
+                            call.argument<String>("cycle"),
+                            call.argument<String>("cycleStart"),
+                            calendarLink(call),
+                            call.argument<Int>("smartWake") ?: 0,
                         ),
                     )
+                }
+                "setCalendarPlans" -> done(result) {
+                    AlarmEngine.setCalendarPlans(activity, call.argument<String>("json") ?: "{}")
+                }
+                "setMorningBrief" -> done(result) {
+                    MorningBrief.save(activity, call.argument<String>("json"))
                 }
                 "setEnabled" -> done(result) {
                     AlarmEngine.setEnabled(activity, id(call), call.argument<Boolean>("enabled") ?: false)
@@ -157,11 +173,13 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                     mapOf(
                         "volumeButtons" to EnginePrefs.volumeButtons(activity),
                         "minVolume" to EnginePrefs.minVolume(activity),
+                        "morning" to EnginePrefs.morning(activity),
                     ),
                 )
                 "setRingSettings" -> done(result) {
                     EnginePrefs.setVolumeButtons(activity, call.argument<String>("volumeButtons"))
                     EnginePrefs.setMinVolume(activity, call.argument<Int>("minVolume") ?: 0)
+                    call.argument<String>("morning")?.let { EnginePrefs.setMorning(activity, it) }
                 }
                 "cancelSnooze" -> done(result) { AlarmEngine.cancelSnooze(activity, id(call)) }
                 "delete" -> done(result) { AlarmEngine.delete(activity, id(call)) }
@@ -248,6 +266,12 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         } catch (e: Exception) {
             result.error("engine", e.message, null)
         }
+    }
+
+    /** The alarm's link to ZT Calendar, as the app sends it (a map), or null. */
+    private fun calendarLink(call: MethodCall): CalendarLink? {
+        val m = call.argument<Map<String, Any?>>("calendar") ?: return null
+        return CalendarLink.fromJson(org.json.JSONObject(m))
     }
 
     private fun id(call: MethodCall): String =

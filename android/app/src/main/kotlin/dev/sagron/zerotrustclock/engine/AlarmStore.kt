@@ -146,6 +146,20 @@ object EnginePrefs {
         prefs(context).edit().putInt("minVolume", RingVolume.parse(percent)).apply()
     }
 
+    /**
+     * The morning screen after an alarm is dismissed (MorningBrief):
+     * "off", "counts" (how many events, tasks and quests) or "details"
+     * (with their names, also over the lock screen).
+     */
+    fun morning(context: Context): String = when (val v = prefs(context).getString("morning", null)) {
+        "off", "details" -> v
+        else -> "counts"
+    }
+
+    fun setMorning(context: Context, value: String) {
+        prefs(context).edit().putString("morning", if (value == "off" || value == "details") value else "counts").apply()
+    }
+
     fun setPauseAllUntil(context: Context, day: String?) {
         prefs(context).edit().apply { if (day == null) remove("pauseAll") else putString("pauseAll", day) }.apply()
     }

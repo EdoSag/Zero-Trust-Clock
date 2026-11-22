@@ -32,6 +32,10 @@ ClockAlarm alarm(
   WakeTask? task,
   String? taskCode,
   bool skipHolidays = false,
+  ShiftPattern? shift,
+  CalendarLink? calendar,
+  String? calendarThrough,
+  int smartWake = 0,
 }) => ClockAlarm(
   id: id,
   hour: hour,
@@ -57,6 +61,10 @@ ClockAlarm alarm(
   task: task,
   taskCode: taskCode,
   skipHolidays: skipHolidays,
+  shift: shift,
+  calendar: calendar,
+  calendarThrough: calendarThrough,
+  smartWake: smartWake,
 );
 
 /// When a switched-on alarm rings next in the fake engine.
@@ -197,6 +205,22 @@ class FakeClockEngine implements ClockEngine {
     ring = settings;
   }
 
+  /// What the day ahead last gave the engine.
+  Map<String, Object?>? calendarPlans;
+  String? morningBrief;
+
+  @override
+  Future<void> setCalendarPlans(Map<String, Object?> plans) async {
+    calls.add('setCalendarPlans ${plans.keys.join(',')}');
+    calendarPlans = plans;
+  }
+
+  @override
+  Future<void> setMorningBrief(String? json) async {
+    calls.add('setMorningBrief ${json == null ? 'null' : 'json'}');
+    morningBrief = json;
+  }
+
   /// Imports refused, as while that alarm rings.
   final Set<String> ringingIds = {};
 
@@ -221,6 +245,9 @@ class FakeClockEngine implements ClockEngine {
       updatedAt: a.updatedAt,
       task: a.task,
       taskCode: a.taskCode,
+      shift: a.shift,
+      calendar: a.calendar,
+      smartWake: a.smartWake,
     );
     if (i >= 0) {
       alarms[i] = copy;
@@ -252,9 +279,15 @@ class FakeClockEngine implements ClockEngine {
     String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
+    ShiftPattern? shift,
+    CalendarLink? calendar,
+    int smartWake = 0,
   }) async {
     _mayFail();
     lastSave = {
+      'shift': shift,
+      'calendar': calendar,
+      'smartWake': smartWake,
       'taskCode': taskCode,
       'sound': sound,
       'soundName': soundName,
@@ -272,12 +305,15 @@ class FakeClockEngine implements ClockEngine {
     // Like the engine: a new or re-timed alarm is switched on, an
     // unchanged one keeps its switch.
     final old = alarms.where((a) => a.id == id).firstOrNull;
-    final newDate = days.isEmpty && date != null ? dayKey(date) : null;
+    final newDate = days.isEmpty && shift == null && date != null
+        ? dayKey(date)
+        : null;
     final retimed =
         old == null ||
         old.hour != hour ||
         old.minute != minute ||
         !setEquals(old.days, days) ||
+        old.shift != shift ||
         (newDate != null && newDate != old.date);
     final saved = alarm(
       id ?? 'new-${++_ids}',
@@ -297,6 +333,9 @@ class FakeClockEngine implements ClockEngine {
       taskCode: taskCode,
       skipHolidays: skipHolidays,
       date: newDate,
+      shift: shift,
+      calendar: shift != null || days.isNotEmpty ? calendar : null,
+      smartWake: smartWake,
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);
     if (i >= 0) {

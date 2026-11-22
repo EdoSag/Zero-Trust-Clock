@@ -132,6 +132,23 @@
             android:exported="false"
             android:directBootAware="true"
             android:foregroundServiceType="systemExempted"/>
+        <!-- Smart wake window: listens for movement in the last minutes
+             before an alarm and rings it early. -->
+        <service
+            android:name=".engine.SmartWakeService"
+            android:exported="false"
+            android:directBootAware="true"
+            android:foregroundServiceType="systemExempted"/>
+        <!-- The day ahead, after an alarm is dismissed. -->
+        <activity
+            android:name=".engine.MorningActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:showWhenLocked="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/RingTheme"/>
         <!-- Timers: "Time's up" over the lock screen, the service that
              rings finished timers, and the receiver for their ends and
              notification buttons. -->
@@ -315,5 +332,9 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
+        <!-- The morning screen opens these apps when they are installed. -->
+        <package android:name="dev.sagron.zerotrustcalendar"/>
+        <package android:name="dev.sagron.zerotrusttasks"/>
+        <package android:name="dev.sagron.zerotrustquests"/>
     </queries>
 </manifest>

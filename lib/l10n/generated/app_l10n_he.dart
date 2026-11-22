@@ -815,4 +815,125 @@ class AppL10nHe extends AppL10n {
   @override
   String get minVolumeAbout =>
       'אם עוצמת השעון המעורר בטלפון נמוכה יותר, היא מוגברת בזמן הצלצול ומוחזרת אחריו. טיימרים לא משתנים.';
+
+  @override
+  String get repeatWeekdays => 'ימים בשבוע';
+
+  @override
+  String get repeatShifts => 'סבב משמרות';
+
+  @override
+  String shiftText(int on, int length) {
+    return 'משמרות: $on מכל $length ימים';
+  }
+
+  @override
+  String get shiftLength => 'ימים בסבב';
+
+  @override
+  String get shiftStart => 'יום 1 בסבב';
+
+  @override
+  String get shiftDaysHint =>
+      'הקישו על הימים בסבב שבהם השעון מצלצל. הסבב חוזר מיום 1 שוב ושוב.';
+
+  @override
+  String shiftDay(int day) {
+    return 'יום $day';
+  }
+
+  @override
+  String shiftOnOff(int on, int off) {
+    return '$on עבודה, $off חופש';
+  }
+
+  @override
+  String get shiftTwoShiftsHint =>
+      'שתי משמרות בשעות שונות, כמו 2 בוקר, 2 לילה, 4 חופש? צרו שעון מעורר לכל אחת, עם אותו יום 1.';
+
+  @override
+  String shiftToday(int day, int length) {
+    return 'היום הוא יום $day מתוך $length';
+  }
+
+  @override
+  String get calendarLink => 'לפי ZT Calendar';
+
+  @override
+  String get calendarLinkHint =>
+      'מצלצל בזמן לאירוע הראשון של היום. ‏ZT Clock קורא את ZT Calendar בכל פעם שהוא נפתח, שבועיים קדימה; בימים שלא נקראו השעון מצלצל בשעה שלו.';
+
+  @override
+  String get calendarNeedsAccount => 'התחברו כדי לעקוב אחרי ZT Calendar.';
+
+  @override
+  String get calendarNeedsRepeat => 'בחרו קודם ימים חוזרים או סבב משמרות.';
+
+  @override
+  String get calendarLead => 'לפני האירוע הראשון';
+
+  @override
+  String get calendarEarlier => 'מוקדם יותר כשצריך';
+
+  @override
+  String calendarEarlierHint(String time) {
+    return 'מצלצל ב־$time, או מוקדם יותר כשהאירוע הראשון דורש.';
+  }
+
+  @override
+  String get calendarFollow => 'תמיד לפני האירוע הראשון';
+
+  @override
+  String calendarFollowHint(String time) {
+    return 'מצלצל לפני האירוע הראשון, גם אחרי $time. בלי אירועים: $time.';
+  }
+
+  @override
+  String get calendarEarliest => 'אף פעם לא לפני';
+
+  @override
+  String get calendarOtherDays => 'גם בימים אחרים, לאירוע בבוקר';
+
+  @override
+  String get calendarLinkedShort => 'לפי ZT Calendar';
+
+  @override
+  String get smartWake => 'חלון השכמה חכמה';
+
+  @override
+  String get smartWakeHint =>
+      'כשהטלפון על המיטה, הוא מצלצל עד כדי כך מוקדם יותר כשאתם זזים, כדי שתתעוררו בשינה קלה. בלי תנועה הוא מצלצל בזמן.';
+
+  @override
+  String get smartWakeOff => 'כבוי';
+
+  @override
+  String get morningScreen => 'אחרי סגירת שעון מעורר';
+
+  @override
+  String get morningOff => 'שום דבר';
+
+  @override
+  String get morningCounts => 'היום שלפניכם, מספרים בלבד';
+
+  @override
+  String get morningDetails => 'היום שלפניכם, עם שמות';
+
+  @override
+  String get morningHint =>
+      'האירועים של היום מ־ZT Calendar, המשימות מ־ZT Tasks וה־Quests מ־ZT Quests, כפי ש־ZT Clock קרא אותם לאחרונה (כשמחוברים). השמות מוצגים גם מעל מסך הנעילה.';
+
+  @override
+  String questGoal(String category) {
+    String _temp0 = intl.Intl.selectLogic(category, {
+      'fitness': 'כושר',
+      'productivity': 'פרודוקטיביות',
+      'nutrition': 'תזונה',
+      'sleep': 'שינה',
+      'learning': 'למידה',
+      'mindfulness': 'מיינדפולנס',
+      'other': 'מטרה',
+    });
+    return '$_temp0';
+  }
 }

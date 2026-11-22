@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/account.dart';
 import '../app/edition.dart';
 import '../engine/alarm.dart';
 import '../engine/clock_engine.dart';
 import '../holidays/holidays.dart';
 import '../l10n/l10n.dart';
+import '../linked/linked_apps.dart';
 import 'alarm_text.dart';
 import 'holidays_page.dart';
 
@@ -25,8 +27,12 @@ enum AlarmEditorResult { saved, delete }
 const snoozeChoices = [5, 10, 15, 20, 30];
 const silenceChoices = [1, 5, 10, 15, 20, 30];
 
-/// Changes one alarm: time, repeat days or the date it rings on, label,
-/// sound, vibration, gradually louder, snooze length and silence after.
+/// Shift patterns offered with one tap: days on, days off.
+const shiftPresets = [(2, 2), (3, 3), (4, 4), (2, 6), (5, 2)];
+
+/// Changes one alarm: time, repeat days, a shift pattern or the date it
+/// rings on, label, sound, vibration, gradually louder, snooze length,
+/// silence after, ZT Calendar and the smart wake window.
 class AlarmEditorPage extends ConsumerStatefulWidget {
   const AlarmEditorPage({super.key, required this.alarm});
 
@@ -50,6 +56,16 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
   late WakeTask? _task = widget.alarm.task;
   late String? _taskCode = widget.alarm.taskCode;
   late bool _skipHolidays = widget.alarm.skipHolidays;
+
+  /// Weekdays (false) or a shift pattern (true).
+  late bool _useShift = widget.alarm.shift != null;
+  late List<bool> _cycle = widget.alarm.shift == null
+      ? [true, true, false, false]
+      : [for (final c in widget.alarm.shift!.days.split('')) c == '1'];
+  late DateTime _cycleStart =
+      parseDay(widget.alarm.shift?.start) ?? DateUtils.dateOnly(DateTime.now());
+  late CalendarLink? _calendar = widget.alarm.calendar;
+  late int _smartWake = widget.alarm.smartWake;
 
   /// The day an alarm without repeat days rings; null: the next such time.
   late DateTime? _date = widget.alarm.repeats
@@ -96,11 +112,22 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
     );
   }
 
+  /// The shift pattern as picked, or null (weekdays, or no day on).
+  ShiftPattern? get _shift => _useShift
+      ? ShiftPattern.of(
+          [for (final on in _cycle) on ? '1' : '0'].join(),
+          dayKey(_cycleStart),
+        )
+      : null;
+
+  bool get _repeats => _useShift ? _shift != null : _days.isNotEmpty;
+
   /// Time, days and day as the alarm had them.
   bool get _scheduleUnchanged =>
       _hour == widget.alarm.hour &&
       _minute == widget.alarm.minute &&
-      setEquals(_days, widget.alarm.days) &&
+      setEquals(_useShift ? const <int>{} : _days, widget.alarm.days) &&
+      _shift == widget.alarm.shift &&
       _date == parseDay(widget.alarm.date);
 
   Future<void> _pickDate() async {
@@ -214,6 +241,8 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
+    final repeats = _repeats;
+    final calendar = repeats ? _calendar : null;
     try {
       await ref
           .read(clockEngineProvider)
@@ -221,7 +250,10 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             id: widget.alarm.id,
             hour: _hour,
             minute: _minute,
-            days: _days,
+            days: _useShift ? const {} : _days,
+            shift: _shift,
+            calendar: calendar,
+            smartWake: _smartWake,
             label: _label.text.trim(),
             vibrate: _vibrate,
             snoozeMinutes: _snooze,
@@ -231,13 +263,17 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             ringMinutes: _silenceAfter,
             task: _task,
             taskCode: _task == WakeTask.scan ? _taskCode : null,
-            skipHolidays: _days.isNotEmpty && _skipHolidays,
+            skipHolidays: repeats && _skipHolidays,
             // Only a picked (or kept) day: saving a label alone does not
             // switch an alarm on, or move a snoozed one to its next day.
-            date: _days.isEmpty && _date != null
+            date: !repeats && _date != null
                 ? (_scheduleUnchanged ? _date : _ringDay())
                 : null,
           );
+      // Read ZT Calendar for the new link right away.
+      if (calendar != null) {
+        ref.read(dayAheadProvider).refresh(l, force: true).ignore();
+      }
       if (mounted) Navigator.of(context).pop(AlarmEditorResult.saved);
     } on Object {
       if (mounted) setState(() => _saving = false);
@@ -303,6 +339,220 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
     );
   }
 
+  void _setCycleLength(int length) => setState(() {
+    _cycle = [
+      for (var i = 0; i < length; i++) i < _cycle.length ? _cycle[i] : false,
+    ];
+  });
+
+  Future<void> _pickCycleStart() async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _cycleStart,
+      firstDate: today.subtract(const Duration(days: 366)),
+      lastDate: today.add(const Duration(days: 366)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _cycleStart = picked);
+  }
+
+  /// The shift pattern: presets, its length, day 1 and the days on.
+  List<Widget> _shiftEditor(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final soft = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final today = DateUtils.dateOnly(DateTime.now());
+    final todayIs =
+        (DateTime.utc(today.year, today.month, today.day)
+                .difference(
+                  DateTime.utc(
+                    _cycleStart.year,
+                    _cycleStart.month,
+                    _cycleStart.day,
+                  ),
+                )
+                .inDays %
+            _cycle.length) +
+        1;
+    return [
+      Wrap(
+        key: const ValueKey('shiftPresets'),
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          for (final (on, off) in shiftPresets)
+            ActionChip(
+              label: Text(l.shiftOnOff(on, off)),
+              onPressed: () => setState(
+                () => _cycle = [for (var i = 0; i < on + off; i++) i < on],
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      ListTile(
+        contentPadding: EdgeInsetsDirectional.zero,
+        leading: const Icon(Icons.event_repeat_outlined),
+        title: Text(l.shiftStart),
+        subtitle: Text(dayText(context, _cycleStart)),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: _pickCycleStart,
+      ),
+      Row(
+        children: [
+          Expanded(child: Text(l.shiftLength)),
+          IconButton(
+            tooltip: '${l.shiftLength} -1',
+            icon: const Icon(Icons.remove),
+            onPressed: _cycle.length > ShiftPattern.minDays
+                ? () => _setCycleLength(_cycle.length - 1)
+                : null,
+          ),
+          Text('${_cycle.length}', style: theme.textTheme.titleMedium),
+          IconButton(
+            tooltip: '${l.shiftLength} +1',
+            icon: const Icon(Icons.add),
+            onPressed: _cycle.length < ShiftPattern.maxDays
+                ? () => _setCycleLength(_cycle.length + 1)
+                : null,
+          ),
+        ],
+      ),
+      Text(l.shiftDaysHint, style: soft),
+      const SizedBox(height: 8),
+      Wrap(
+        key: const ValueKey('shiftDays'),
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          for (var i = 0; i < _cycle.length; i++)
+            FilterChip(
+              label: Text('${i + 1}'),
+              tooltip: l.shiftDay(i + 1),
+              selected: _cycle[i],
+              onSelected: (on) => setState(() => _cycle[i] = on),
+            ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(l.shiftToday(todayIs, _cycle.length), style: soft),
+      const SizedBox(height: 4),
+      Text(l.shiftTwoShiftsHint, style: soft),
+    ];
+  }
+
+  Future<void> _pickEarliest(CalendarLink link) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: link.earliest ~/ 60,
+        minute: link.earliest % 60,
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(
+      () =>
+          _calendar = link.copyWith(earliest: picked.hour * 60 + picked.minute),
+    );
+  }
+
+  /// "Follow ZT Calendar": ring in time for the day's first event.
+  List<Widget> _calendarSection(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final signedIn = ref.watch(signedInProvider);
+    final link = _calendar;
+    final usual = timeOfDayText(context, _hour, _minute);
+    return [
+      const SizedBox(height: 8),
+      SwitchListTile(
+        key: const ValueKey('calendarLink'),
+        contentPadding: EdgeInsetsDirectional.zero,
+        secondary: const Icon(Icons.calendar_month_outlined),
+        title: Text(l.calendarLink),
+        subtitle: Text(
+          !signedIn
+              ? l.calendarNeedsAccount
+              : !_repeats
+              ? l.calendarNeedsRepeat
+              : l.calendarLinkHint,
+        ),
+        value: link != null && _repeats,
+        onChanged: signedIn && _repeats
+            ? (on) =>
+                  setState(() => _calendar = on ? const CalendarLink() : null)
+            : null,
+      ),
+      if (link != null && _repeats) ...[
+        Text(l.calendarLead, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          key: const ValueKey('calendarLead'),
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final minutes in {
+              ...CalendarLink.leads,
+              link.lead,
+            }.toList()..sort())
+              ChoiceChip(
+                label: Text(l.minutesShort(minutes)),
+                selected: link.lead == minutes,
+                onSelected: (_) =>
+                    setState(() => _calendar = link.copyWith(lead: minutes)),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        RadioGroup<bool>(
+          groupValue: link.follow,
+          onChanged: (v) =>
+              setState(() => _calendar = link.copyWith(follow: v ?? false)),
+          child: Column(
+            children: [
+              RadioListTile<bool>(
+                key: const ValueKey('calendarEarlier'),
+                contentPadding: EdgeInsetsDirectional.zero,
+                value: false,
+                title: Text(l.calendarEarlier),
+                subtitle: Text(l.calendarEarlierHint(usual)),
+              ),
+              RadioListTile<bool>(
+                key: const ValueKey('calendarFollow'),
+                contentPadding: EdgeInsetsDirectional.zero,
+                value: true,
+                title: Text(l.calendarFollow),
+                subtitle: Text(l.calendarFollowHint(usual)),
+              ),
+            ],
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsetsDirectional.zero,
+          leading: const Icon(Icons.bedtime_outlined),
+          title: Text(l.calendarEarliest),
+          subtitle: Text(
+            timeOfDayText(context, link.earliest ~/ 60, link.earliest % 60),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _pickEarliest(link),
+        ),
+        SwitchListTile(
+          key: const ValueKey('calendarOtherDays'),
+          contentPadding: EdgeInsetsDirectional.zero,
+          secondary: const Icon(Icons.wb_twilight_outlined),
+          title: Text(l.calendarOtherDays),
+          value: link.otherDays,
+          onChanged: (on) =>
+              setState(() => _calendar = link.copyWith(otherDays: on)),
+        ),
+      ],
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -348,23 +598,40 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
             const SizedBox(height: 16),
             Text(l.repeat, style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (final day in weekOrder(context))
-                  FilterChip(
-                    label: Text(shortDayName(context, day)),
-                    tooltip: fullDayName(context, day),
-                    selected: _days.contains(day),
-                    onSelected: (on) =>
-                        setState(() => on ? _days.add(day) : _days.remove(day)),
-                  ),
-              ],
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<bool>(
+                key: const ValueKey('repeatKind'),
+                segments: [
+                  ButtonSegment(value: false, label: Text(l.repeatWeekdays)),
+                  ButtonSegment(value: true, label: Text(l.repeatShifts)),
+                ],
+                selected: {_useShift},
+                onSelectionChanged: (v) => setState(() => _useShift = v.first),
+              ),
             ),
-            if (_days.isNotEmpty && !ref.watch(offlineEditionProvider))
+            const SizedBox(height: 8),
+            if (!_useShift)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final day in weekOrder(context))
+                    FilterChip(
+                      label: Text(shortDayName(context, day)),
+                      tooltip: fullDayName(context, day),
+                      selected: _days.contains(day),
+                      onSelected: (on) => setState(
+                        () => on ? _days.add(day) : _days.remove(day),
+                      ),
+                    ),
+                ],
+              )
+            else
+              ..._shiftEditor(context),
+            if (_repeats && !ref.watch(offlineEditionProvider))
               _holidaysSwitch(context),
-            if (_days.isEmpty) ...[
+            if (!_repeats && !_useShift) ...[
               const SizedBox(height: 4),
               Text(l.ringsOnce, style: soft),
               ListTile(
@@ -484,6 +751,28 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
                   child: Text(l.wakeTaskScanAgain),
                 ),
               ),
+            const SizedBox(height: 16),
+            Text(l.smartWake, style: theme.textTheme.titleSmall),
+            const SizedBox(height: 2),
+            Text(l.smartWakeHint, style: soft),
+            const SizedBox(height: 8),
+            Wrap(
+              key: const ValueKey('smartWake'),
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final minutes in smartWakeChoices)
+                  ChoiceChip(
+                    label: Text(
+                      minutes == 0 ? l.smartWakeOff : l.minutesShort(minutes),
+                    ),
+                    selected: _smartWake == minutes,
+                    onSelected: (_) => setState(() => _smartWake = minutes),
+                  ),
+              ],
+            ),
+            if (!ref.watch(offlineEditionProvider))
+              ..._calendarSection(context),
             const SizedBox(height: 28),
             FilledButton(
               onPressed: _saving ? null : _save,

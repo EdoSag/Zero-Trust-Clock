@@ -57,7 +57,7 @@ class SetAlarmActivity : Activity() {
         val vibrate = intent.getBooleanExtra(AlarmClock.EXTRA_VIBRATE, true)
         // The same alarm already there: switched on rather than a second one.
         val existing = AlarmStore.load(this).firstOrNull {
-            !it.test && it.hour == hour && it.minute == minute && it.days == days
+            !it.test && it.cycle == null && it.hour == hour && it.minute == minute && it.days == days
         }
         if (existing != null) {
             if (!existing.enabled) AlarmEngine.setEnabled(this, existing.id, true)
