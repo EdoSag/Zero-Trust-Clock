@@ -95,4 +95,12 @@
     <string name="no_alarm_ringing">אין שעון מעורר שמצלצל</string>
     <string name="no_timer_ringing">אין טיימר שמצלצל</string>
     <string name="snooze_ended">הנודניק בוטל</string>
+    <string name="channel_sunrise">זריחה</string>
+    <string name="channel_sunrise_about">פותח את מסך הזריחה לפני שעון ההשכמה. בלי צליל.</string>
+    <string name="sunrise_title">זריחה</string>
+    <string name="sunrise_text">שעון מעורר ב-%1$s</string>
+    <string name="sunrise_close">סגירה</string>
+    <string name="health_title">שינה ב-Health Connect</string>
+    <string name="health_text">כש\"שמירת השינה ב-Health Connect\" דולקת במסך השינה, ZT Clock כותב רשומת שינה אחת לכל לילה: משעת השינה ועד שמכבים את שעון ההשכמה, או עד שעת ההשכמה אם הוא לא צלצל. זה לוח הזמנים שלכם, לא מדידה.\n\nZT Clock רק כותב שינה. הוא אף פעם לא קורא את נתוני הבריאות שלכם, ולא מגבה, מסנכרן או שולח את הרשומות האלה לשום מקום.\n\nאפשר לכבות את זה במסך השינה בכל רגע. רשומות שכבר נשמרו נשארות ב-Health Connect, ושם אפשר למחוק אותן.</string>
+    <string name="health_policy">מדיניות פרטיות: https://zerotrust.bz/privacy/</string>
 </resources>

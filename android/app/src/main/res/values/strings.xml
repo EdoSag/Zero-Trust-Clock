@@ -97,4 +97,12 @@
     <string name="no_alarm_ringing">No alarm is ringing</string>
     <string name="no_timer_ringing">No timer is ringing</string>
     <string name="snooze_ended">Snooze ended</string>
+    <string name="channel_sunrise">Sunrise</string>
+    <string name="channel_sunrise_about">Opens the sunrise screen before the wake-up alarm. No sound.</string>
+    <string name="sunrise_title">Sunrise</string>
+    <string name="sunrise_text">Alarm at %1$s</string>
+    <string name="sunrise_close">Close</string>
+    <string name="health_title">Sleep in Health Connect</string>
+    <string name="health_text">When \"Save sleep to Health Connect\" is on in Bedtime, ZT Clock writes one sleep entry for each night: from your bedtime until you dismiss the wake-up alarm, or until your wake-up time when it did not ring. It is your schedule, not a measurement.\n\nZT Clock only writes sleep. It never reads your health data, and it does not back up, sync or send these entries anywhere.\n\nYou can switch it off in Bedtime at any time. Entries already saved stay in Health Connect, where you can delete them.</string>
+    <string name="health_policy">Privacy policy: https://zerotrust.bz/privacy/</string>
 </resources>

@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.15.0)
+## What is in it now (0.16.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -98,6 +98,19 @@ Work happens on the `Dev` branch; `main` holds releases.
   Disturb through the night (alarms still ring; it is only turned off again
   if the app turned it on), and a wake-up alarm on the mornings after your
   nights that follows the schedule when you change it.
+- **Sunrise before the alarm** (Bedtime, off by default): for 15 minutes
+  before the wake-up alarm the screen goes from dark red to warm white and
+  gets brighter, over the lock screen, with no sound. It follows the
+  alarm's real next ring, so a morning that is turned off once, paused or a
+  holiday has none. It is not shown when the phone is already in use, and
+  Close ends it for that morning.
+- **Save sleep to Health Connect** (Bedtime, off by default, Android 14
+  and later): each night is written as one sleep entry, from bedtime until
+  the wake-up alarm is dismissed, or until the wake-up time when it did
+  not ring. It is the schedule, not a measurement, and is marked as entered
+  by hand. The app only writes sleep; it never reads health data, and the
+  entries are not backed up or synced. A night that can't be written yet
+  (phone locked after a restart) is written later.
 - **Sleep sounds**: white, pink or deep noise made on the phone (no files,
   no network), with a sleep timer and a 30-second fade-out.
 - **Night clock screensaver**: the time, date and next alarm on black
@@ -117,8 +130,8 @@ Work happens on the `Dev` branch; `main` holds releases.
   calendar with its ticked days, and the night clock's dim red. For each
   the newer change wins; a phone that already has its own cities or quick
   timers keeps them next to the account's the first time. Whether bedtime
-  is on, and its Do Not Disturb, stay each phone's own, like an alarm's
-  switch. Like every Zero-Trust app, a signed-in Clock asks to unlock
+  is on, its Do Not Disturb, the sunrise and saving sleep stay each
+  phone's own, like an alarm's switch. Like every Zero-Trust app, a signed-in Clock asks to unlock
   after a restart or auto-lock; the alarms ring either way.
 - English and Hebrew, also on the ring screen and in notifications.
 - **Offline edition** (`zero-trust-clock-offline-…apk` in each release):
@@ -227,6 +240,18 @@ Where things are kept on the phone:
     again: it asks for sums.
 26. With an alarm ringing say "snooze" and "dismiss my alarm" to the
     assistant; with a timer ringing, "stop the timer".
+27. Sunrise: Bedtime > Wake-up alarm on > Sunrise before the alarm on. Set
+    the wake-up time 17 minutes ahead, lock the phone and put it down. Two
+    minutes later the screen lights up dark red over the lock screen and
+    gets lighter and brighter; at the time the alarm's own screen takes
+    over. Try again and press Close: it stays closed until the alarm. Try
+    again with the phone in your hand and the screen on: no sunrise.
+28. Save sleep (Android 14 and later): Bedtime > Save sleep to Health
+    Connect > allow. With the schedule on, dismiss the wake-up alarm in
+    the morning, then open Health Connect > Data and access > Sleep: one
+    entry from bedtime to when you dismissed it, from ZT Clock. In Health
+    Connect > App permissions > ZT Clock, the privacy link opens the app's
+    own explanation.
 
 ## Development
 

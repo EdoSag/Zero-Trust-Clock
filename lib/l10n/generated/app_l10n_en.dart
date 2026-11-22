@@ -558,6 +558,32 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
+  String get sunrise => 'Sunrise before the alarm';
+
+  @override
+  String sunriseHint(int minutes) {
+    return 'The screen lights up slowly for $minutes minutes before the wake-up alarm. Not when you are already using the phone.';
+  }
+
+  @override
+  String get sunriseNeedsAlarm => 'Needs the wake-up alarm.';
+
+  @override
+  String get saveSleep => 'Save sleep to Health Connect';
+
+  @override
+  String get saveSleepHint =>
+      'Each night is saved as sleep, from bedtime until you dismiss the wake-up alarm. Apps you allow in Health Connect can read it. Not backed up.';
+
+  @override
+  String get saveSleepNotAllowed =>
+      'ZT Clock is not allowed to save sleep in Health Connect.';
+
+  @override
+  String get saveSleepNeedsAccess =>
+      'Needs permission to write sleep in Health Connect.';
+
+  @override
   String get sleepSounds => 'Sleep sounds';
 
   @override

@@ -1045,6 +1045,48 @@ abstract class AppL10n {
   /// **'An alarm at {time} on the mornings after your nights.'**
   String wakeUpAlarmHint(String time);
 
+  /// No description provided for @sunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise before the alarm'**
+  String get sunrise;
+
+  /// No description provided for @sunriseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen lights up slowly for {minutes} minutes before the wake-up alarm. Not when you are already using the phone.'**
+  String sunriseHint(int minutes);
+
+  /// No description provided for @sunriseNeedsAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the wake-up alarm.'**
+  String get sunriseNeedsAlarm;
+
+  /// No description provided for @saveSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Save sleep to Health Connect'**
+  String get saveSleep;
+
+  /// No description provided for @saveSleepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each night is saved as sleep, from bedtime until you dismiss the wake-up alarm. Apps you allow in Health Connect can read it. Not backed up.'**
+  String get saveSleepHint;
+
+  /// No description provided for @saveSleepNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'ZT Clock is not allowed to save sleep in Health Connect.'**
+  String get saveSleepNotAllowed;
+
+  /// No description provided for @saveSleepNeedsAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs permission to write sleep in Health Connect.'**
+  String get saveSleepNeedsAccess;
+
   /// No description provided for @sleepSounds.
   ///
   /// In en, this message translates to:

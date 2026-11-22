@@ -72,6 +72,11 @@ object AlarmScheduler {
         } catch (_: Exception) {
             // Only the notification; the rings themselves are set.
         }
+        try {
+            Sunrise.refresh(context, alarms, now, pauseAll, holidays)
+        } catch (_: Exception) {
+            // Only the sunrise; the rings themselves are set.
+        }
         for (a in missed) AlarmNotifications.showMissed(Loc.wrap(context), a)
         Tiles.refresh(context)
         Widgets.refresh(context)

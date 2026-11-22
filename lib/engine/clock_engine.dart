@@ -156,6 +156,12 @@ abstract class ClockEngine {
   /// Whether the app may turn Do Not Disturb on (Android's setting).
   Future<bool> dndAccess();
 
+  /// Whether sleep can be saved to Health Connect here, and is allowed.
+  Future<SleepAccess> sleepAccess();
+
+  /// Asks to write sleep to Health Connect. True when allowed.
+  Future<bool> requestSleepAccess();
+
   /// Sleep sounds playing now, or null.
   Future<SleepSoundState?> sleepSound();
   Future<void> playSleepSound(SleepSound sound, int minutes);
@@ -238,6 +244,19 @@ class MethodChannelClockEngine implements ClockEngine {
   @override
   Future<bool> dndAccess() async =>
       await _channel.invokeMethod<bool>('dndAccess') ?? false;
+
+  @override
+  Future<SleepAccess> sleepAccess() async {
+    final m = await _channel.invokeMapMethod<String, Object?>('sleepAccess');
+    return SleepAccess(
+      available: m?['available'] == true,
+      allowed: m?['allowed'] == true,
+    );
+  }
+
+  @override
+  Future<bool> requestSleepAccess() async =>
+      await _channel.invokeMethod<bool>('requestSleepAccess') ?? false;
 
   @override
   Future<SleepSoundState?> sleepSound() async {
@@ -702,8 +721,8 @@ class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
   /// The group's name in the account's backup.
   static const settingsName = 'bedtime';
 
-  /// Puts the account's schedule here. Whether it is on, and Do Not
-  /// Disturb, stay this phone's own.
+  /// Puts the account's schedule here. Whether it is on, Do Not Disturb,
+  /// the sunrise and saving sleep stay this phone's own.
   Future<void> restore(Map<String, Object?> backup) async {
     final schedule = (await future).withBackup(backup);
     state = AsyncData(schedule);
@@ -720,6 +739,12 @@ final bedtimeProvider =
 /// from Android's settings.
 final dndAccessProvider = FutureProvider<bool>(
   (ref) => ref.watch(clockEngineProvider).dndAccess(),
+);
+
+/// Whether sleep can be saved to Health Connect, and is allowed.
+/// Invalidate after coming back from Health Connect.
+final sleepAccessProvider = FutureProvider<SleepAccess>(
+  (ref) => ref.watch(clockEngineProvider).sleepAccess(),
 );
 
 /// Sleep sounds playing now. Reloads when the engine says something changed.
