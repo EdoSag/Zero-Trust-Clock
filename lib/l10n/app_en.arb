@@ -134,6 +134,13 @@
   "checkProfile": "Phone profile",
   "checkProfileOk": "Main profile",
   "checkProfileBad": "Secondary profile. When this profile is ended, its alarms do not ring.",
+  "batteryXiaomi": "Xiaomi, Redmi and POCO phones",
+  "batteryXiaomiHint": "These phones can stop an app that is closed, and its alarms with it. In the app's settings turn on Autostart, and set Battery saver to No restrictions.",
+  "batteryHuawei": "Huawei and Honor phones",
+  "batteryHuaweiHint": "These phones close apps to save battery. In Settings > Battery > App launch, switch ZT Clock to Manage manually and leave Auto-launch and Run in background on.",
+  "batterySamsung": "Samsung phones",
+  "batterySamsungHint": "Samsung puts apps you rarely open to sleep, and a sleeping app's alarms can be late. In the app's settings open Battery and pick Unrestricted, and keep ZT Clock out of Sleeping apps.",
+  "openAppSettings": "Open",
   "checkRestart": "After a restart",
   "checkRestartNever": "No restart seen since the app was installed.",
   "checkRestartLocked": "Alarms were set again on {when}, before the phone was unlocked.",
@@ -305,6 +312,34 @@
   },
   "noCityFound": "No city found",
   "dragToReorder": "Long-press to reorder, swipe to remove.",
+  "homeIn": "Home: {city}",
+  "@homeIn": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTimeZone": "Home time zone",
+  "homeTimeZoneOff": "Off",
+  "homeTimeZoneOn": "{city}. Its time shows in the Clock tab while the phone is in another time zone.",
+  "@homeTimeZoneOn": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "homeHere": "This phone's time zone now ({city})",
+  "@homeHere": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "homePickCity": "Pick a city",
+  "homeTimeZoneAbout": "When you travel and the phone changes time zone, the Clock tab also shows the time at home. At home nothing is added.",
   "bedtime": "Bedtime",
   "bedtimeSchedule": "Bedtime schedule",
   "bedtimeScheduleHint": "A reminder before bed, and quiet through the night.",

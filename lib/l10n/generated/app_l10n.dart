@@ -511,6 +511,48 @@ abstract class AppL10n {
   /// **'Secondary profile. When this profile is ended, its alarms do not ring.'**
   String get checkProfileBad;
 
+  /// No description provided for @batteryXiaomi.
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaomi, Redmi and POCO phones'**
+  String get batteryXiaomi;
+
+  /// No description provided for @batteryXiaomiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These phones can stop an app that is closed, and its alarms with it. In the app\'s settings turn on Autostart, and set Battery saver to No restrictions.'**
+  String get batteryXiaomiHint;
+
+  /// No description provided for @batteryHuawei.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei and Honor phones'**
+  String get batteryHuawei;
+
+  /// No description provided for @batteryHuaweiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These phones close apps to save battery. In Settings > Battery > App launch, switch ZT Clock to Manage manually and leave Auto-launch and Run in background on.'**
+  String get batteryHuaweiHint;
+
+  /// No description provided for @batterySamsung.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung phones'**
+  String get batterySamsung;
+
+  /// No description provided for @batterySamsungHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung puts apps you rarely open to sleep, and a sleeping app\'s alarms can be late. In the app\'s settings open Battery and pick Unrestricted, and keep ZT Clock out of Sleeping apps.'**
+  String get batterySamsungHint;
+
+  /// No description provided for @openAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openAppSettings;
+
   /// No description provided for @checkRestart.
   ///
   /// In en, this message translates to:
@@ -954,6 +996,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Long-press to reorder, swipe to remove.'**
   String get dragToReorder;
+
+  /// No description provided for @homeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Home: {city}'**
+  String homeIn(String city);
+
+  /// No description provided for @homeTimeZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Home time zone'**
+  String get homeTimeZone;
+
+  /// No description provided for @homeTimeZoneOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get homeTimeZoneOff;
+
+  /// No description provided for @homeTimeZoneOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{city}. Its time shows in the Clock tab while the phone is in another time zone.'**
+  String homeTimeZoneOn(String city);
+
+  /// No description provided for @homeHere.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s time zone now ({city})'**
+  String homeHere(String city);
+
+  /// No description provided for @homePickCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a city'**
+  String get homePickCity;
+
+  /// No description provided for @homeTimeZoneAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'When you travel and the phone changes time zone, the Clock tab also shows the time at home. At home nothing is added.'**
+  String get homeTimeZoneAbout;
 
   /// No description provided for @bedtime.
   ///

@@ -232,6 +232,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 }
                 "stopSleepSound" -> done(result) { SleepSoundService.stop(activity) }
                 "zones" -> result.success(WorldZones.allJson(activity))
+                // The phone's own time zone, e.g. "Asia/Jerusalem".
+                "localZone" -> result.success(java.util.TimeZone.getDefault().id)
                 "zoneOffsets" -> result.success(
                     WorldZones.offsets(call.argument<List<String>>("ids") ?: emptyList()),
                 )
@@ -284,6 +286,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             "bootLocked" to EnginePrefs.bootLocked(activity),
             "ringing" to (RingService.ringingId != null),
             "sdk" to Build.VERSION.SDK_INT,
+            // Some makers stop closed apps; the screen says what to switch.
+            "maker" to "${Build.MANUFACTURER} ${Build.BRAND}".lowercase(),
         )
     }
 

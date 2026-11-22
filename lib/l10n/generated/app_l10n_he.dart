@@ -243,6 +243,30 @@ class AppL10nHe extends AppL10n {
       'פרופיל משני. כשמסיימים את הפרופיל הזה, השעונים המעוררים שלו לא מצלצלים.';
 
   @override
+  String get batteryXiaomi => 'טלפונים של Xiaomi, Redmi ו-POCO';
+
+  @override
+  String get batteryXiaomiHint =>
+      'הטלפונים האלה יכולים לעצור אפליקציה סגורה, ואיתה את השעונים המעוררים שלה. בהגדרות האפליקציה הפעילו הפעלה אוטומטית (Autostart) ובחרו בחיסכון בסוללה \"ללא הגבלות\".';
+
+  @override
+  String get batteryHuawei => 'טלפונים של Huawei ו-Honor';
+
+  @override
+  String get batteryHuaweiHint =>
+      'הטלפונים האלה סוגרים אפליקציות כדי לחסוך בסוללה. בהגדרות > סוללה > הפעלת אפליקציות, העבירו את ZT Clock לניהול ידני והשאירו דלוקים הפעלה אוטומטית והפעלה ברקע.';
+
+  @override
+  String get batterySamsung => 'טלפונים של Samsung';
+
+  @override
+  String get batterySamsungHint =>
+      'Samsung מעבירה אפליקציות שלא פותחים הרבה למצב שינה, והשעונים המעוררים של אפליקציה ישנה יכולים לאחר. בהגדרות האפליקציה פתחו את סוללה ובחרו \"ללא הגבלה\", ואל תוסיפו את ZT Clock לאפליקציות במצב שינה.';
+
+  @override
+  String get openAppSettings => 'פתיחה';
+
+  @override
   String get checkRestart => 'אחרי הפעלה מחדש';
 
   @override
@@ -501,6 +525,34 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get dragToReorder => 'לחיצה ארוכה לשינוי הסדר, החלקה להסרה.';
+
+  @override
+  String homeIn(String city) {
+    return 'בבית: $city';
+  }
+
+  @override
+  String get homeTimeZone => 'אזור הזמן של הבית';
+
+  @override
+  String get homeTimeZoneOff => 'כבוי';
+
+  @override
+  String homeTimeZoneOn(String city) {
+    return '$city. השעה שם מוצגת בלשונית השעון כשהטלפון באזור זמן אחר.';
+  }
+
+  @override
+  String homeHere(String city) {
+    return 'אזור הזמן של הטלפון עכשיו ($city)';
+  }
+
+  @override
+  String get homePickCity => 'בחירת עיר';
+
+  @override
+  String get homeTimeZoneAbout =>
+      'כשנוסעים והטלפון עובר לאזור זמן אחר, לשונית השעון מציגה גם את השעה בבית. בבית לא מתווסף כלום.';
 
   @override
   String get bedtime => 'שינה';

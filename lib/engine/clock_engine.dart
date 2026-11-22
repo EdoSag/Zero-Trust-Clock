@@ -172,6 +172,9 @@ abstract class ClockEngine {
   /// Every city Android knows, named in the app's language.
   Future<List<WorldZone>> zones();
 
+  /// The phone's own time zone ("Asia/Jerusalem"), or null.
+  Future<String?> localZone();
+
   /// The offsets from UTC right now of [ids].
   Future<Map<String, Duration>> zoneOffsets(List<String> ids);
 
@@ -278,6 +281,9 @@ class MethodChannelClockEngine implements ClockEngine {
 
   @override
   Future<void> stopSleepSound() => _channel.invokeMethod('stopSleepSound');
+
+  @override
+  Future<String?> localZone() => _channel.invokeMethod<String>('localZone');
 
   @override
   Future<List<WorldZone>> zones() async => WorldZone.listFromJson(

@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.16.0)
+## What is in it now (0.17.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -20,7 +20,10 @@ Work happens on the `Dev` branch; `main` holds releases.
   unlock (GrapheneOS restarts a phone left locked for 18 hours).
 - **Alarm check** (Settings, or the warning on the home screen): everything
   on the phone that can stop an alarm, each with a Fix button, a test alarm
-  in 10 seconds and a restart test.
+  in 10 seconds and a restart test. On Xiaomi, Redmi, POCO, Huawei, Honor
+  and Samsung phones it also says which of the maker's own battery
+  settings to change, with a button to the app's settings (advice only:
+  Android can't tell the app how those are set).
 - **Pause until** a date (a repeating alarm is silent through that day and
   on again after it, by itself), and **Pause all alarms until** for a trip
   (repeating alarms only; one set for a single day still rings).
@@ -63,6 +66,10 @@ Work happens on the `Dev` branch; `main` holds releases.
   time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
   named in the app's language, found by city or country, offline. Long-press
   to reorder, swipe to remove (with Undo).
+- **Home time when travelling** (Settings > Home time zone: this phone's
+  time zone now, any city, or off): while the phone is in another time
+  zone, the Clock tab shows home's time under the time here. At home
+  nothing is added. Backed up with the account.
 - **Quick Settings tiles**: Next alarm (opens the alarms), Timer (says
   when the next timer ends; a tap opens the keypad for a new one, or the
   timers when one is going) and Stopwatch (starts and pauses it).
@@ -126,7 +133,8 @@ Work happens on the `Dev` branch; `main` holds releases.
   switched on there: each phone has its own switch. Edits (time, days,
   label, Turn off once) sync; the newer edit wins. The rest is backed up
   too, so a new phone looks like the old one: the world clock's cities
-  (in order), saved quick timers, the bedtime schedule, the holiday
+  (in order) and where home is, saved quick timers, the bedtime schedule,
+  what the volume buttons do and the least a ring is loud, the holiday
   calendar with its ticked days, and the night clock's dim red. For each
   the newer change wins; a phone that already has its own cities or quick
   timers keeps them next to the account's the first time. Whether bedtime
@@ -148,7 +156,7 @@ Work happens on the `Dev` branch; `main` holds releases.
 | Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. Timers (`TimerEngine`, exact AlarmManager wake-ups) and the stopwatch live here too, with their notifications. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
 | Screens | `lib/ui` | Flutter, on the shared core: Alarms, Clock, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
-| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. The settings groups (`kind = 'settings'`, ids `settings-cities`, `-quick-timers`, `-bedtime`, `-holidays`, `-night-clock`) go the same way, newer change first. |
+| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. The settings groups (`kind = 'settings'`, ids `settings-cities`, `-quick-timers`, `-bedtime`, `-holidays`, `-night-clock`, `-ring`, `-home`) go the same way, newer change first. |
 | Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
 The engine is the only thing that decides when an alarm rings; the screens
@@ -252,6 +260,13 @@ Where things are kept on the phone:
     entry from bedtime to when you dismissed it, from ZT Clock. In Health
     Connect > App permissions > ZT Clock, the privacy link opens the app's
     own explanation.
+29. Home time: Settings > Home time zone > This phone's time zone now.
+    The Clock tab shows nothing new. Change the phone's time zone in
+    Android's settings (Date and time, automatic off): the Clock tab shows
+    "Home: …" with home's time under the time here. Set it back.
+30. On a Xiaomi, Huawei or Samsung phone: Settings > Alarm check shows the
+    maker's battery advice above "After a restart", and Open goes to the
+    app's settings. On a Pixel there is no such line.
 
 ## Development
 

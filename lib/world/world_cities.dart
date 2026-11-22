@@ -99,3 +99,61 @@ final savedZonesProvider = FutureProvider<List<WorldZone>>((ref) async {
       if (byId[id] case final z?) z.withOffset(offsets[id] ?? z.offset),
   ];
 });
+
+/// Where home is (a time zone id), or null: off. While the phone is in
+/// another time zone, the Clock tab shows home's time too. Backed up with
+/// the account.
+class HomeZoneController extends AsyncNotifier<String?> {
+  static const _key = 'clock_home_zone';
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'home';
+
+  PreferencesStore get _prefs => ref.read(ztPreferencesStoreProvider);
+
+  @override
+  Future<String?> build() async {
+    try {
+      final id = await _prefs.read(_key);
+      return id == null || id.isEmpty ? null : id;
+    } on Object {
+      return null;
+    }
+  }
+
+  /// [byHand] false: put here by the account's backup, nothing to send.
+  Future<void> set(String? id, {bool byHand = true}) async {
+    await future;
+    state = AsyncData(id);
+    await _prefs.write(_key, id ?? '');
+    if (byHand) await ref.read(settingsEditsProvider).touch(settingsName);
+  }
+}
+
+final homeZoneProvider = AsyncNotifierProvider<HomeZoneController, String?>(
+  HomeZoneController.new,
+);
+
+/// Home with its name and its offset as it is now; null when off or
+/// unknown on this phone.
+final homeZoneInfoProvider = FutureProvider<WorldZone?>((ref) async {
+  final id = await ref.watch(homeZoneProvider.future);
+  if (id == null) return null;
+  final all = await ref.watch(allZonesProvider.future);
+  for (final z in all) {
+    if (z.id != id) continue;
+    final offsets = await ref.read(clockEngineProvider).zoneOffsets([id]);
+    return z.withOffset(offsets[id] ?? z.offset);
+  }
+  return null;
+});
+
+/// The phone's own time zone as a city, when it is one of the cities.
+final localZoneProvider = FutureProvider<WorldZone?>((ref) async {
+  final id = await ref.watch(clockEngineProvider).localZone();
+  final all = await ref.watch(allZonesProvider.future);
+  for (final z in all) {
+    if (z.id == id) return z;
+  }
+  return null;
+});
