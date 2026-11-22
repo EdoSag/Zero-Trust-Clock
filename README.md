@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.14.0)
+## What is in it now (0.15.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -25,13 +25,23 @@ Work happens on the `Dev` branch; `main` holds releases.
   on again after it, by itself), and **Pause all alarms until** for a trip
   (repeating alarms only; one set for a single day still rings).
 - **Alarm on a date**: an alarm without repeat days can ring on a picked day.
-- **Sounds**: the app's chime, the phone's alarm sound, a phone sound or any
-  audio file. A picked sound is copied into the app, so it plays before the
-  first unlock too; if it can't play, the chime rings, never silence.
+- **Sounds**: five of the app's own (ZT chime, Bells, Beeps, Sunrise and
+  Buzzer, each with a button to hear it), the phone's alarm sound, a phone
+  sound or any audio file. A picked sound is copied into the app, so it
+  plays before the first unlock too; if it can't play, the chime rings,
+  never silence. The app's sounds are made by `tool/make_alarm_sounds.py`.
 - **Gradually louder** and **Silence after** (1 to 30 minutes), per alarm.
+- **Ring at least this loud** (Settings; off, 30, 50, 70 or 100%): if the
+  phone's alarm volume is lower, it is raised while an alarm rings and put
+  back afterwards. Timers are not changed.
 - **Slide to dismiss** on the ring screen, so a sleepy tap can't silence it.
-- **"Set an alarm for 7"** from assistants and other apps (Android's
-  standard alarm request).
+- **Volume buttons** (Settings): while an alarm rings on its screen they
+  change the volume, snooze or dismiss. A wake-up task is still asked for.
+- **From assistants and other apps** (Android's standard alarm requests):
+  "set an alarm for 7", "snooze" (also "snooze for 5 minutes") and
+  "dismiss my alarm". Dismiss ends the ringing alarm, or a snooze; an
+  alarm with a wake-up task still asks for it. With nothing ringing the
+  app opens: which coming alarm to skip is never guessed from a voice.
 - **Upcoming alarm notification**, from two hours before a ring, with
   **Turn off once** (or **Dismiss** on an alarm that rings once). Silent,
   and the label is not shown on the lock screen.
@@ -47,7 +57,8 @@ Work happens on the `Dev` branch; `main` holds releases.
   just rung, becomes a time entry in ZT Time, ending now, with what it was
   and a project from ZT Time. It goes to the same account, end-to-end
   encrypted, and is pushed later if the phone is offline.
-- **"Set a timer for 5 minutes"** from assistants and other apps.
+- **"Set a timer for 5 minutes"** and **"stop the timer"** from assistants
+  and other apps.
 - **World clock** (Clock tab): the time here, then your cities with their
   time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
   named in the app's language, found by city or country, offline. Long-press
@@ -70,10 +81,18 @@ Work happens on the `Dev` branch; `main` holds releases.
   downloaded with no account and refreshed weekly). Days off are ticked;
   untick any day an alarm should still ring on. A calendar that doesn't
   mark days off skips nothing until you tick days. This phone only.
-- **Wake-up tasks** (in an alarm's editor): solve 3 sums or shake the
-  phone 30 times before the alarm can be dismissed, so it can't be
-  silenced half asleep. Snooze still works, and Dismiss in the
+- **Wake-up tasks** (in an alarm's editor): solve 3 sums, shake the
+  phone 30 times or scan a code before the alarm can be dismissed, so it
+  can't be silenced half asleep. Snooze still works, and Dismiss in the
   notification or the app opens the task on the ring screen.
+- **Scan a code**: save any QR code or barcode that is away from the bed
+  (the toothpaste, a note on the fridge); the alarm is dismissed by
+  scanning the same one. Codes are read on the phone (ZXing, no Google
+  services), no picture is kept, and only a hash of the code is stored, so
+  what it says is never saved. It works over the lock screen and has a
+  light for a dark room. If the camera can't be used (no permission, in
+  use, broken), the alarm asks for sums instead, so it can always be
+  dismissed. The saved code syncs with the alarm.
 - **Bedtime** tab: when your nights start and end and which nights, with
   the length of sleep. A reminder before bed (15, 30 or 60 minutes), Do Not
   Disturb through the night (alarms still ring; it is only turned off again
@@ -190,6 +209,24 @@ Where things are kept on the phone:
 21. Android 16: start a timer and leave the app. Its time counts down in a
     chip in the status bar. Add the Timer tile to Quick Settings: it says
     "Until" and the end time.
+
+22. Sounds: in an alarm's editor open Sound, play each of the five, pick
+    Buzzer and ring a test alarm in Alarm check with that alarm's sound
+    (or set the alarm a minute ahead).
+23. Settings > Ring at least this loud > 70%. Turn the phone's alarm volume
+    all the way down and let an alarm ring: it is loud, and after
+    dismissing it the alarm volume is back down.
+24. Settings > Volume buttons > Snooze. Let an alarm ring with the phone
+    locked and press a volume button: it snoozes. Then Dismiss, with an
+    alarm that has a wake-up task: the task opens.
+25. Scan a code: in an alarm's editor pick Scan a code, allow the camera
+    and scan a barcode twice in view. Let it ring with the phone locked,
+    slide to dismiss: the camera opens over the lock screen; another code
+    says "This is another code", the saved one dismisses. Try Light. Then
+    take the camera permission away in Android's settings and let it ring
+    again: it asks for sums.
+26. With an alarm ringing say "snooze" and "dismiss my alarm" to the
+    assistant; with a timer ringing, "stop the timer".
 
 ## Development
 

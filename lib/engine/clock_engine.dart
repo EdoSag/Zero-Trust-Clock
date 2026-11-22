@@ -31,9 +31,23 @@ abstract class ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
   });
+
+  /// Opens the camera to save a code for [WakeTask.scan]. The code's
+  /// hash, or null when nothing was scanned.
+  Future<String?> scanCode();
+
+  /// Plays [sound] once, on the alarm volume ([ClockAlarm.sound] values).
+  Future<void> previewSound(String? sound);
+  Future<void> stopPreview();
+
+  /// What the volume buttons do while an alarm rings, and how loud a ring
+  /// is at least.
+  Future<RingSettings> ringSettings();
+  Future<void> setRingSettings(RingSettings settings);
 
   /// "Pause until": a repeating alarm is silent through [until].
   Future<void> pause(String id, DateTime until);
@@ -352,6 +366,7 @@ class MethodChannelClockEngine implements ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
   }) async =>
@@ -368,10 +383,31 @@ class MethodChannelClockEngine implements ClockEngine {
         'gradual': gradual,
         'ringMinutes': ringMinutes,
         'task': task?.name,
+        'taskCode': taskCode,
         'skipHolidays': skipHolidays,
         'date': date == null ? null : dayKey(date),
       }) ??
       '';
+
+  @override
+  Future<String?> scanCode() => _channel.invokeMethod<String>('scanCode');
+
+  @override
+  Future<void> previewSound(String? sound) =>
+      _channel.invokeMethod('previewSound', {'sound': sound});
+
+  @override
+  Future<void> stopPreview() => _channel.invokeMethod('stopPreview');
+
+  @override
+  Future<RingSettings> ringSettings() async => RingSettings.fromMap(
+    await _channel.invokeMethod<Map<Object?, Object?>>('ringSettings') ??
+        const {},
+  );
+
+  @override
+  Future<void> setRingSettings(RingSettings settings) =>
+      _channel.invokeMethod('setRingSettings', settings.toMap());
 
   @override
   Future<void> pause(String id, DateTime until) =>
@@ -418,6 +454,7 @@ class MethodChannelClockEngine implements ClockEngine {
         'gradual': a.gradual,
         'ringMinutes': a.ringMinutes,
         'task': a.task?.name,
+        'taskCode': a.taskCode,
         'skipHolidays': a.skipHolidays,
       }) ??
       false;
@@ -470,6 +507,70 @@ class MethodChannelClockEngine implements ClockEngine {
 }
 
 enum SoundKind { ringtone, file }
+
+/// The app's own alarm sounds besides the chime, as [ClockAlarm.sound]
+/// values. They are part of the app, so they play before the first unlock.
+const builtInSounds = [
+  'builtin:bells',
+  'builtin:beeps',
+  'builtin:sunrise',
+  'builtin:buzzer',
+];
+
+/// What the volume buttons do while an alarm rings on its screen.
+enum VolumeButtons {
+  /// Change the alarm volume, as everywhere else.
+  volume,
+  snooze,
+
+  /// Dismiss. An alarm with a wake-up task still asks for it.
+  dismiss;
+
+  static VolumeButtons parse(Object? name) {
+    for (final v in values) {
+      if (v.name == name) return v;
+    }
+    return volume;
+  }
+}
+
+/// Settings of every ring on this phone.
+class RingSettings {
+  const RingSettings({
+    this.volumeButtons = VolumeButtons.volume,
+    this.minVolume = 0,
+  });
+
+  final VolumeButtons volumeButtons;
+
+  /// "Ring at least this loud": percent of the phone's loudest alarm
+  /// volume, one of [minVolumeChoices]. 0: off.
+  final int minVolume;
+
+  static const minVolumeChoices = [0, 30, 50, 70, 100];
+
+  factory RingSettings.fromMap(Map<Object?, Object?> m) {
+    final percent = switch (m['minVolume']) {
+      final num n => n.toInt(),
+      _ => 0,
+    };
+    return RingSettings(
+      volumeButtons: VolumeButtons.parse(m['volumeButtons']),
+      minVolume: minVolumeChoices.contains(percent) ? percent : 0,
+    );
+  }
+
+  Map<String, Object?> toMap() => {
+    'volumeButtons': volumeButtons.name,
+    'minVolume': minVolume,
+  };
+
+  RingSettings copyWith({VolumeButtons? volumeButtons, int? minVolume}) =>
+      RingSettings(
+        volumeButtons: volumeButtons ?? this.volumeButtons,
+        minVolume: minVolume ?? this.minVolume,
+      );
+}
 
 class PickedSound {
   const PickedSound(this.sound, this.name);
@@ -664,4 +765,25 @@ class ScreensaverNightController extends AsyncNotifier<bool> {
 final screensaverNightProvider =
     AsyncNotifierProvider<ScreensaverNightController, bool>(
       ScreensaverNightController.new,
+    );
+
+/// What the volume buttons do while an alarm rings, and the least a ring
+/// is loud.
+class RingSettingsController extends AsyncNotifier<RingSettings> {
+  @override
+  Future<RingSettings> build() => ref.watch(clockEngineProvider).ringSettings();
+
+  Future<void> set(RingSettings settings, {bool byHand = true}) async {
+    state = AsyncData(settings);
+    await ref.read(clockEngineProvider).setRingSettings(settings);
+    if (byHand) await ref.read(settingsEditsProvider).touch(settingsName);
+  }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'ring';
+}
+
+final ringSettingsProvider =
+    AsyncNotifierProvider<RingSettingsController, RingSettings>(
+      RingSettingsController.new,
     );

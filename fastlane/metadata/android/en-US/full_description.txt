@@ -3,7 +3,8 @@ Zero-Trust Clock is an alarm clock built to ring: after a restart, before you un
 WHAT IT DOES
 • Turn off once: skip the next ring from the alarm's menu, the notification or the widget, and the alarm stays on.
 • Rings after a restart and before the first unlock, with a full-screen alarm over the lock screen.
-• Repeat days or a single date, labels, your own sound or audio file, gradually louder, snooze length and auto-silence.
+• Repeat days or a single date, labels, five built-in sounds or your own audio file, gradually louder, a minimum volume, snooze length and auto-silence.
+• Wake-up tasks: solve sums, shake the phone or scan a code you keep away from the bed. Volume buttons can snooze or dismiss.
 • Pause a repeating alarm until a date, or pause every alarm for a holiday.
 • A heads-up before the next alarm, with a button to skip it.
 • Timers: several at once, quick timers, +1 minute, "Time's up" over the lock screen.
@@ -11,7 +12,7 @@ WHAT IT DOES
 • World clock with every city, named in your language, and how far ahead or behind it is.
 • Bedtime: a reminder before bed, Do Not Disturb through the night, a wake-up alarm, and sleep sounds with a timer.
 • Home-screen widgets (clock and next alarm, world clock, analog, timer, stopwatch), Quick Settings tiles and app shortcuts.
-• Works with "set an alarm" and "set a timer" from your assistant and other apps.
+• Works with "set an alarm", "snooze", "dismiss my alarm" and "set a timer" from your assistant and other apps.
 • Works without an account. Sign in to back up and sync alarms; a synced alarm arrives switched off on your other phones.
 
 WHY ZERO-TRUST

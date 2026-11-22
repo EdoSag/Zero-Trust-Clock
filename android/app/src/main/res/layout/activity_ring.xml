@@ -93,6 +93,22 @@
             android:textDirection="ltr"
             android:textSize="32sp" />
 
+        <Button
+            android:id="@+id/ring_task_scan"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/ring_button_outline"
+            android:minWidth="200dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:stateListAnimator="@null"
+            android:text="@string/ring_task_scan_button"
+            android:textAllCaps="false"
+            android:textColor="@color/ring_text"
+            android:textSize="18sp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/ring_task_progress"
             android:layout_width="wrap_content"

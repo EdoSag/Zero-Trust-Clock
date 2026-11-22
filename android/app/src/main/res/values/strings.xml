@@ -85,4 +85,16 @@
     <string name="ring_task_progress">%1$d of %2$d</string>
     <string name="ring_task_wrong">Not quite. Try again.</string>
     <string name="screensaver_name">Night clock</string>
+    <string name="ring_task_scan">Scan your code to dismiss</string>
+    <string name="ring_task_scan_button">Open the camera</string>
+    <string name="scan_hint_wake">Point the camera at the code you saved for this alarm.</string>
+    <string name="scan_hint_save">Point the camera at a QR code or a barcode. Pick one that stays away from your bed.</string>
+    <string name="scan_wrong">This is another code.</string>
+    <string name="scan_light">Light</string>
+    <string name="scan_light_off">Light off</string>
+    <string name="scan_back">Back</string>
+    <string name="scan_no_camera">ZT Clock can\'t use the camera. Allow it in the phone\'s settings.</string>
+    <string name="no_alarm_ringing">No alarm is ringing</string>
+    <string name="no_timer_ringing">No timer is ringing</string>
+    <string name="snooze_ended">Snooze ended</string>
 </resources>

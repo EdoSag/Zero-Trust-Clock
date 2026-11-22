@@ -26,6 +26,8 @@ import dev.sagron.zerotrustclock.engine.AlarmScheduler
 import dev.sagron.zerotrustclock.engine.EnginePrefs
 import dev.sagron.zerotrustclock.engine.Loc
 import dev.sagron.zerotrustclock.engine.RingService
+import dev.sagron.zerotrustclock.engine.ScanActivity
+import dev.sagron.zerotrustclock.engine.SoundPreview
 import dev.sagron.zerotrustclock.engine.Sounds
 import dev.sagron.zerotrustclock.engine.Tabs
 import dev.sagron.zerotrustclock.engine.TimerEngine
@@ -101,6 +103,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             gradual = call.argument<Boolean>("gradual") ?: false,
                             ringMinutes = (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                             task = call.argument<String>("task"),
+                            taskCode = call.argument<String>("taskCode"),
                             skipHolidays = call.argument<Boolean>("skipHolidays") ?: false,
                             date = call.argument<String>("date"),
                         ),
@@ -128,6 +131,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                             call.argument<String>("task"),
                             call.argument<Boolean>("skipHolidays") ?: false,
+                            call.argument<String>("taskCode"),
                         ),
                     )
                 }
@@ -143,6 +147,19 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "pauseAllUntil" -> result.success(AlarmEngine.pauseAllUntil(activity))
                 "setPauseAll" -> done(result) { AlarmEngine.setPauseAll(activity, call.argument<String>("until")) }
                 "pickSound" -> pickSound(call.argument<String>("kind") ?: "file", call.argument<String>("current"), result)
+                "previewSound" -> done(result) { SoundPreview.play(activity, call.argument<String>("sound")) }
+                "stopPreview" -> done(result) { SoundPreview.stop() }
+                "scanCode" -> scanCode(result)
+                "ringSettings" -> result.success(
+                    mapOf(
+                        "volumeButtons" to EnginePrefs.volumeButtons(activity),
+                        "minVolume" to EnginePrefs.minVolume(activity),
+                    ),
+                )
+                "setRingSettings" -> done(result) {
+                    EnginePrefs.setVolumeButtons(activity, call.argument<String>("volumeButtons"))
+                    EnginePrefs.setMinVolume(activity, call.argument<Int>("minVolume") ?: 0)
+                }
                 "cancelSnooze" -> done(result) { AlarmEngine.cancelSnooze(activity, id(call)) }
                 "delete" -> done(result) { AlarmEngine.delete(activity, id(call)) }
                 "testAlarm" -> done(result) {
@@ -311,7 +328,30 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         }
     }
 
+    private var pendingScan: MethodChannel.Result? = null
+
+    /**
+     * Opens the camera to save a code for the "scan a code" wake-up task.
+     * Answers the code's hash, or null when nothing was scanned.
+     */
+    private fun scanCode(result: MethodChannel.Result) {
+        pendingScan?.success(null)
+        pendingScan = result
+        try {
+            activity.startActivityForResult(ScanActivity.saveIntent(activity), REQUEST_SCAN)
+        } catch (_: Exception) {
+            pendingScan = null
+            result.success(null)
+        }
+    }
+
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode == REQUEST_SCAN) {
+            val code = if (resultCode == Activity.RESULT_OK) data?.getStringExtra(ScanActivity.EXTRA_CODE) else null
+            pendingScan?.success(code)
+            pendingScan = null
+            return true
+        }
         if (requestCode != REQUEST_RINGTONE && requestCode != REQUEST_FILE) return false
         val result = pendingSound ?: return true
         pendingSound = null
@@ -377,5 +417,6 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         const val REQUEST_NOTIFICATIONS = 7301
         const val REQUEST_RINGTONE = 7302
         const val REQUEST_FILE = 7303
+        const val REQUEST_SCAN = 7304
     }
 }

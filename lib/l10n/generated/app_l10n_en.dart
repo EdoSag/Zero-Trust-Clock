@@ -692,4 +692,57 @@ class AppL10nEn extends AppL10n {
   @override
   String get offlineEditionHint =>
       'No internet permission. No account, no sync, no downloads: nothing leaves this phone.';
+
+  @override
+  String get soundBells => 'Bells';
+
+  @override
+  String get soundBeeps => 'Beeps';
+
+  @override
+  String get soundSunrise => 'Sunrise';
+
+  @override
+  String get soundBuzzer => 'Buzzer';
+
+  @override
+  String get wakeTaskScan => 'Scan a code';
+
+  @override
+  String get wakeTaskScanSaved => 'Code saved';
+
+  @override
+  String get wakeTaskScanHint =>
+      'Scan the same QR code or barcode to dismiss. Keep it away from the bed. If the camera can\'t be used, the alarm asks for sums instead.';
+
+  @override
+  String get wakeTaskScanAgain => 'Scan another';
+
+  @override
+  String get wakeTaskScanNone => 'No code was scanned';
+
+  @override
+  String get volumeButtons => 'Volume buttons';
+
+  @override
+  String get volumeButtonsVolume => 'Change the volume';
+
+  @override
+  String get volumeButtonsAbout =>
+      'What the volume buttons do while an alarm rings on its own screen. A wake-up task is still asked for.';
+
+  @override
+  String get minVolume => 'Ring at least this loud';
+
+  @override
+  String get minVolumeOff => 'Off: the phone\'s alarm volume';
+
+  @override
+  String minVolumePercent(int percent) {
+    return '$percent% of the loudest';
+  }
+
+  @override
+  String get minVolumeAbout =>
+      'If the phone\'s alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.';
 }

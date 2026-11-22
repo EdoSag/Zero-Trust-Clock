@@ -53,6 +53,8 @@ object AlarmEngine {
         val ringMinutes: Int = Alarm.DEFAULT_RING_MINUTES,
         /** A wake-up task (WakeTasks), or null. */
         val task: String? = null,
+        /** The scan task's saved code (WakeTasks.codeHash). */
+        val taskCode: String? = null,
         /** Silent on this phone's public holidays (repeating alarms). */
         val skipHolidays: Boolean = false,
         /** Rings once on this day (yyyy-MM-dd); null: the next such time. */
@@ -106,7 +108,12 @@ object AlarmEngine {
                 soundName = if (options.sound == null) null else options.soundName,
                 gradual = options.gradual,
                 ringMinutes = options.ringMinutes.coerceIn(1, 60),
-                task = WakeTasks.parse(options.task),
+                task = WakeTasks.parse(options.task, options.taskCode),
+                taskCode = if (WakeTasks.parse(options.task, options.taskCode) == WakeTasks.SCAN) {
+                    options.taskCode
+                } else {
+                    null
+                },
                 skipHolidays = options.skipHolidays,
                 updatedAt = if (old == null) System.currentTimeMillis() else editedAt(old),
             )
@@ -209,6 +216,7 @@ object AlarmEngine {
         ringMinutes: Int,
         task: String?,
         skipHolidays: Boolean,
+        taskCode: String? = null,
     ): Boolean {
         if (id == RingService.ringingId) return false
         val taken = AlarmStore.update(context) { list ->
@@ -237,7 +245,8 @@ object AlarmEngine {
                     pauseUntil = if (days.isEmpty()) null else pauseUntil,
                     gradual = gradual,
                     ringMinutes = ringMinutes.coerceIn(1, 60),
-                    task = WakeTasks.parse(task),
+                    task = WakeTasks.parse(task, taskCode),
+                    taskCode = if (WakeTasks.parse(task, taskCode) == WakeTasks.SCAN) taskCode else null,
                     skipHolidays = skipHolidays,
                 )
             if (i >= 0) list[i] = alarm else list.add(alarm)

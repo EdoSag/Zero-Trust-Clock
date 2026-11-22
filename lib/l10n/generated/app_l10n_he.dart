@@ -685,4 +685,57 @@ class AppL10nHe extends AppL10n {
   @override
   String get offlineEditionHint =>
       'בלי הרשאת אינטרנט. בלי חשבון, בלי סנכרון ובלי הורדות: שום דבר לא יוצא מהטלפון הזה.';
+
+  @override
+  String get soundBells => 'פעמונים';
+
+  @override
+  String get soundBeeps => 'צפצופים';
+
+  @override
+  String get soundSunrise => 'זריחה';
+
+  @override
+  String get soundBuzzer => 'זמזם';
+
+  @override
+  String get wakeTaskScan => 'סריקת קוד';
+
+  @override
+  String get wakeTaskScanSaved => 'הקוד נשמר';
+
+  @override
+  String get wakeTaskScanHint =>
+      'כדי לכבות סורקים את אותו קוד QR או ברקוד. כדאי שיהיה רחוק מהמיטה. אם אי אפשר להשתמש במצלמה, השעון יבקש תרגילי חשבון.';
+
+  @override
+  String get wakeTaskScanAgain => 'סריקת קוד אחר';
+
+  @override
+  String get wakeTaskScanNone => 'לא נסרק קוד';
+
+  @override
+  String get volumeButtons => 'כפתורי עוצמת הקול';
+
+  @override
+  String get volumeButtonsVolume => 'שינוי עוצמת הקול';
+
+  @override
+  String get volumeButtonsAbout =>
+      'מה עושים כפתורי עוצמת הקול כששעון מעורר מצלצל על המסך שלו. משימת השכמה עדיין נדרשת.';
+
+  @override
+  String get minVolume => 'לצלצל לפחות בעוצמה הזו';
+
+  @override
+  String get minVolumeOff => 'כבוי: עוצמת השעון המעורר של הטלפון';
+
+  @override
+  String minVolumePercent(int percent) {
+    return '$percent% מהעוצמה המרבית';
+  }
+
+  @override
+  String get minVolumeAbout =>
+      'אם עוצמת השעון המעורר בטלפון נמוכה יותר, היא מוגברת בזמן הצלצול ומוחזרת אחריו. טיימרים לא משתנים.';
 }

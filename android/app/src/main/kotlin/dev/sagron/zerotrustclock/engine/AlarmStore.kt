@@ -6,6 +6,8 @@ import android.os.UserManager
 import android.util.AtomicFile
 import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
+import dev.sagron.zerotrustclock.engine.core.RingVolume
+import dev.sagron.zerotrustclock.engine.core.VolumeButtons
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -127,6 +129,21 @@ object EnginePrefs {
     fun pauseAllUntil(context: Context): java.time.LocalDate? {
         val day = AlarmSchedule.parseDay(prefs(context).getString("pauseAll", null)) ?: return null
         return if (day.isBefore(java.time.LocalDate.now())) null else day
+    }
+
+    /** What the volume buttons do on the ring screen (VolumeButtons). */
+    fun volumeButtons(context: Context): String =
+        VolumeButtons.parse(prefs(context).getString("volumeButtons", null))
+
+    fun setVolumeButtons(context: Context, value: String?) {
+        prefs(context).edit().putString("volumeButtons", VolumeButtons.parse(value)).apply()
+    }
+
+    /** "Ring at least this loud", in percent (RingVolume). 0: off. */
+    fun minVolume(context: Context): Int = RingVolume.parse(prefs(context).getInt("minVolume", 0))
+
+    fun setMinVolume(context: Context, percent: Int) {
+        prefs(context).edit().putInt("minVolume", RingVolume.parse(percent)).apply()
     }
 
     fun setPauseAllUntil(context: Context, day: String?) {

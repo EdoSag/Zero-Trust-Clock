@@ -7,7 +7,11 @@ enum WakeTask {
   math,
 
   /// Shake the phone 30 times.
-  shake;
+  shake,
+
+  /// Scan the code saved with the alarm (a QR code or a barcode), which
+  /// is somewhere away from the bed. Needs [ClockAlarm.taskCode].
+  scan;
 
   static WakeTask? parse(Object? name) {
     for (final t in values) {
@@ -45,6 +49,7 @@ class ClockAlarm {
     this.gradual = false,
     this.ringMinutes = defaultRingMinutes,
     this.task,
+    this.taskCode,
     this.skipHolidays = false,
   });
 
@@ -106,6 +111,10 @@ class ClockAlarm {
   /// Done before it can be dismissed; null: a slide dismisses it.
   final WakeTask? task;
 
+  /// For [WakeTask.scan]: the saved code, as a hash (the engine never
+  /// keeps what the code says).
+  final String? taskCode;
+
   /// A repeating alarm stays silent on this phone's public holidays.
   final bool skipHolidays;
 
@@ -140,6 +149,7 @@ class ClockAlarm {
       gradual: j['gradual'] as bool? ?? false,
       ringMinutes: (j['ringMinutes'] as num?)?.toInt() ?? defaultRingMinutes,
       task: WakeTask.parse(j['task']),
+      taskCode: j['taskCode'] as String?,
       skipHolidays: j['skipHolidays'] as bool? ?? false,
     );
   }
@@ -168,6 +178,7 @@ class ClockAlarm {
         gradual: gradual,
         ringMinutes: ringMinutes,
         task: task,
+        taskCode: taskCode,
         skipHolidays: skipHolidays,
       );
 

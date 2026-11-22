@@ -400,5 +400,28 @@
   "loggedToTime": "Logged in ZT Time",
   "couldNotLog": "Couldn't log it. Check the connection and try again.",
   "offlineEdition": "Offline edition",
-  "offlineEditionHint": "No internet permission. No account, no sync, no downloads: nothing leaves this phone."
+  "offlineEditionHint": "No internet permission. No account, no sync, no downloads: nothing leaves this phone.",
+  "soundBells": "Bells",
+  "soundBeeps": "Beeps",
+  "soundSunrise": "Sunrise",
+  "soundBuzzer": "Buzzer",
+  "wakeTaskScan": "Scan a code",
+  "wakeTaskScanSaved": "Code saved",
+  "wakeTaskScanHint": "Scan the same QR code or barcode to dismiss. Keep it away from the bed. If the camera can't be used, the alarm asks for sums instead.",
+  "wakeTaskScanAgain": "Scan another",
+  "wakeTaskScanNone": "No code was scanned",
+  "volumeButtons": "Volume buttons",
+  "volumeButtonsVolume": "Change the volume",
+  "volumeButtonsAbout": "What the volume buttons do while an alarm rings on its own screen. A wake-up task is still asked for.",
+  "minVolume": "Ring at least this loud",
+  "minVolumeOff": "Off: the phone's alarm volume",
+  "minVolumePercent": "{percent}% of the loudest",
+  "@minVolumePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "minVolumeAbout": "If the phone's alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed."
 }

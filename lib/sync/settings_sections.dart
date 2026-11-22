@@ -194,6 +194,37 @@ class NightClockSection implements SettingsSection {
   ) => null;
 }
 
+/// What the volume buttons do while an alarm rings, and the least a ring
+/// is loud.
+class RingSection implements SettingsSection {
+  RingSection(this._ref);
+  final Ref _ref;
+
+  @override
+  String get name => RingSettingsController.settingsName;
+
+  @override
+  Map<String, Object?> get fresh => const RingSettings().toMap();
+
+  @override
+  Future<Map<String, Object?>> read() async =>
+      (await _ref.read(ringSettingsProvider.future)).toMap();
+
+  @override
+  Future<void> apply(Map<String, Object?> data) async {
+    await _ref.read(ringSettingsProvider.future);
+    await _ref
+        .read(ringSettingsProvider.notifier)
+        .set(RingSettings.fromMap(data), byHand: false);
+  }
+
+  @override
+  Map<String, Object?>? merge(
+    Map<String, Object?> here,
+    Map<String, Object?> account,
+  ) => null;
+}
+
 /// Every group of settings the account backs up.
 final settingsSectionsProvider = Provider<List<SettingsSection>>(
   (ref) => [
@@ -202,6 +233,7 @@ final settingsSectionsProvider = Provider<List<SettingsSection>>(
     BedtimeSection(ref),
     HolidaysSection(ref),
     NightClockSection(ref),
+    RingSection(ref),
   ],
 );
 

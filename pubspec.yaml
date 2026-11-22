@@ -1,7 +1,7 @@
 name: zerotrust_clock
 description: "Zero-Trust Clock: alarms that ring, with Turn off once. Timer, stopwatch, world clock and bedtime to follow."
 publish_to: none
-version: 0.14.0+15
+version: 0.15.0+16
 
 environment:
   sdk: ^3.9.0
