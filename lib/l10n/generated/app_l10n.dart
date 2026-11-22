@@ -1506,6 +1506,192 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'If the phone\'s alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.'**
   String get minVolumeAbout;
+
+  /// No description provided for @repeatWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get repeatWeekdays;
+
+  /// No description provided for @repeatShifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift pattern'**
+  String get repeatShifts;
+
+  /// No description provided for @shiftText.
+  ///
+  /// In en, this message translates to:
+  /// **'Shifts: {on} of every {length} days'**
+  String shiftText(int on, int length);
+
+  /// No description provided for @shiftLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Days in the cycle'**
+  String get shiftLength;
+
+  /// No description provided for @shiftStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Day 1 of the cycle'**
+  String get shiftStart;
+
+  /// No description provided for @shiftDaysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the days of the cycle the alarm rings on. The cycle repeats from day 1 again and again.'**
+  String get shiftDaysHint;
+
+  /// No description provided for @shiftDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String shiftDay(int day);
+
+  /// No description provided for @shiftOnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{on} on, {off} off'**
+  String shiftOnOff(int on, int off);
+
+  /// No description provided for @shiftTwoShiftsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Two shifts with different times, like 2 days, 2 nights, 4 off? Make one alarm for each, with the same day 1.'**
+  String get shiftTwoShiftsHint;
+
+  /// No description provided for @shiftToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is day {day} of {length}'**
+  String shiftToday(int day, int length);
+
+  /// No description provided for @calendarLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow ZT Calendar'**
+  String get calendarLink;
+
+  /// No description provided for @calendarLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings in time for the day\'s first event. ZT Clock reads ZT Calendar each time it is opened, two weeks ahead; days it hasn\'t read ring at the alarm\'s own time.'**
+  String get calendarLinkHint;
+
+  /// No description provided for @calendarNeedsAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to follow ZT Calendar.'**
+  String get calendarNeedsAccount;
+
+  /// No description provided for @calendarNeedsRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick repeat days or a shift pattern first.'**
+  String get calendarNeedsRepeat;
+
+  /// No description provided for @calendarLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Before the first event'**
+  String get calendarLead;
+
+  /// No description provided for @calendarEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier when needed'**
+  String get calendarEarlier;
+
+  /// No description provided for @calendarEarlierHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings at {time}, or earlier when the first event needs it.'**
+  String calendarEarlierHint(String time);
+
+  /// No description provided for @calendarFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Always before the first event'**
+  String get calendarFollow;
+
+  /// No description provided for @calendarFollowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings before the first event, later than {time} too. Without events: {time}.'**
+  String calendarFollowHint(String time);
+
+  /// No description provided for @calendarEarliest.
+  ///
+  /// In en, this message translates to:
+  /// **'Never before'**
+  String get calendarEarliest;
+
+  /// No description provided for @calendarOtherDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Also on other days, for a morning event'**
+  String get calendarOtherDays;
+
+  /// No description provided for @calendarLinkedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows ZT Calendar'**
+  String get calendarLinkedShort;
+
+  /// No description provided for @smartWake.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart wake window'**
+  String get smartWake;
+
+  /// No description provided for @smartWakeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'With the phone on the bed, it rings up to this much earlier when you stir, so you wake in light sleep. Without movement it rings at its time.'**
+  String get smartWakeHint;
+
+  /// No description provided for @smartWakeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get smartWakeOff;
+
+  /// No description provided for @morningScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'After dismissing an alarm'**
+  String get morningScreen;
+
+  /// No description provided for @morningOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing'**
+  String get morningOff;
+
+  /// No description provided for @morningCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'The day ahead, counts only'**
+  String get morningCounts;
+
+  /// No description provided for @morningDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'The day ahead, with names'**
+  String get morningDetails;
+
+  /// No description provided for @morningHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s events from ZT Calendar, tasks from ZT Tasks and quests from ZT Quests, as ZT Clock last read them (signed in). Names also show over the lock screen.'**
+  String get morningHint;
+
+  /// No description provided for @questGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'{category, select, fitness{Fitness} productivity{Productivity} nutrition{Nutrition} sleep{Sleep} learning{Learning} mindfulness{Mindfulness} other{Goal}}'**
+  String questGoal(String category);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

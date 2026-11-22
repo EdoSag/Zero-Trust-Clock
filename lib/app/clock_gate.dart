@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
+import '../linked/linked_apps.dart';
 import '../sync/alarm_sync_host.dart';
 import '../ui/clock_home.dart';
 import 'account.dart';
@@ -90,6 +91,6 @@ class _ClockGateState extends ConsumerState<ClockGate>
       );
     }
 
-    return AlarmSyncHost(child: widget.home);
+    return AlarmSyncHost(child: DayAheadHost(child: widget.home));
   }
 }

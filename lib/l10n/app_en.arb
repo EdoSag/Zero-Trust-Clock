@@ -472,5 +472,94 @@
       }
     }
   },
-  "minVolumeAbout": "If the phone's alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed."
+  "minVolumeAbout": "If the phone's alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.",
+  "repeatWeekdays": "Weekdays",
+  "repeatShifts": "Shift pattern",
+  "shiftText": "Shifts: {on} of every {length} days",
+  "@shiftText": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "shiftLength": "Days in the cycle",
+  "shiftStart": "Day 1 of the cycle",
+  "shiftDaysHint": "Tap the days of the cycle the alarm rings on. The cycle repeats from day 1 again and again.",
+  "shiftDay": "Day {day}",
+  "@shiftDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "shiftOnOff": "{on} on, {off} off",
+  "@shiftOnOff": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "shiftTwoShiftsHint": "Two shifts with different times, like 2 days, 2 nights, 4 off? Make one alarm for each, with the same day 1.",
+  "shiftToday": "Today is day {day} of {length}",
+  "@shiftToday": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarLink": "Follow ZT Calendar",
+  "calendarLinkHint": "Rings in time for the day's first event. ZT Clock reads ZT Calendar each time it is opened, two weeks ahead; days it hasn't read ring at the alarm's own time.",
+  "calendarNeedsAccount": "Sign in to follow ZT Calendar.",
+  "calendarNeedsRepeat": "Pick repeat days or a shift pattern first.",
+  "calendarLead": "Before the first event",
+  "calendarEarlier": "Earlier when needed",
+  "calendarEarlierHint": "Rings at {time}, or earlier when the first event needs it.",
+  "@calendarEarlierHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFollow": "Always before the first event",
+  "calendarFollowHint": "Rings before the first event, later than {time} too. Without events: {time}.",
+  "@calendarFollowHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEarliest": "Never before",
+  "calendarOtherDays": "Also on other days, for a morning event",
+  "calendarLinkedShort": "Follows ZT Calendar",
+  "smartWake": "Smart wake window",
+  "smartWakeHint": "With the phone on the bed, it rings up to this much earlier when you stir, so you wake in light sleep. Without movement it rings at its time.",
+  "smartWakeOff": "Off",
+  "morningScreen": "After dismissing an alarm",
+  "morningOff": "Nothing",
+  "morningCounts": "The day ahead, counts only",
+  "morningDetails": "The day ahead, with names",
+  "morningHint": "Today's events from ZT Calendar, tasks from ZT Tasks and quests from ZT Quests, as ZT Clock last read them (signed in). Names also show over the lock screen.",
+  "questGoal": "{category, select, fitness{Fitness} productivity{Productivity} nutrition{Nutrition} sleep{Sleep} learning{Learning} mindfulness{Mindfulness} other{Goal}}",
+  "@questGoal": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  }
 }

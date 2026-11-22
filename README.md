@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.17.1)
+## What is in it now (0.18.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -48,6 +48,28 @@ Work happens on the `Dev` branch; `main` holds releases.
 - **Upcoming alarm notification**, from two hours before a ring, with
   **Turn off once** (or **Dismiss** on an alarm that rings once). Silent,
   and the label is not shown on the lock screen.
+- **Shift patterns** (in an alarm's editor, instead of weekdays): for
+  rotating schedules such as 2 on, 2 off or 4 on, 4 off, up to 56 days.
+  Pick a preset or tick the days of the cycle, and which day today is.
+  Two shifts (days and nights) are two alarms with the same cycle. Skip,
+  pause and holidays work as on weekday alarms.
+- **Follow ZT Calendar** (signed in, repeating alarms): ring from 15 minutes
+  to 3 hours before the day's first event. Either only earlier than
+  the alarm's own time (a later first event keeps the usual time) or
+  always, never before a chosen earliest time, and optionally on days the
+  alarm doesn't ring (a morning event). All-day and day-long events don't
+  count; hidden calendars are left out. Clock reads ZT Calendar, end-to-end
+  encrypted, when it is opened, for the next 14 days; a day it hasn't read
+  rings at the usual time.
+- **Smart wake window** (10, 20 or 30 minutes): in that window before the
+  alarm, the phone's motion sensor listens, and the alarm rings early when
+  you move (as when sleep gets light). It rings on time if you don't. Only
+  while the window is open; nothing is recorded.
+- **Morning screen** (Settings, on by default with counts only): after an
+  alarm is dismissed on its ring screen, today's events from ZT Calendar,
+  tasks due (and overdue) from ZT Tasks and quests from ZT Quests. With
+  "with names" it also lists them. Each row opens its app. Signed out, or
+  before the phone's first unlock, there is no morning screen.
 - **Timers.** Several at once, each with a label, Pause, +1:00 and Reset.
   Type a length on the keypad or tap a quick timer (1, 3, 5, 10, 15, 30
   minutes, plus your own). Timers run and ring in the engine, so they ring

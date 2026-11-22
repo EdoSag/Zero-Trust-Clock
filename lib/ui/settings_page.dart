@@ -17,6 +17,13 @@ import 'world_clock_page.dart';
 /// nobody signed in it shows what needs none (language, theme, the app's
 /// own rows, About) and "Sign in or create account" for encrypted backup
 /// and sync. Signed in, it is the full account section with sync status.
+/// What the morning screen setting is called in the list.
+String morningScreenText(AppL10n l, MorningScreen m) => switch (m) {
+  MorningScreen.off => l.morningOff,
+  MorningScreen.counts => l.morningCounts,
+  MorningScreen.details => l.morningDetails,
+};
+
 class ClockSettingsPage extends ConsumerWidget {
   const ClockSettingsPage({super.key});
 
@@ -103,6 +110,30 @@ class ClockSettingsPage extends ConsumerWidget {
                 .set(ring.copyWith(minVolume: picked));
           },
         ),
+        // Read from the other apps in the account: not in the Offline edition.
+        if (!offline)
+          ListTile(
+            key: const ValueKey('morningScreen'),
+            leading: const Icon(Icons.wb_sunny_outlined),
+            title: Text(l.morningScreen),
+            subtitle: Text(morningScreenText(l, ring.morning)),
+            onTap: () async {
+              final picked = await chooseOne<MorningScreen>(
+                context,
+                title: l.morningScreen,
+                about: l.morningHint,
+                current: ring.morning,
+                choices: [
+                  for (final m in MorningScreen.values)
+                    (m, morningScreenText(l, m)),
+                ],
+              );
+              if (picked == null) return;
+              await ref
+                  .read(ringSettingsProvider.notifier)
+                  .set(ring.copyWith(morning: picked));
+            },
+          ),
         ListTile(
           key: const ValueKey('homeZone'),
           leading: const Icon(Icons.home_outlined),

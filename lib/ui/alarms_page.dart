@@ -205,6 +205,9 @@ class _AlarmsPageState extends ConsumerState<AlarmsPage>
           label: alarm.label,
           vibrate: alarm.vibrate,
           snoozeMinutes: alarm.snoozeMinutes,
+          shift: alarm.shift,
+          calendar: alarm.calendar,
+          smartWake: alarm.smartWake,
         );
         if (!alarm.enabled) await _engine.setEnabled(id, false);
       }),

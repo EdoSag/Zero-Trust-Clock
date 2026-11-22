@@ -34,6 +34,9 @@ abstract class ClockEngine {
     String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
+    ShiftPattern? shift,
+    CalendarLink? calendar,
+    int smartWake = 0,
   });
 
   /// Opens the camera to save a code for [WakeTask.scan]. The code's
@@ -67,6 +70,14 @@ abstract class ClockEngine {
   /// [ClockAlarm.updatedAt]. [ClockAlarm.enabled] is this phone's own
   /// switch. False while that alarm rings (nothing changed; try later).
   Future<bool> importSynced(ClockAlarm alarm);
+
+  /// Each linked alarm's first ZT Calendar event per day:
+  /// `{alarmId: {"through": "yyyy-MM-dd", "days": {"yyyy-MM-dd": minutes}}}`.
+  /// Not an edit: nothing syncs because of it.
+  Future<void> setCalendarPlans(Map<String, Object?> plans);
+
+  /// The morning screen's data (see `morningBrief`), or null to forget it.
+  Future<void> setMorningBrief(String? json);
 
   /// "Turn off once": skips the next ring; the alarm stays on.
   Future<void> skipOnce(String id);
@@ -394,6 +405,9 @@ class MethodChannelClockEngine implements ClockEngine {
     String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
+    ShiftPattern? shift,
+    CalendarLink? calendar,
+    int smartWake = 0,
   }) async =>
       await _channel.invokeMethod<String>('save', {
         'id': id,
@@ -411,6 +425,10 @@ class MethodChannelClockEngine implements ClockEngine {
         'taskCode': taskCode,
         'skipHolidays': skipHolidays,
         'date': date == null ? null : dayKey(date),
+        'cycle': shift?.days,
+        'cycleStart': shift?.start,
+        'calendar': calendar?.toJson(),
+        'smartWake': smartWake,
       }) ??
       '';
 
@@ -481,8 +499,20 @@ class MethodChannelClockEngine implements ClockEngine {
         'task': a.task?.name,
         'taskCode': a.taskCode,
         'skipHolidays': a.skipHolidays,
+        'cycle': a.shift?.days,
+        'cycleStart': a.shift?.start,
+        'calendar': a.calendar?.toJson(),
+        'smartWake': a.smartWake,
       }) ??
       false;
+
+  @override
+  Future<void> setCalendarPlans(Map<String, Object?> plans) =>
+      _channel.invokeMethod('setCalendarPlans', {'json': jsonEncode(plans)});
+
+  @override
+  Future<void> setMorningBrief(String? json) =>
+      _channel.invokeMethod('setMorningBrief', {'json': json});
 
   @override
   Future<void> setEnabled(String id, bool enabled) =>
@@ -564,6 +594,7 @@ class RingSettings {
   const RingSettings({
     this.volumeButtons = VolumeButtons.volume,
     this.minVolume = 0,
+    this.morning = MorningScreen.counts,
   });
 
   final VolumeButtons volumeButtons;
@@ -574,6 +605,9 @@ class RingSettings {
 
   static const minVolumeChoices = [0, 30, 50, 70, 100];
 
+  /// The day ahead after an alarm is dismissed.
+  final MorningScreen morning;
+
   factory RingSettings.fromMap(Map<Object?, Object?> m) {
     final percent = switch (m['minVolume']) {
       final num n => n.toInt(),
@@ -582,19 +616,40 @@ class RingSettings {
     return RingSettings(
       volumeButtons: VolumeButtons.parse(m['volumeButtons']),
       minVolume: minVolumeChoices.contains(percent) ? percent : 0,
+      morning: MorningScreen.parse(m['morning']),
     );
   }
 
   Map<String, Object?> toMap() => {
     'volumeButtons': volumeButtons.name,
     'minVolume': minVolume,
+    'morning': morning.name,
   };
 
-  RingSettings copyWith({VolumeButtons? volumeButtons, int? minVolume}) =>
-      RingSettings(
-        volumeButtons: volumeButtons ?? this.volumeButtons,
-        minVolume: minVolume ?? this.minVolume,
-      );
+  RingSettings copyWith({
+    VolumeButtons? volumeButtons,
+    int? minVolume,
+    MorningScreen? morning,
+  }) => RingSettings(
+    volumeButtons: volumeButtons ?? this.volumeButtons,
+    minVolume: minVolume ?? this.minVolume,
+    morning: morning ?? this.morning,
+  );
+}
+
+/// The morning screen after an alarm is dismissed: off, how many events,
+/// tasks and quests today has, or with their names too (also over the
+/// lock screen).
+enum MorningScreen {
+  off,
+  counts,
+  details;
+
+  static MorningScreen parse(Object? v) => switch (v) {
+    'off' => off,
+    'details' => details,
+    _ => counts,
+  };
 }
 
 class PickedSound {

@@ -1,7 +1,7 @@
 name: zerotrust_clock
 description: "Zero-Trust Clock: alarms that ring, with Turn off once. Timer, stopwatch, world clock and bedtime to follow."
 publish_to: none
-version: 0.17.1+19
+version: 0.18.0+20
 
 environment:
   sdk: ^3.9.0
@@ -34,6 +34,9 @@ dependencies:
   flutter_dotenv: ^6.0.1
   intl: any
   url_launcher: ^6.3.1
+  # Repeating ZT Calendar events made in another time zone keep that
+  # zone's wall-clock time (same package and version as ZT Calendar).
+  timezone: ^0.11.2
 
 dev_dependencies:
   flutter_test:

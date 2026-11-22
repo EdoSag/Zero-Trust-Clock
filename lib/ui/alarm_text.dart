@@ -59,6 +59,9 @@ String fullDayName(BuildContext context, int isoDay) =>
 /// rings once the day it rings ("Tomorrow").
 String repeatText(BuildContext context, ClockAlarm alarm, {DateTime? now}) {
   final l = context.l10n;
+  if (alarm.shift case final ShiftPattern shift) {
+    return l.shiftText(shift.on, shift.length);
+  }
   if (alarm.days.length == 7) return l.everyDay;
   if (alarm.repeats) {
     return [

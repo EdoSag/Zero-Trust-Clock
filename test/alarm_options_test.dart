@@ -157,6 +157,9 @@ void main() {
       'task': null,
       'skipHolidays': false,
       'date': null,
+      'shift': null,
+      'calendar': null,
+      'smartWake': 0,
     });
   });
 

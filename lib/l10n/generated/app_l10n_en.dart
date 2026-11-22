@@ -823,4 +823,126 @@ class AppL10nEn extends AppL10n {
   @override
   String get minVolumeAbout =>
       'If the phone\'s alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.';
+
+  @override
+  String get repeatWeekdays => 'Weekdays';
+
+  @override
+  String get repeatShifts => 'Shift pattern';
+
+  @override
+  String shiftText(int on, int length) {
+    return 'Shifts: $on of every $length days';
+  }
+
+  @override
+  String get shiftLength => 'Days in the cycle';
+
+  @override
+  String get shiftStart => 'Day 1 of the cycle';
+
+  @override
+  String get shiftDaysHint =>
+      'Tap the days of the cycle the alarm rings on. The cycle repeats from day 1 again and again.';
+
+  @override
+  String shiftDay(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String shiftOnOff(int on, int off) {
+    return '$on on, $off off';
+  }
+
+  @override
+  String get shiftTwoShiftsHint =>
+      'Two shifts with different times, like 2 days, 2 nights, 4 off? Make one alarm for each, with the same day 1.';
+
+  @override
+  String shiftToday(int day, int length) {
+    return 'Today is day $day of $length';
+  }
+
+  @override
+  String get calendarLink => 'Follow ZT Calendar';
+
+  @override
+  String get calendarLinkHint =>
+      'Rings in time for the day\'s first event. ZT Clock reads ZT Calendar each time it is opened, two weeks ahead; days it hasn\'t read ring at the alarm\'s own time.';
+
+  @override
+  String get calendarNeedsAccount => 'Sign in to follow ZT Calendar.';
+
+  @override
+  String get calendarNeedsRepeat =>
+      'Pick repeat days or a shift pattern first.';
+
+  @override
+  String get calendarLead => 'Before the first event';
+
+  @override
+  String get calendarEarlier => 'Earlier when needed';
+
+  @override
+  String calendarEarlierHint(String time) {
+    return 'Rings at $time, or earlier when the first event needs it.';
+  }
+
+  @override
+  String get calendarFollow => 'Always before the first event';
+
+  @override
+  String calendarFollowHint(String time) {
+    return 'Rings before the first event, later than $time too. Without events: $time.';
+  }
+
+  @override
+  String get calendarEarliest => 'Never before';
+
+  @override
+  String get calendarOtherDays => 'Also on other days, for a morning event';
+
+  @override
+  String get calendarLinkedShort => 'Follows ZT Calendar';
+
+  @override
+  String get smartWake => 'Smart wake window';
+
+  @override
+  String get smartWakeHint =>
+      'With the phone on the bed, it rings up to this much earlier when you stir, so you wake in light sleep. Without movement it rings at its time.';
+
+  @override
+  String get smartWakeOff => 'Off';
+
+  @override
+  String get morningScreen => 'After dismissing an alarm';
+
+  @override
+  String get morningOff => 'Nothing';
+
+  @override
+  String get morningCounts => 'The day ahead, counts only';
+
+  @override
+  String get morningDetails => 'The day ahead, with names';
+
+  @override
+  String get morningHint =>
+      'Today\'s events from ZT Calendar, tasks from ZT Tasks and quests from ZT Quests, as ZT Clock last read them (signed in). Names also show over the lock screen.';
+
+  @override
+  String questGoal(String category) {
+    String _temp0 = intl.Intl.selectLogic(category, {
+      'fitness': 'Fitness',
+      'productivity': 'Productivity',
+      'nutrition': 'Nutrition',
+      'sleep': 'Sleep',
+      'learning': 'Learning',
+      'mindfulness': 'Mindfulness',
+      'other': 'Goal',
+    });
+    return '$_temp0';
+  }
 }
