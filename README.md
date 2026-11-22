@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.11.0)
+## What is in it now (0.14.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -52,12 +52,19 @@ Work happens on the `Dev` branch; `main` holds releases.
   time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
   named in the app's language, found by city or country, offline. Long-press
   to reorder, swipe to remove (with Undo).
-- **Quick Settings tiles**: Next alarm (opens the alarms) and Stopwatch
-  (starts and pauses it).
+- **Quick Settings tiles**: Next alarm (opens the alarms), Timer (says
+  when the next timer ends; a tap opens the keypad for a new one, or the
+  timers when one is going) and Stopwatch (starts and pauses it).
 - **Home screen widgets**, in the shared Zero-Trust widget look: Clock and
   next alarm (with Turn off once, and + for a new alarm), World clock (the
-  first four cities of the Clock tab, each with a live time) and an Analog
-  clock. No alarm labels on the home screen.
+  first four cities of the Clock tab, each with a live time), an Analog
+  clock, Timer (the timer that ends next, counting down, with Pause, +1:00,
+  Resume, Reset or Stop; with no timer, 1:00, 5:00 and 10:00 start one with
+  a tap) and Stopwatch (counting, with Start, Pause, Lap and Reset). No
+  alarm or timer labels on the home screen.
+- **Live status on Android 16**: a running timer or the stopwatch counts in
+  a chip in the status bar, and can be switched off in Android's
+  notification settings for the app.
 - **Skip public holidays** (repeating alarms): pick a holiday calendar in
   Settings > Public holidays (the same public calendars as ZT Calendar,
   downloaded with no account and refreshed weekly). Days off are ticked;
@@ -85,10 +92,21 @@ Work happens on the `Dev` branch; `main` holds releases.
   end-to-end encrypted backup and sync through the shared Zero-Trust
   account. An alarm arrives switched **off** on another phone until it is
   switched on there: each phone has its own switch. Edits (time, days,
-  label, Turn off once) sync; the newer edit wins. Like every Zero-Trust
-  app, a signed-in Clock asks to unlock after a restart or auto-lock; the
-  alarms ring either way.
+  label, Turn off once) sync; the newer edit wins. The rest is backed up
+  too, so a new phone looks like the old one: the world clock's cities
+  (in order), saved quick timers, the bedtime schedule, the holiday
+  calendar with its ticked days, and the night clock's dim red. For each
+  the newer change wins; a phone that already has its own cities or quick
+  timers keeps them next to the account's the first time. Whether bedtime
+  is on, and its Do Not Disturb, stay each phone's own, like an alarm's
+  switch. Like every Zero-Trust app, a signed-in Clock asks to unlock
+  after a restart or auto-lock; the alarms ring either way.
 - English and Hebrew, also on the ring screen and in notifications.
+- **Offline edition** (`zero-trust-clock-offline-…apk` in each release):
+  the same clock with no internet permission at all, so no account, no
+  sync and no downloads (no holiday calendars, no Log to ZT Time). It is
+  its own app, "ZT Clock Offline", and can sit next to the full one.
+  Settings says which edition is installed.
 
 ## How it is built
 
@@ -98,7 +116,7 @@ Work happens on the `Dev` branch; `main` holds releases.
 | Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. Timers (`TimerEngine`, exact AlarmManager wake-ups) and the stopwatch live here too, with their notifications. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
 | Screens | `lib/ui` | Flutter, on the shared core: Alarms, Clock, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
-| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. |
+| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. The settings groups (`kind = 'settings'`, ids `settings-cities`, `-quick-timers`, `-bedtime`, `-holidays`, `-night-clock`) go the same way, newer change first. |
 | Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
 The engine is the only thing that decides when an alarm rings; the screens
@@ -139,8 +157,12 @@ Where things are kept on the phone:
     the names follow.
 11. Add the Next alarm and Stopwatch tiles to Quick Settings; long-press the
     app icon for the shortcuts.
-12. Add the three widgets; tap Turn off once on the Clock widget and check
-    the alarm list; add a city and check the World clock widget.
+12. Add the five widgets; tap Turn off once on the Clock widget and check
+    the alarm list; add a city and check the World clock widget. On the
+    Timer widget tap 1:00, then Pause, Resume and +1:00, and let it ring:
+    the widget says "Time's up" with Stop. On the Stopwatch widget tap
+    Start, Lap, Pause and Reset. Restart the phone with a timer running:
+    the widget counts on from the right time.
 13. Bedtime tab: switch the schedule on with bedtime 16 minutes ahead and
     the 15-minute reminder, and wait for the reminder. Switch on Do Not
     Disturb, allow the access, and check it turns on at bedtime and off at
@@ -159,6 +181,15 @@ Where things are kept on the phone:
     the clock-plus icon, pick the project and Log. Open ZT Time: the entry
     is there with that length. Do the same from a 1-minute timer when it
     rings.
+19. Install the Offline APK next to the full one: it appears as "ZT Clock
+    Offline", Android's app info shows no network permission, Settings has
+    "Offline edition" and no sign-in, and a test alarm rings.
+20. Signed in on two phones: add two cities and a quick timer on one,
+    change the bedtime times and pick a holiday calendar. They appear on
+    the other within a moment; bedtime arrives switched off there.
+21. Android 16: start a timer and leave the app. Its time counts down in a
+    chip in the status bar. Add the Timer tile to Quick Settings: it says
+    "Until" and the end time.
 
 ## Development
 
@@ -166,8 +197,14 @@ Where things are kept on the phone:
 flutter pub get
 flutter analyze
 flutter test test/
-cd android && ./gradlew :app:testDebugUnitTest   # the scheduler's tests
+cd android && ./gradlew :app:testFullDebugUnitTest   # the scheduler's tests
 ```
+
+Two editions are built from the one project (`android/app/build.gradle.kts`):
+`flutter build apk --flavor full` (the default) and `--flavor offline`. The
+Offline edition's manifest (`android/app/src/offline`) takes the INTERNET
+permission out, `lib/app/edition.dart` hides what would need it, and CI
+checks the built APK has no network permission.
 
 Flutter 3.47.9 (the suite's pinned version). Strings are in
 `lib/l10n/app_en.arb` and `app_he.arb`; the native ring screen and

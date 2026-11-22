@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'alarm.dart';
 import 'bedtime.dart';
 import 'clock_timer.dart';
+import '../sync/settings_sync.dart';
 import '../world/world_zone.dart';
 
 /// The alarm engine on the phone. It keeps the alarms, hands them to
@@ -586,6 +588,23 @@ class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
   Future<BedtimeSchedule> build() => ref.watch(clockEngineProvider).bedtime();
 
   Future<void> save(BedtimeSchedule schedule) async {
+    final before = state.value;
+    state = AsyncData(schedule);
+    await ref.read(clockEngineProvider).setBedtime(schedule);
+    // A change to the part that is backed up (not this phone's switches).
+    if (before == null ||
+        jsonEncode(before.backup) != jsonEncode(schedule.backup)) {
+      await ref.read(settingsEditsProvider).touch(settingsName);
+    }
+  }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'bedtime';
+
+  /// Puts the account's schedule here. Whether it is on, and Do Not
+  /// Disturb, stay this phone's own.
+  Future<void> restore(Map<String, Object?> backup) async {
+    final schedule = (await future).withBackup(backup);
     state = AsyncData(schedule);
     await ref.read(clockEngineProvider).setBedtime(schedule);
   }
@@ -632,10 +651,14 @@ class ScreensaverNightController extends AsyncNotifier<bool> {
   @override
   Future<bool> build() => ref.watch(clockEngineProvider).screensaverNight();
 
-  Future<void> set(bool on) async {
+  Future<void> set(bool on, {bool byHand = true}) async {
     state = AsyncData(on);
     await ref.read(clockEngineProvider).setScreensaverNight(on);
+    if (byHand) await ref.read(settingsEditsProvider).touch(settingsName);
   }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'night-clock';
 }
 
 final screensaverNightProvider =

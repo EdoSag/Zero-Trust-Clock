@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Sign-in and sync with the shared Zero-Trust account (optional in
-         this app: alarms work without it and without a network). -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- INTERNET (sign-in and sync, optional) and the password-reset link
+         are in src/full/AndroidManifest.xml: the Offline edition has
+         neither. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
 
     <!-- Alarms. USE_EXACT_ALARM is the permission for alarm clocks: given
@@ -14,6 +14,9 @@
     <!-- The ringing alarm's notification and its screen over the lock screen. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- Android 16: a running timer or the stopwatch counts in a live chip
+         in the status bar. Given at install; the user can switch it off. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
     <!-- The service that rings. "System exempted" is the type Android
          keeps for apps continuing an exact alarm. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -53,13 +56,6 @@
             <!-- Links are handled by the app's own code (app_links, see
                  lib/app/email_links.dart), not Flutter's router. -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
-            <!-- Password-reset emails: https://zerotrust.bz/auth/clock/#token_hash=… -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https" android:host="zerotrust.bz" android:pathPrefix="/auth/clock/"/>
-            </intent-filter>
         </activity>
 
         <!-- The alarm engine (dev.sagron.zerotrustclock.engine). Every part
@@ -144,7 +140,25 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_analog_info"/>
         </receiver>
-        <!-- Quick Settings tiles: the next alarm, and the stopwatch. -->
+        <receiver
+            android:name=".engine.TimerWidget"
+            android:exported="false"
+            android:label="@string/widget_timer_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_timer_info"/>
+        </receiver>
+        <receiver
+            android:name=".engine.StopwatchWidget"
+            android:exported="false"
+            android:label="@string/widget_stopwatch_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_stopwatch_info"/>
+        </receiver>
+        <!-- Quick Settings tiles: the next alarm, the timer, and the stopwatch. -->
         <service
             android:name=".engine.ClockScreensaver"
             android:exported="true"
@@ -162,6 +176,16 @@
             android:exported="true"
             android:icon="@drawable/ic_stat_alarm"
             android:label="@string/tile_next_alarm"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".engine.TimerTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_timer"
+            android:label="@string/tile_timer"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE"/>

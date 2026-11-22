@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
 import '../engine/clock_engine.dart';
+import '../sync/settings_sync.dart';
 import 'world_zone.dart';
 
 /// The world clock's cities (time zone ids), in the user's order. Kept on
-/// this phone and handed to the engine for the widget.
+/// this phone, handed to the engine for the widget, and backed up with
+/// the account.
 class WorldCitiesController extends AsyncNotifier<List<String>> {
   static const _key = 'clock_world_cities';
   static const limit = 50;
@@ -28,7 +30,7 @@ class WorldCitiesController extends AsyncNotifier<List<String>> {
     }
   }
 
-  Future<void> _write(List<String> ids) async {
+  Future<void> _write(List<String> ids, {bool byHand = true}) async {
     state = AsyncData(ids);
     await _prefs.write(_key, jsonEncode(ids));
     try {
@@ -36,6 +38,17 @@ class WorldCitiesController extends AsyncNotifier<List<String>> {
     } on Object {
       // Only the widget; it reads them again next time.
     }
+    // A change made here is backed up (sync/settings_sections.dart).
+    if (byHand) await ref.read(settingsEditsProvider).touch(settingsName);
+  }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'cities';
+
+  /// Puts the account's cities here.
+  Future<void> restore(List<String> ids) async {
+    await future;
+    await _write(ids.take(limit).toList(), byHand: false);
   }
 
   Future<void> add(String id) async {

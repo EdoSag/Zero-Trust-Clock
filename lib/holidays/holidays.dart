@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
 import '../engine/clock_engine.dart';
+import '../sync/settings_sync.dart';
 import 'holiday_feed.dart';
 
 /// Downloads a holiday calendar; tests override it.
@@ -129,6 +130,29 @@ class HolidaysController extends AsyncNotifier<HolidaysState> {
   Future<void> choose(String? feedId) async {
     final now = await future;
     if (feedId == now.feedId) return;
+    await _set(feedId, const {});
+    await ref.read(settingsEditsProvider).touch(settingsName);
+    if (feedId != null) await refresh();
+  }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'holidays';
+
+  /// Puts the account's calendar and ticked days here, and downloads the
+  /// calendar if it is another one.
+  Future<void> restore(String? feedId, Map<String, bool> choices) async {
+    final now = await future;
+    if (HolidayCalendar.byId(feedId) == null) feedId = null;
+    if (feedId == now.feedId) {
+      await _prefs.write(_choicesKey, jsonEncode(choices));
+      await _publish(now.copyWith(choices: choices));
+      return;
+    }
+    await _set(feedId, feedId == null ? const {} : choices);
+    if (feedId != null) await refresh();
+  }
+
+  Future<void> _set(String? feedId, Map<String, bool> choices) async {
     if (feedId == null) {
       // The store has no delete: an empty value is "none".
       await _prefs.write(_feedKey, '');
@@ -138,9 +162,8 @@ class HolidaysController extends AsyncNotifier<HolidaysState> {
       return;
     }
     await _prefs.write(_feedKey, feedId);
-    await _prefs.write(_choicesKey, '');
-    await _publish(HolidaysState(feedId: feedId));
-    await refresh();
+    await _prefs.write(_choicesKey, choices.isEmpty ? '' : jsonEncode(choices));
+    await _publish(HolidaysState(feedId: feedId, choices: choices));
   }
 
   /// Downloads the chosen calendar again.
@@ -185,6 +208,7 @@ class HolidaysController extends AsyncNotifier<HolidaysState> {
     final choices = {...s.choices, h.day: skip};
     await _prefs.write(_choicesKey, jsonEncode(choices));
     await _publish(s.copyWith(choices: choices));
+    await ref.read(settingsEditsProvider).touch(settingsName);
   }
 
   Future<void> _publish(HolidaysState s) async {

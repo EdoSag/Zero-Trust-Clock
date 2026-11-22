@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
 import '../app/account.dart';
+import '../app/edition.dart';
 import '../engine/clock_engine.dart';
 import '../l10n/l10n.dart';
 import 'alarm_check_page.dart';
@@ -20,18 +21,29 @@ class ClockSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final night = ref.watch(screensaverNightProvider).value ?? true;
+    final offline = ref.watch(offlineEditionProvider);
     return ZtSettingsPage(
       accountOptional: true,
       showSyncStatus: true,
-      onSignIn: () => Navigator.of(
-        context,
-      ).push<void>(MaterialPageRoute(builder: (_) => const ClockSignInPage())),
+      // The Offline edition has no account to sign in to.
+      onSignIn: offline
+          ? null
+          : () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => const ClockSignInPage()),
+            ),
       onSignedOut: () => Navigator.of(context).popUntil((r) => r.isFirst),
       onOpenUrl: (url) => launchUrl(url, mode: LaunchMode.externalApplication),
       privacyPolicyUrl: Uri.parse('https://zerotrust.bz/privacy'),
       termsUrl: Uri.parse('https://zerotrust.bz/terms'),
       supportUrl: Uri.parse('https://zerotrust.bz/support'),
       appSection: [
+        if (offline)
+          ListTile(
+            key: const ValueKey('offlineEdition'),
+            leading: const Icon(Icons.cloud_off_outlined),
+            title: Text(l.offlineEdition),
+            subtitle: Text(l.offlineEditionHint),
+          ),
         ListTile(
           leading: const Icon(Icons.fact_check_outlined),
           title: Text(l.alarmCheck),
@@ -41,15 +53,17 @@ class ClockSettingsPage extends ConsumerWidget {
             MaterialPageRoute(builder: (_) => const AlarmCheckPage()),
           ),
         ),
-        ListTile(
-          leading: const Icon(Icons.beach_access_outlined),
-          title: Text(l.publicHolidays),
-          subtitle: Text(l.publicHolidaysHint),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(
-            context,
-          ).push<void>(MaterialPageRoute(builder: (_) => const HolidaysPage())),
-        ),
+        // Holiday calendars are downloaded, so not in the Offline edition.
+        if (!offline)
+          ListTile(
+            leading: const Icon(Icons.beach_access_outlined),
+            title: Text(l.publicHolidays),
+            subtitle: Text(l.publicHolidaysHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => const HolidaysPage()),
+            ),
+          ),
         ListTile(
           leading: const Icon(Icons.nightlight_outlined),
           title: Text(l.screensaver),

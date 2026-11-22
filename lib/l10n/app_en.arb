@@ -398,5 +398,7 @@
   "noProject": "No project",
   "logIt": "Log",
   "loggedToTime": "Logged in ZT Time",
-  "couldNotLog": "Couldn't log it. Check the connection and try again."
+  "couldNotLog": "Couldn't log it. Check the connection and try again.",
+  "offlineEdition": "Offline edition",
+  "offlineEditionHint": "No internet permission. No account, no sync, no downloads: nothing leaves this phone."
 }

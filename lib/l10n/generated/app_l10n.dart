@@ -1272,6 +1272,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Couldn\'t log it. Check the connection and try again.'**
   String get couldNotLog;
+
+  /// No description provided for @offlineEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline edition'**
+  String get offlineEdition;
+
+  /// No description provided for @offlineEditionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet permission. No account, no sync, no downloads: nothing leaves this phone.'**
+  String get offlineEditionHint;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

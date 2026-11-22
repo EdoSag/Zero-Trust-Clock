@@ -678,4 +678,11 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get couldNotLog => 'לא הצלחנו לרשום. כדאי לבדוק את החיבור ולנסות שוב.';
+
+  @override
+  String get offlineEdition => 'מהדורה לא מקוונת';
+
+  @override
+  String get offlineEditionHint =>
+      'בלי הרשאת אינטרנט. בלי חשבון, בלי סנכרון ובלי הורדות: שום דבר לא יוצא מהטלפון הזה.';
 }

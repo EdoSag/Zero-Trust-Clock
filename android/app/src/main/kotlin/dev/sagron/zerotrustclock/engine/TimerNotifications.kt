@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import dev.sagron.zerotrustclock.R
 import dev.sagron.zerotrustclock.engine.core.ClockTimer
 import dev.sagron.zerotrustclock.engine.core.Stopwatch
@@ -104,6 +105,7 @@ object TimerNotifications {
             .setVisibility(Notification.VISIBILITY_PRIVATE)
             .setPublicVersion(build(false).build())
         if (t.running) {
+            full.live()
             full.addAction(timerAction(context, t, R.string.timer_pause, TimerReceiver.ACTION_PAUSE))
             full.addAction(timerAction(context, t, R.string.timer_add_minute, TimerReceiver.ACTION_ADD_MINUTE))
         } else {
@@ -120,8 +122,12 @@ object TimerNotifications {
         }
     }
 
-    private fun timerAction(context: Context, t: ClockTimer, text: Int, action: String): Notification.Action {
-        val pending = PendingIntent.getBroadcast(
+    private fun timerAction(context: Context, t: ClockTimer, text: Int, action: String): Notification.Action =
+        Notification.Action.Builder(null, context.getString(text), timerPending(context, t, action)).build()
+
+    /** What a timer's button (in its notification or the widget) sends. */
+    fun timerPending(context: Context, t: ClockTimer, action: String): PendingIntent =
+        PendingIntent.getBroadcast(
             context,
             t.code * 8 + action.hashCode().and(7),
             Intent(context, TimerReceiver::class.java)
@@ -129,8 +135,17 @@ object TimerNotifications {
                 .setData(Uri.parse("ztclock://timer/${t.id}")),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        return Notification.Action.Builder(null, context.getString(text), pending).build()
-    }
+
+    /** A button that needs no timer: a quick start, "Stop" on the ringing ones. */
+    fun timersPending(context: Context, action: String, seconds: Long = 0): PendingIntent =
+        PendingIntent.getBroadcast(
+            context,
+            41,
+            Intent(context, TimerReceiver::class.java)
+                .setAction(action)
+                .setData(Uri.parse("ztclock://timer-new/$seconds")),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
     /**
      * The finished timers' notification: "Time's up", over the lock screen
@@ -218,27 +233,50 @@ object TimerNotifications {
             b.setUsesChronometer(true)
                 .setWhen(now - s.elapsed(now))
                 .setShowWhen(true)
+            b.live()
             if (s.laps.isNotEmpty()) b.setContentText(context.getString(R.string.stopwatch_lap, s.laps.size + 1))
-            b.addAction(stopwatchAction(context, R.string.timer_pause, TimerReceiver.ACTION_STOPWATCH_PAUSE, 31))
-            b.addAction(stopwatchAction(context, R.string.stopwatch_lap_button, TimerReceiver.ACTION_STOPWATCH_LAP, 32))
+            b.addAction(stopwatchAction(context, R.string.timer_pause, TimerReceiver.ACTION_STOPWATCH_PAUSE, CODE_STOPWATCH_PAUSE))
+            b.addAction(stopwatchAction(context, R.string.stopwatch_lap_button, TimerReceiver.ACTION_STOPWATCH_LAP, CODE_STOPWATCH_LAP))
         } else {
             b.setShowWhen(false)
                 .setContentText(context.getString(R.string.stopwatch_paused, durationText(s.elapsed(now), roundUp = false)))
-            b.addAction(stopwatchAction(context, R.string.timer_resume, TimerReceiver.ACTION_STOPWATCH_START, 33))
-            b.addAction(stopwatchAction(context, R.string.timer_reset, TimerReceiver.ACTION_STOPWATCH_RESET, 34))
+            b.addAction(stopwatchAction(context, R.string.timer_resume, TimerReceiver.ACTION_STOPWATCH_START, CODE_STOPWATCH_START))
+            b.addAction(stopwatchAction(context, R.string.timer_reset, TimerReceiver.ACTION_STOPWATCH_RESET, CODE_STOPWATCH_RESET))
         }
         notify(context, null, STOPWATCH_ID, b.build())
     }
 
-    private fun stopwatchAction(context: Context, text: Int, action: String, code: Int): Notification.Action {
-        val pending = PendingIntent.getBroadcast(
+    private fun stopwatchAction(context: Context, text: Int, action: String, code: Int): Notification.Action =
+        Notification.Action.Builder(null, context.getString(text), stopwatchPending(context, action, code)).build()
+
+    /** What a stopwatch button (in its notification or the widget) sends. */
+    fun stopwatchPending(context: Context, action: String, code: Int): PendingIntent =
+        PendingIntent.getBroadcast(
             context,
             code,
             Intent(context, TimerReceiver::class.java).setAction(action),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        return Notification.Action.Builder(null, context.getString(text), pending).build()
+
+    const val CODE_STOPWATCH_PAUSE = 31
+    const val CODE_STOPWATCH_LAP = 32
+    const val CODE_STOPWATCH_START = 33
+    const val CODE_STOPWATCH_RESET = 34
+
+    /**
+     * Android 16's live status: a running timer or stopwatch counts in a
+     * chip in the status bar (and stays on top of the lock screen), like
+     * a call. Older versions ignore the request; the user can switch it
+     * off per app in Android's notification settings.
+     */
+    private fun Notification.Builder.live(): Notification.Builder = apply {
+        if (Build.VERSION.SDK_INT >= 36) {
+            addExtras(Bundle().apply { putBoolean(EXTRA_REQUEST_PROMOTED_ONGOING, true) })
+        }
     }
+
+    /** `Notification.EXTRA_REQUEST_PROMOTED_ONGOING` (API 36). */
+    private const val EXTRA_REQUEST_PROMOTED_ONGOING = "android.requestPromotedOngoing"
 
     private fun notify(context: Context, tag: String?, id: Int, notification: Notification) {
         try {

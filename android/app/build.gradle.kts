@@ -37,6 +37,24 @@ android {
         versionName = flutter.versionName
     }
 
+    // Two editions from one module:
+    //   full     the clock with the optional Zero-Trust account.
+    //            `flutter build apk --flavor full` (the default flavor).
+    //   offline  the same clock with no INTERNET permission: no account, no
+    //            sync, no downloads. `flutter build apk --flavor offline`.
+    flavorDimensions += "edition"
+    productFlavors {
+        create("full") {
+            dimension = "edition"
+        }
+        create("offline") {
+            dimension = "edition"
+            // Its own app, so it can sit next to the full edition and never
+            // updates into it.
+            applicationIdSuffix = ".offline"
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (System.getenv("CM_BUILD_DIR") != null) {

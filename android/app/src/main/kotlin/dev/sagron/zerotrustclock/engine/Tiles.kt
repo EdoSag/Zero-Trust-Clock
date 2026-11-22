@@ -10,16 +10,18 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.text.format.DateFormat
 import dev.sagron.zerotrustclock.R
+import dev.sagron.zerotrustclock.engine.core.TimerMath
 import java.util.Date
 
 /**
- * Quick Settings tiles: the next alarm (opens the alarms), and the
- * stopwatch (starts and pauses it).
+ * Quick Settings tiles: the next alarm (opens the alarms), the timer
+ * (opens a new timer, or the timers when one is going), and the stopwatch
+ * (starts and pauses it).
  */
 object Tiles {
-    /** Asks Android to redraw both tiles (after an alarm or the stopwatch changed). */
+    /** Asks Android to redraw the tiles (after an alarm, a timer or the stopwatch changed). */
     fun refresh(context: Context) {
-        for (cls in listOf(NextAlarmTile::class.java, StopwatchTile::class.java)) {
+        for (cls in listOf(NextAlarmTile::class.java, TimerTile::class.java, StopwatchTile::class.java)) {
             try {
                 TileService.requestListeningState(context, ComponentName(context, cls))
             } catch (_: Exception) {
@@ -78,6 +80,45 @@ class NextAlarmTile : TileService() {
     override fun onClick() {
         super.onClick()
         Tiles.open(this, Tabs.ALARMS)
+    }
+}
+
+/**
+ * The timer that ends next: "Until 14:35" while it runs (a time of day,
+ * so it stays right while the panel is open). A tap opens the keypad for
+ * a new timer, or the timers when one is going.
+ */
+class TimerTile : TileService() {
+    override fun onStartListening() {
+        super.onStartListening()
+        val tile = qsTile ?: return
+        val text = Loc.wrap(this)
+        val t = TimerMath.featured(TimerStore.load(this))
+        tile.icon = Icon.createWithResource(this, R.drawable.ic_stat_timer)
+        tile.label = text.getString(R.string.tile_timer)
+        tile.state = if (t != null && (t.running || t.ringing)) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+        if (Build.VERSION.SDK_INT >= 29) {
+            tile.subtitle = when {
+                t == null -> text.getString(R.string.tile_timer_set)
+                t.ringing -> text.getString(R.string.timer_times_up)
+                t.running -> text.getString(
+                    R.string.tile_timer_until,
+                    DateFormat.getTimeFormat(this).format(Date(t.endsAt!!)),
+                )
+                t.paused -> text.getString(
+                    R.string.timer_paused_left,
+                    TimerNotifications.durationText(t.left(TimerEngine.now())),
+                )
+                else -> TimerNotifications.name(text, t, withLabel = false)
+            }
+        }
+        tile.updateTile()
+    }
+
+    override fun onClick() {
+        super.onClick()
+        val any = TimerStore.load(this).any { it.running || it.paused || it.ringing }
+        Tiles.open(this, if (any) Tabs.TIMERS else "newTimer")
     }
 }
 
