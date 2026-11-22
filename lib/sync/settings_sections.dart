@@ -283,9 +283,16 @@ final settingsVaultProvider = FutureProvider<SettingsVault?>((ref) async {
 final settingsSyncProvider = FutureProvider<SettingsSync?>((ref) async {
   final vault = await ref.watch(settingsVaultProvider.future);
   if (vault == null) return null;
+  String? account;
+  try {
+    account = ref.read(accountServiceProvider).currentUserId;
+  } on Object {
+    account = null;
+  }
   return SettingsSync(
     sections: ref.watch(settingsSectionsProvider),
     vault: vault,
     edits: ref.watch(settingsEditsProvider),
+    accountId: account ?? '',
   );
 });

@@ -29,11 +29,17 @@ class FakeSettingsVault implements SettingsVault {
   final _changes = StreamController<void>.broadcast();
   int writes = 0;
 
+  /// Runs while a save is under way, once (something done meanwhile).
+  Future<void> Function()? duringSave;
+
   @override
   Future<Map<String, SyncedSettings?>> read() async => {...items};
 
   @override
   Future<void> save(SyncedSettings settings) async {
+    final meanwhile = duringSave;
+    duringSave = null;
+    if (meanwhile != null) await meanwhile();
     writes++;
     expect(settings.id, startsWith('settings-'));
     items[settings.id.substring('settings-'.length)] = settings;
@@ -88,19 +94,29 @@ class WordsSection implements SettingsSection {
 
 /// One phone with the in-memory group.
 class WordsPhone {
-  WordsPhone(this.vault, {bool merges = false, int Function()? clock})
-    : section = WordsSection(merges: merges),
-      prefs = InMemoryPreferencesStore() {
+  WordsPhone(
+    this.vault, {
+    bool merges = false,
+    int Function()? clock,
+    PreferencesStore? store,
+    String accountId = '',
+  }) : section = WordsSection(merges: merges),
+       prefs = store ?? InMemoryPreferencesStore() {
     edits = SettingsEdits(
       prefs,
       now: () => DateTime.fromMillisecondsSinceEpoch((clock ?? () => 9000)()),
     );
-    sync = SettingsSync(sections: [section], vault: vault, edits: edits);
+    sync = SettingsSync(
+      sections: [section],
+      vault: vault,
+      edits: edits,
+      accountId: accountId,
+    );
   }
 
   final FakeSettingsVault vault;
   final WordsSection section;
-  final InMemoryPreferencesStore prefs;
+  final PreferencesStore prefs;
   late final SettingsEdits edits;
   late final SettingsSync sync;
 

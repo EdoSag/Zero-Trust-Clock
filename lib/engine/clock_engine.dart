@@ -707,6 +707,32 @@ final stopwatchProvider =
       StopwatchController.new,
     );
 
+/// Saves the bedtime's wake-up alarm: it rings at the schedule's wake-up
+/// time on the mornings after its nights. Everything else about [alarm]
+/// (sound, snooze, wake-up task and its code) stays as it is; with no
+/// [alarm] a new one is made, named [label]. Returns its id.
+Future<String> saveWakeAlarm(
+  ClockEngine engine,
+  BedtimeSchedule s,
+  ClockAlarm? alarm, {
+  required String label,
+}) => engine.save(
+  id: alarm?.id,
+  hour: s.wakeHour,
+  minute: s.wakeMinute,
+  days: s.wakeDays,
+  label: alarm?.label ?? label,
+  vibrate: alarm?.vibrate ?? true,
+  snoozeMinutes: alarm?.snoozeMinutes ?? 10,
+  sound: alarm?.sound,
+  soundName: alarm?.soundName,
+  gradual: alarm?.gradual ?? false,
+  ringMinutes: alarm?.ringMinutes ?? ClockAlarm.defaultRingMinutes,
+  task: alarm?.task,
+  taskCode: alarm?.taskCode,
+  skipHolidays: alarm?.skipHolidays ?? false,
+);
+
 /// The bedtime schedule. [save] writes it to the engine, which sets the
 /// reminder and Do Not Disturb.
 class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
@@ -729,8 +755,35 @@ class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
 
   /// Puts the account's schedule here. Whether it is on, Do Not Disturb,
   /// the sunrise and saving sleep stay this phone's own.
+  ///
+  /// A phone that has its own wake-up alarm switched on keeps it as the
+  /// one Bedtime controls, moved to the account's times: the other
+  /// phone's alarm arrives switched off here, and taking its id would
+  /// leave this phone's own ringing with the Bedtime switch showing off.
   Future<void> restore(Map<String, Object?> backup) async {
-    final schedule = (await future).withBackup(backup);
+    final before = await future;
+    var schedule = before.withBackup(backup);
+    final own = before.wakeAlarmId;
+    if (own != null && own != schedule.wakeAlarmId) {
+      final engine = ref.read(clockEngineProvider);
+      try {
+        final mine = (await engine.list())
+            .where((a) => a.id == own && a.enabled)
+            .firstOrNull;
+        if (mine != null) {
+          schedule = schedule.copyWith(wakeAlarmId: own);
+          final days = schedule.wakeDays;
+          if (mine.hour != schedule.wakeHour ||
+              mine.minute != schedule.wakeMinute ||
+              mine.days.length != days.length ||
+              !mine.days.containsAll(days)) {
+            await saveWakeAlarm(engine, schedule, mine, label: mine.label);
+          }
+        }
+      } on Object {
+        // The alarms can't be read: the account's schedule as it is.
+      }
+    }
     state = AsyncData(schedule);
     await ref.read(clockEngineProvider).setBedtime(schedule);
   }

@@ -121,9 +121,22 @@ class SettingsEdits {
   final PreferencesStore _prefs;
   final DateTime Function() _now;
   static const _timesKey = 'clock_settings_edited';
+
+  /// Before 0.17.1: the groups compared, for whichever account it was.
   static const _metKey = 'clock_settings_met';
+  static const _metByAccountKey = 'clock_settings_met_by_account';
 
   final _changes = StreamController<void>.broadcast();
+
+  /// Each change reads the saved map and writes it back. One at a time,
+  /// so a backup round and a change made by hand can't lose each other's.
+  Future<void> _queue = Future.value();
+
+  Future<T> _oneAtATime<T>(Future<T> Function() work) {
+    final result = _queue.then((_) => work());
+    _queue = result.then((_) {}, onError: (Object _) {});
+    return result;
+  }
 
   /// Fires after [touch]: there is something to back up.
   Stream<void> get changes => _changes.stream;
@@ -144,8 +157,25 @@ class SettingsEdits {
   /// 0: never changed by hand here.
   Future<int> editedAt(String name) async => (await _times())[name] ?? 0;
 
-  Future<void> setEditedAt(String name, int at) async =>
-      _prefs.write(_timesKey, jsonEncode({...await _times(), name: at}));
+  Future<void> setEditedAt(String name, int at) => _oneAtATime(
+    () async =>
+        _prefs.write(_timesKey, jsonEncode({...await _times(), name: at})),
+  );
+
+  /// Sets the time of [name] to [at], but only when it still is [was]: a
+  /// change made by hand in the meantime keeps its own, newer time.
+  Future<bool> setEditedAtIf(
+    String name, {
+    required int was,
+    required int at,
+  }) => _oneAtATime(() async {
+    final times = await _times();
+    if ((times[name] ?? 0) != was) return false;
+    if (was != at) {
+      await _prefs.write(_timesKey, jsonEncode({...times, name: at}));
+    }
+    return true;
+  });
 
   /// The user changed the group [name] now.
   Future<void> touch(String name) async {
@@ -155,26 +185,53 @@ class SettingsEdits {
 
   int nowMillis() => _now().millisecondsSinceEpoch;
 
-  Future<Set<String>> _met() async {
+  static Set<String> _names(Object? list) => {
+    if (list case final List names)
+      for (final name in names)
+        if (name is String) name,
+  };
+
+  /// The groups each account was compared with, by account.
+  Future<Map<String, Set<String>>> _met(String account) async {
     try {
-      final raw = await _prefs.read(_metKey);
-      if (raw == null || raw.isEmpty) return {};
-      return {
-        for (final name in jsonDecode(raw) as List)
-          if (name is String) name,
-      };
+      final raw = await _prefs.read(_metByAccountKey);
+      if (raw != null && raw.isNotEmpty) {
+        return {
+          for (final MapEntry(:key, :value) in (jsonDecode(raw) as Map).entries)
+            if (key is String) key: _names(value),
+        };
+      }
+      // Kept without the account before: it was the one signed in then,
+      // which is the first to come by now.
+      final old = await _prefs.read(_metKey);
+      if (old == null || old.isEmpty) return {};
+      return {account: _names(jsonDecode(old))};
     } on Object {
       return {};
     }
   }
 
-  /// Whether this phone and the account compared [name] before.
-  Future<bool> met(String name) async => (await _met()).contains(name);
+  /// Whether this phone and [account] compared [name] before. Another
+  /// account on the same phone starts over, so its first meeting keeps
+  /// both sides too.
+  Future<bool> met(String name, {String account = ''}) async =>
+      (await _met(account))[account]?.contains(name) ?? false;
 
-  Future<void> setMet(String name) async {
-    final met = await _met();
-    if (met.add(name)) await _prefs.write(_metKey, jsonEncode(met.toList()));
-  }
+  Future<void> setMet(String name, {String account = ''}) => _oneAtATime(
+    () async {
+      final met = await _met(account);
+      if (!met.putIfAbsent(account, () => {}).add(name) &&
+          await _prefs.read(_metByAccountKey) != null) {
+        return;
+      }
+      await _prefs.write(
+        _metByAccountKey,
+        jsonEncode({
+          for (final MapEntry(:key, :value) in met.entries) key: value.toList(),
+        }),
+      );
+    },
+  );
 }
 
 final settingsEditsProvider = Provider<SettingsEdits>(
@@ -194,11 +251,15 @@ class SettingsSync {
     required this.sections,
     required this.vault,
     required this.edits,
+    this.accountId = '',
   });
 
   final List<SettingsSection> sections;
   final SettingsVault vault;
   final SettingsEdits edits;
+
+  /// Whose backup [vault] is (the account's id).
+  final String accountId;
 
   Future<bool>? _running;
   bool _again = false;
@@ -236,61 +297,89 @@ class SettingsSync {
       if (account.containsKey(name) && account[name] == null) continue;
       final theirs = account[name];
       final here = await section.read();
-      var hereAt = await edits.editedAt(name);
+      final savedAt = await edits.editedAt(name);
+      var hereAt = savedAt;
       // Set up before the app kept times (or by a restore): older than
       // any change the account can hold, but still this phone's own.
       if (hereAt == 0 && !_same(here, section.fresh)) hereAt = 1;
       final id = '${SyncedSettings.prefix}$name';
+      // The group's time after this round. Not written when the user
+      // changed the group meanwhile: that change keeps its newer time,
+      // and the round it started sends it.
+      Future<void> settle(int at) =>
+          edits.setEditedAtIf(name, was: savedAt, at: at);
+      // Asked right before the account's copy is written over the group:
+      // a change made by hand since this round read it must stay. It is
+      // left for the next round, which sees its newer time.
+      Future<bool> changedMeanwhile() async {
+        if (await edits.editedAt(name) == savedAt &&
+            _same(await section.read(), here)) {
+          return false;
+        }
+        _again = true;
+        return true;
+      }
 
       if (theirs == null) {
         if (hereAt > 0) {
           await vault.save(
             SyncedSettings(id: id, editedAt: hereAt, data: here),
           );
-          await edits.setEditedAt(name, hereAt);
-          await edits.setMet(name);
+          await settle(hereAt);
+          await edits.setMet(name, account: accountId);
         }
         continue;
       }
       if (_same(here, theirs.data)) {
-        if (hereAt != theirs.editedAt) {
-          await edits.setEditedAt(name, theirs.editedAt);
+        if (hereAt > theirs.editedAt) {
+          // Changed and changed back here, later than the account knows:
+          // the later time is sent, so an older change elsewhere can't
+          // win over it.
+          await vault.save(
+            SyncedSettings(id: id, editedAt: hereAt, data: here),
+          );
+          await settle(hereAt);
+        } else if (hereAt < theirs.editedAt) {
+          await settle(theirs.editedAt);
         }
-        await edits.setMet(name);
+        await edits.setMet(name, account: accountId);
         continue;
       }
-      final both = hereAt > 0 && !await edits.met(name)
+      final both = hereAt > 0 && !await edits.met(name, account: accountId)
           ? section.merge(here, theirs.data)
           : null;
       if (hereAt == 0) {
         // Nothing set up here: a new phone, or a group left as it came.
+        if (await changedMeanwhile()) continue;
         await section.apply(theirs.data);
-        await edits.setEditedAt(name, theirs.editedAt);
+        await settle(theirs.editedAt);
         changed = true;
       } else if (both != null) {
         // This phone and the account meet for the first time, each with
         // its own: both are kept.
+        if (await changedMeanwhile()) continue;
         final at = edits.nowMillis();
         if (!_same(both, here)) {
           await section.apply(both);
           changed = true;
         }
-        await edits.setEditedAt(name, at);
+        await settle(at);
         if (!_same(both, theirs.data)) {
           await vault.save(SyncedSettings(id: id, editedAt: at, data: both));
         }
       } else if (theirs.editedAt > hereAt) {
+        if (await changedMeanwhile()) continue;
         await section.apply(theirs.data);
-        await edits.setEditedAt(name, theirs.editedAt);
+        await settle(theirs.editedAt);
         changed = true;
       } else if (hereAt > theirs.editedAt) {
         await vault.save(SyncedSettings(id: id, editedAt: hereAt, data: here));
-        await edits.setEditedAt(name, hereAt);
+        await settle(hereAt);
       }
       // The same time and still different: the account's was taken before
       // and this phone keeps it its own way (a city it doesn't know). Not
       // sent back, so two phones can never push at each other for ever.
-      await edits.setMet(name);
+      await edits.setMet(name, account: accountId);
     }
     return changed;
   }
