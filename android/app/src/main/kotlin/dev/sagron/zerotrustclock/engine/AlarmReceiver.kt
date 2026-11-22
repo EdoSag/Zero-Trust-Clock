@@ -20,6 +20,8 @@ class AlarmReceiver : BroadcastReceiver() {
             UpcomingAlarms.ACTION_WINDOW -> AlarmScheduler.rescheduleAll(context)
             // The sunrise before the wake-up alarm starts: the same.
             Sunrise.ACTION_START -> AlarmScheduler.rescheduleAll(context)
+            // A smart wake window opens: the same starts listening.
+            SmartWakeWindows.ACTION_OPEN -> AlarmScheduler.rescheduleAll(context)
             UpcomingAlarms.ACTION_SKIP -> AlarmEngine.skipOnce(context, id)
             UpcomingAlarms.ACTION_OFF -> AlarmEngine.setEnabled(context, id, false)
         }

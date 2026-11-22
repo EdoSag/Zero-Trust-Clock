@@ -45,7 +45,7 @@ class RingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_RING -> ring(intent.getStringExtra(EXTRA_ID))
+            ACTION_RING -> ring(intent.getStringExtra(EXTRA_ID), intent.getLongExtra(EXTRA_EARLY_FOR, 0L))
             ACTION_SNOOZE -> end(Outcome.SNOOZE, intent.getIntExtra(EXTRA_MINUTES, 0))
             ACTION_DISMISS -> if (taskWaiting(intent)) openTask() else end(Outcome.DISMISS)
             else -> if (ringingId == null) stopNow()
@@ -71,7 +71,8 @@ class RingService : Service() {
         }
     }
 
-    private fun ring(id: String?) {
+    /** [earlyFor]: the smart wake window rings ahead of this ring (epoch ms), 0 for a ring on time. */
+    private fun ring(id: String?, earlyFor: Long = 0L) {
         val text = Loc.wrap(this)
         val alarm = if (id == null) null else AlarmStore.load(this).firstOrNull { it.id == id }
         // First of all: Android gives a started foreground service a few
@@ -92,7 +93,9 @@ class RingService : Service() {
         AlarmStore.update(this) { list ->
             val i = list.indexOfFirst { it.id == alarm.id }
             if (i >= 0) {
-                list[i] = list[i].copy(armedFor = null, snoozeUntil = null)
+                val rung = list[i].copy(armedFor = null, snoozeUntil = null)
+                // Rung early: the ring it was early for is done.
+                list[i] = if (earlyFor > 0L) AlarmSchedule.servedEarly(rung, earlyFor) else rung
             }
         }
         AlarmNotifications.cancelSnoozed(this, alarm.id)
@@ -263,6 +266,9 @@ class RingService : Service() {
         const val ACTION_DISMISS = "dev.sagron.zerotrustclock.action.DISMISS"
         const val EXTRA_ID = "id"
 
+        /** On a ring from the smart wake window: the time it was due (epoch ms). */
+        const val EXTRA_EARLY_FOR = "earlyFor"
+
         /** On a snooze: its length in minutes, when not the alarm's own. */
         const val EXTRA_MINUTES = "minutes"
 
@@ -281,8 +287,9 @@ class RingService : Service() {
         @Volatile
         var onEnded: (() -> Unit)? = null
 
-        fun ring(context: Context, id: String) {
+        fun ring(context: Context, id: String, earlyFor: Long = 0L) {
             val intent = Intent(context, RingService::class.java).setAction(ACTION_RING).putExtra(EXTRA_ID, id)
+                .putExtra(EXTRA_EARLY_FOR, earlyFor)
             try {
                 context.startForegroundService(intent)
             } catch (_: Exception) {

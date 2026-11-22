@@ -3,7 +3,11 @@ package dev.sagron.zerotrustclock.engine
 import android.content.Context
 import dev.sagron.zerotrustclock.engine.core.Alarm
 import dev.sagron.zerotrustclock.engine.core.AlarmSchedule
+import dev.sagron.zerotrustclock.engine.core.CalendarLink
+import dev.sagron.zerotrustclock.engine.core.ShiftPattern
+import dev.sagron.zerotrustclock.engine.core.SmartWake
 import dev.sagron.zerotrustclock.engine.core.WakeTasks
+import dev.sagron.zerotrustclock.engine.core.withCalendar
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -28,6 +32,8 @@ object AlarmEngine {
             val o = a.toJson()
             o.remove("armedFor")
             o.remove("code")
+            o.remove("calendarPlan")
+            o.remove("servedUntil")
             o.put("label", LabelStore.get(context, a.id))
             val next = AlarmSchedule.nextRing(a, now, pauseAll, holidays)
             if (next != null) o.put("nextRing", next.at.toInstant().toEpochMilli())
@@ -59,6 +65,13 @@ object AlarmEngine {
         val skipHolidays: Boolean = false,
         /** Rings once on this day (yyyy-MM-dd); null: the next such time. */
         val date: String? = null,
+        /** A shift pattern instead of weekdays (see Alarm.cycle), and its first day. */
+        val cycle: String? = null,
+        val cycleStart: String? = null,
+        /** Linked to ZT Calendar, or null. */
+        val calendar: CalendarLink? = null,
+        /** Smart wake window in minutes, 0 off. */
+        val smartWake: Int = 0,
     )
 
     /**
@@ -75,7 +88,8 @@ object AlarmEngine {
         options: Options,
     ): String {
         val now = now()
-        val pickedDay = if (days.isEmpty()) AlarmSchedule.parseDay(options.date) else null
+        val shift = ShiftPattern.of(options.cycle, options.cycleStart)
+        val pickedDay = if (days.isEmpty() && shift == null) AlarmSchedule.parseDay(options.date) else null
         val saved = AlarmStore.update(context) { list ->
             val i = if (id == null) -1 else list.indexOfFirst { it.id == id }
             val old = if (i >= 0) list[i] else null
@@ -87,12 +101,13 @@ object AlarmEngine {
                         hour = hour,
                         minute = minute,
                     ),
-                    hour, minute, days, now,
+                    hour, minute, days, now, shift?.days, shift?.start?.toString(),
                 )
             } else if (old.hour != hour || old.minute != minute || old.days != days ||
+                old.shift != shift ||
                 (pickedDay != null && pickedDay.toString() != old.date)
             ) {
-                AlarmSchedule.withTime(old.copy(enabled = true), hour, minute, days, now)
+                AlarmSchedule.withTime(old.copy(enabled = true), hour, minute, days, now, shift?.days, shift?.start?.toString())
             } else {
                 old
             }
@@ -115,8 +130,9 @@ object AlarmEngine {
                     null
                 },
                 skipHolidays = options.skipHolidays,
+                smartWake = SmartWake.parse(options.smartWake),
                 updatedAt = if (old == null) System.currentTimeMillis() else editedAt(old),
-            )
+            ).withCalendar(options.calendar)
             if (i >= 0) list[i] = alarm else list.add(alarm)
             alarm
         }
@@ -217,6 +233,10 @@ object AlarmEngine {
         task: String?,
         skipHolidays: Boolean,
         taskCode: String? = null,
+        cycle: String? = null,
+        cycleStart: String? = null,
+        calendar: CalendarLink? = null,
+        smartWake: Int = 0,
     ): Boolean {
         if (id == RingService.ringingId) return false
         val taken = AlarmStore.update(context) { list ->
@@ -225,16 +245,21 @@ object AlarmEngine {
             // Edited here since sync read it: this phone's edit is newer
             // and goes to the account on the next round instead.
             if (old != null && old.updatedAt > updatedAt) return@update false
-            val newDate = if (days.isEmpty()) date else null
-            val retimed = old == null || old.hour != hour || old.minute != minute || old.days != days ||
-                (days.isEmpty() && old.date != newDate)
-            val newlyPaused = days.isNotEmpty() && pauseUntil != null && pauseUntil != old?.pauseUntil
+            val shift = ShiftPattern.of(cycle, cycleStart)
+            val repeats = days.isNotEmpty() || shift != null
+            val newDays = if (shift != null) emptySet() else days
+            val newDate = if (repeats) null else date
+            val retimed = old == null || old.hour != hour || old.minute != minute || old.days != newDays ||
+                old.shift != shift || (!repeats && old.date != newDate)
+            val newlyPaused = repeats && pauseUntil != null && pauseUntil != old?.pauseUntil
             val keepSnooze = old?.snoozeUntil != null && enabled && !retimed && !newlyPaused
             val alarm = (old ?: Alarm(id = id, code = (list.maxOfOrNull { it.code } ?: 0) + 1, hour = hour, minute = minute))
                 .copy(
                     hour = hour,
                     minute = minute,
-                    days = days,
+                    days = newDays,
+                    cycle = shift?.days,
+                    cycleStart = shift?.start?.toString(),
                     date = newDate,
                     skipDate = skipDate,
                     vibrate = vibrate,
@@ -242,13 +267,15 @@ object AlarmEngine {
                     enabled = enabled,
                     snoozeUntil = if (keepSnooze) old?.snoozeUntil else null,
                     updatedAt = updatedAt,
-                    pauseUntil = if (days.isEmpty()) null else pauseUntil,
+                    pauseUntil = if (repeats) pauseUntil else null,
                     gradual = gradual,
                     ringMinutes = ringMinutes.coerceIn(1, 60),
                     task = WakeTasks.parse(task, taskCode),
                     taskCode = if (WakeTasks.parse(task, taskCode) == WakeTasks.SCAN) taskCode else null,
                     skipHolidays = skipHolidays,
-                )
+                    smartWake = SmartWake.parse(smartWake),
+                    servedUntil = if (retimed) null else old?.servedUntil,
+                ).withCalendar(calendar)
             if (i >= 0) list[i] = alarm else list.add(alarm)
             if (!keepSnooze) AlarmNotifications.cancelSnoozed(context, id)
             true
@@ -257,6 +284,28 @@ object AlarmEngine {
         LabelStore.set(context, id, label)
         AlarmScheduler.rescheduleAll(context)
         return true
+    }
+
+    /**
+     * The day's first ZT Calendar event for the linked alarms, as the app
+     * just read it: `{alarmId: {"through": "yyyy-MM-dd", "days": {"yyyy-MM-dd": minutes}}}`.
+     * Times only. Not an edit by hand: nothing syncs because of it.
+     */
+    fun setCalendarPlans(context: Context, json: String) {
+        val o = org.json.JSONObject(json)
+        val today = now().toLocalDate()
+        AlarmStore.update(context) { list ->
+            for (i in list.indices) {
+                val a = list[i]
+                if (a.calendar == null) continue
+                val entry = o.optJSONObject(a.id) ?: continue
+                val through = AlarmSchedule.parseDay(entry.optString("through", "")) ?: continue
+                val plan = Alarm.plan(entry.optJSONObject("days"))
+                    .filterKeys { k -> AlarmSchedule.parseDay(k)?.isBefore(today) == false }
+                list[i] = a.copy(calendarPlan = plan, calendarThrough = through.toString())
+            }
+        }
+        AlarmScheduler.rescheduleAll(context)
     }
 
     /**

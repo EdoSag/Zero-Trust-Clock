@@ -105,4 +105,38 @@
     <string name="health_title">Sleep in Health Connect</string>
     <string name="health_text">When \"Save sleep to Health Connect\" is on in Bedtime, ZT Clock writes one sleep entry for each night: from your bedtime until you dismiss the wake-up alarm, or until your wake-up time when it did not ring. It is your schedule, not a measurement.\n\nZT Clock only writes sleep. It never reads your health data, and it does not back up, sync or send these entries anywhere.\n\nYou can switch it off in Bedtime at any time. Entries already saved stay in Health Connect, where you can delete them.</string>
     <string name="health_policy">Privacy policy: https://zerotrust.bz/privacy/</string>
+    <!-- Smart wake window -->
+    <string name="channel_smart_wake">Smart wake</string>
+    <string name="channel_smart_wake_about">Shown while the phone listens for movement before an alarm</string>
+    <string name="smart_wake_title">Smart wake</string>
+    <string name="smart_wake_text">Rings early if you stir, by %1$s at the latest</string>
+    <!-- The morning screen after an alarm is dismissed -->
+    <string name="morning_hello">Good morning</string>
+    <string name="morning_hello_afternoon">Good afternoon</string>
+    <string name="morning_hello_evening">Good evening</string>
+    <string name="morning_close">Close</string>
+    <string name="morning_nothing">Nothing planned today</string>
+    <string name="morning_no_events">No events today</string>
+    <string name="morning_first_at">%1$s, the first at %2$s</string>
+    <string name="morning_no_tasks">No tasks due today</string>
+    <string name="morning_tasks_overdue">%1$s, %2$s</string>
+    <string name="morning_more">and %1$d more</string>
+    <string name="morning_note_counts">From ZT Calendar, ZT Tasks and ZT Quests, as ZT Clock last read them. Names are shown when Settings say so.</string>
+    <string name="morning_note_details">From ZT Calendar, ZT Tasks and ZT Quests, as ZT Clock last read them.</string>
+    <plurals name="morning_events">
+        <item quantity="one">1 event today</item>
+        <item quantity="other">%d events today</item>
+    </plurals>
+    <plurals name="morning_tasks">
+        <item quantity="one">1 task due today</item>
+        <item quantity="other">%d tasks due today</item>
+    </plurals>
+    <plurals name="morning_overdue">
+        <item quantity="one">1 overdue</item>
+        <item quantity="other">%d overdue</item>
+    </plurals>
+    <plurals name="morning_quests">
+        <item quantity="one">1 daily quest</item>
+        <item quantity="other">%d daily quests</item>
+    </plurals>
 </resources>
