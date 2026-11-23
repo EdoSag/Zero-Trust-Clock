@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
+import dev.sagron.zerotrustclock.engine.core.RingVolume
 
 /**
  * Plays a ring on the alarm volume and vibrates, for alarms and timers.
@@ -22,8 +23,17 @@ class Ringer(private val context: Context, private val handler: Handler) {
     private var focus: AudioFocusRequest? = null
     private var volume = 1f
 
-    fun start(sound: String?, gradual: Boolean, vibrate: Boolean) {
+    /** The alarm volume before this ring raised it, and what it raised it to. */
+    private var volumeBefore: Int? = null
+    private var volumeRaisedTo = 0
+
+    /**
+     * [minVolumePercent]: "ring at least this loud". A lower alarm volume
+     * is raised for this ring and put back when it ends.
+     */
+    fun start(sound: String?, gradual: Boolean, vibrate: Boolean, minVolumePercent: Int = 0) {
         stop()
+        raiseVolume(minVolumePercent)
         startSound(sound, gradual)
         if (vibrate) startVibration()
     }
@@ -31,6 +41,39 @@ class Ringer(private val context: Context, private val handler: Handler) {
     fun stop() {
         stopSound()
         stopVibration()
+        restoreVolume()
+    }
+
+    private fun raiseVolume(percent: Int) {
+        if (percent <= 0) return
+        try {
+            val audio = context.getSystemService(AudioManager::class.java) ?: return
+            val current = audio.getStreamVolume(AudioManager.STREAM_ALARM)
+            val want = RingVolume.atLeast(
+                current,
+                audio.getStreamMaxVolume(AudioManager.STREAM_ALARM),
+                percent,
+            )
+            if (want <= current) return
+            audio.setStreamVolume(AudioManager.STREAM_ALARM, want, 0)
+            volumeBefore = current
+            volumeRaisedTo = want
+        } catch (_: Exception) {
+            // Not allowed to change it (a Do Not Disturb mode): rings as it is.
+        }
+    }
+
+    /** Back to the volume before the ring, unless it was changed by hand meanwhile. */
+    private fun restoreVolume() {
+        val before = volumeBefore ?: return
+        volumeBefore = null
+        try {
+            val audio = context.getSystemService(AudioManager::class.java) ?: return
+            if (audio.getStreamVolume(AudioManager.STREAM_ALARM) == volumeRaisedTo) {
+                audio.setStreamVolume(AudioManager.STREAM_ALARM, before, 0)
+            }
+        } catch (_: Exception) {
+        }
     }
 
     private fun startSound(sound: String?, gradual: Boolean) {

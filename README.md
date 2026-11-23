@@ -7,7 +7,7 @@ the other Zero-Trust apps, built on
 
 Work happens on the `Dev` branch; `main` holds releases.
 
-## What is in it now (0.11.0)
+## What is in it now (0.18.0)
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -20,21 +20,56 @@ Work happens on the `Dev` branch; `main` holds releases.
   unlock (GrapheneOS restarts a phone left locked for 18 hours).
 - **Alarm check** (Settings, or the warning on the home screen): everything
   on the phone that can stop an alarm, each with a Fix button, a test alarm
-  in 10 seconds and a restart test.
+  in 10 seconds and a restart test. On Xiaomi, Redmi, POCO, Huawei, Honor
+  and Samsung phones it also says which of the maker's own battery
+  settings to change, with a button to the app's settings (advice only:
+  Android can't tell the app how those are set).
 - **Pause until** a date (a repeating alarm is silent through that day and
   on again after it, by itself), and **Pause all alarms until** for a trip
   (repeating alarms only; one set for a single day still rings).
 - **Alarm on a date**: an alarm without repeat days can ring on a picked day.
-- **Sounds**: the app's chime, the phone's alarm sound, a phone sound or any
-  audio file. A picked sound is copied into the app, so it plays before the
-  first unlock too; if it can't play, the chime rings, never silence.
+- **Sounds**: five of the app's own (ZT chime, Bells, Beeps, Sunrise and
+  Buzzer, each with a button to hear it), the phone's alarm sound, a phone
+  sound or any audio file. A picked sound is copied into the app, so it
+  plays before the first unlock too; if it can't play, the chime rings,
+  never silence. The app's sounds are made by `tool/make_alarm_sounds.py`.
 - **Gradually louder** and **Silence after** (1 to 30 minutes), per alarm.
+- **Ring at least this loud** (Settings; off, 30, 50, 70 or 100%): if the
+  phone's alarm volume is lower, it is raised while an alarm rings and put
+  back afterwards. Timers are not changed.
 - **Slide to dismiss** on the ring screen, so a sleepy tap can't silence it.
-- **"Set an alarm for 7"** from assistants and other apps (Android's
-  standard alarm request).
+- **Volume buttons** (Settings): while an alarm rings on its screen they
+  change the volume, snooze or dismiss. A wake-up task is still asked for.
+- **From assistants and other apps** (Android's standard alarm requests):
+  "set an alarm for 7", "snooze" (also "snooze for 5 minutes") and
+  "dismiss my alarm". Dismiss ends the ringing alarm, or a snooze; an
+  alarm with a wake-up task still asks for it. With nothing ringing the
+  app opens: which coming alarm to skip is never guessed from a voice.
 - **Upcoming alarm notification**, from two hours before a ring, with
   **Turn off once** (or **Dismiss** on an alarm that rings once). Silent,
   and the label is not shown on the lock screen.
+- **Shift patterns** (in an alarm's editor, instead of weekdays): for
+  rotating schedules such as 2 on, 2 off or 4 on, 4 off, up to 56 days.
+  Pick a preset or tick the days of the cycle, and which day today is.
+  Two shifts (days and nights) are two alarms with the same cycle. Skip,
+  pause and holidays work as on weekday alarms.
+- **Follow ZT Calendar** (signed in, repeating alarms): ring from 15 minutes
+  to 3 hours before the day's first event. Either only earlier than
+  the alarm's own time (a later first event keeps the usual time) or
+  always, never before a chosen earliest time, and optionally on days the
+  alarm doesn't ring (a morning event). All-day and day-long events don't
+  count; hidden calendars are left out. Clock reads ZT Calendar, end-to-end
+  encrypted, when it is opened, for the next 14 days; a day it hasn't read
+  rings at the usual time.
+- **Smart wake window** (10, 20 or 30 minutes): in that window before the
+  alarm, the phone's motion sensor listens, and the alarm rings early when
+  you move (as when sleep gets light). It rings on time if you don't. Only
+  while the window is open; nothing is recorded.
+- **Morning screen** (Settings, on by default with counts only): after an
+  alarm is dismissed on its ring screen, today's events from ZT Calendar,
+  tasks due (and overdue) from ZT Tasks and quests from ZT Quests. With
+  "with names" it also lists them. Each row opens its app. Signed out, or
+  before the phone's first unlock, there is no morning screen.
 - **Timers.** Several at once, each with a label, Pause, +1:00 and Reset.
   Type a length on the keypad or tap a quick timer (1, 3, 5, 10, 15, 30
   minutes, plus your own). Timers run and ring in the engine, so they ring
@@ -47,31 +82,64 @@ Work happens on the `Dev` branch; `main` holds releases.
   just rung, becomes a time entry in ZT Time, ending now, with what it was
   and a project from ZT Time. It goes to the same account, end-to-end
   encrypted, and is pushed later if the phone is offline.
-- **"Set a timer for 5 minutes"** from assistants and other apps.
+- **"Set a timer for 5 minutes"** and **"stop the timer"** from assistants
+  and other apps.
 - **World clock** (Clock tab): the time here, then your cities with their
   time, day and distance ("Tomorrow, 7 h ahead"). Every city Android knows,
   named in the app's language, found by city or country, offline. Long-press
   to reorder, swipe to remove (with Undo).
-- **Quick Settings tiles**: Next alarm (opens the alarms) and Stopwatch
-  (starts and pauses it).
+- **Home time when travelling** (Settings > Home time zone: this phone's
+  time zone now, any city, or off): while the phone is in another time
+  zone, the Clock tab shows home's time under the time here. At home
+  nothing is added. Backed up with the account.
+- **Quick Settings tiles**: Next alarm (opens the alarms), Timer (says
+  when the next timer ends; a tap opens the keypad for a new one, or the
+  timers when one is going) and Stopwatch (starts and pauses it).
 - **Home screen widgets**, in the shared Zero-Trust widget look: Clock and
   next alarm (with Turn off once, and + for a new alarm), World clock (the
-  first four cities of the Clock tab, each with a live time) and an Analog
-  clock. No alarm labels on the home screen.
+  first four cities of the Clock tab, each with a live time), an Analog
+  clock, Timer (the timer that ends next, counting down, with Pause, +1:00,
+  Resume, Reset or Stop; with no timer, 1:00, 5:00 and 10:00 start one with
+  a tap) and Stopwatch (counting, with Start, Pause, Lap and Reset). No
+  alarm or timer labels on the home screen.
+- **Live status on Android 16**: a running timer or the stopwatch counts in
+  a chip in the status bar, and can be switched off in Android's
+  notification settings for the app.
 - **Skip public holidays** (repeating alarms): pick a holiday calendar in
   Settings > Public holidays (the same public calendars as ZT Calendar,
   downloaded with no account and refreshed weekly). Days off are ticked;
   untick any day an alarm should still ring on. A calendar that doesn't
   mark days off skips nothing until you tick days. This phone only.
-- **Wake-up tasks** (in an alarm's editor): solve 3 sums or shake the
-  phone 30 times before the alarm can be dismissed, so it can't be
-  silenced half asleep. Snooze still works, and Dismiss in the
+- **Wake-up tasks** (in an alarm's editor): solve 3 sums, shake the
+  phone 30 times or scan a code before the alarm can be dismissed, so it
+  can't be silenced half asleep. Snooze still works, and Dismiss in the
   notification or the app opens the task on the ring screen.
+- **Scan a code**: save any QR code or barcode that is away from the bed
+  (the toothpaste, a note on the fridge); the alarm is dismissed by
+  scanning the same one. Codes are read on the phone (ZXing, no Google
+  services), no picture is kept, and only a hash of the code is stored, so
+  what it says is never saved. It works over the lock screen and has a
+  light for a dark room. If the camera can't be used (no permission, in
+  use, broken), the alarm asks for sums instead, so it can always be
+  dismissed. The saved code syncs with the alarm.
 - **Bedtime** tab: when your nights start and end and which nights, with
   the length of sleep. A reminder before bed (15, 30 or 60 minutes), Do Not
   Disturb through the night (alarms still ring; it is only turned off again
   if the app turned it on), and a wake-up alarm on the mornings after your
   nights that follows the schedule when you change it.
+- **Sunrise before the alarm** (Bedtime, off by default): for 15 minutes
+  before the wake-up alarm the screen goes from dark red to warm white and
+  gets brighter, over the lock screen, with no sound. It follows the
+  alarm's real next ring, so a morning that is turned off once, paused or a
+  holiday has none. It is not shown when the phone is already in use, and
+  Close ends it for that morning.
+- **Save sleep to Health Connect** (Bedtime, off by default, Android 14
+  and later): each night is written as one sleep entry, from bedtime until
+  the wake-up alarm is dismissed, or until the wake-up time when it did
+  not ring. It is the schedule, not a measurement, and is marked as entered
+  by hand. The app only writes sleep; it never reads health data, and the
+  entries are not backed up or synced. A night that can't be written yet
+  (phone locked after a restart) is written later.
 - **Sleep sounds**: white, pink or deep noise made on the phone (no files,
   no network), with a sleep timer and a 30-second fade-out.
 - **Night clock screensaver**: the time, date and next alarm on black
@@ -85,10 +153,22 @@ Work happens on the `Dev` branch; `main` holds releases.
   end-to-end encrypted backup and sync through the shared Zero-Trust
   account. An alarm arrives switched **off** on another phone until it is
   switched on there: each phone has its own switch. Edits (time, days,
-  label, Turn off once) sync; the newer edit wins. Like every Zero-Trust
-  app, a signed-in Clock asks to unlock after a restart or auto-lock; the
-  alarms ring either way.
+  label, Turn off once) sync; the newer edit wins. The rest is backed up
+  too, so a new phone looks like the old one: the world clock's cities
+  (in order) and where home is, saved quick timers, the bedtime schedule,
+  what the volume buttons do and the least a ring is loud, the holiday
+  calendar with its ticked days, and the night clock's dim red. For each
+  the newer change wins; a phone that already has its own cities or quick
+  timers keeps them next to the account's the first time. Whether bedtime
+  is on, its Do Not Disturb, the sunrise and saving sleep stay each
+  phone's own, like an alarm's switch. Like every Zero-Trust app, a signed-in Clock asks to unlock
+  after a restart or auto-lock; the alarms ring either way.
 - English and Hebrew, also on the ring screen and in notifications.
+- **Offline edition** (`zero-trust-clock-offline-…apk` in each release):
+  the same clock with no internet permission at all, so no account, no
+  sync and no downloads (no holiday calendars, no Log to ZT Time). It is
+  its own app, "ZT Clock Offline", and can sit next to the full one.
+  Settings says which edition is installed.
 
 ## How it is built
 
@@ -98,7 +178,7 @@ Work happens on the `Dev` branch; `main` holds releases.
 | Engine | `android/.../engine` | Stores the alarms, hands them to Android (`setAlarmClock`), rings them (sound, vibration, ring screen), sets them again after a restart. Timers (`TimerEngine`, exact AlarmManager wake-ups) and the stopwatch live here too, with their notifications. |
 | Bridge | `android/.../EngineBridge.kt`, `lib/engine` | How the screens talk to the engine. |
 | Screens | `lib/ui` | Flutter, on the shared core: Alarms, Clock, Timers and Stopwatch tabs, alarm editor, Alarm check, settings. |
-| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. |
+| Sync | `lib/sync` | Compares the engine's alarms with the account's encrypted copy (`app = 'clock'`, `kind = 'alarm'`) and hands each side the other's newer edits. The settings groups (`kind = 'settings'`, ids `settings-cities`, `-quick-timers`, `-bedtime`, `-holidays`, `-night-clock`, `-ring`, `-home`) go the same way, newer change first. |
 | Account | `lib/app` | Optional sign-in, unlock, password-reset links (`zerotrust.bz/auth/clock/`). |
 
 The engine is the only thing that decides when an alarm rings; the screens
@@ -139,8 +219,12 @@ Where things are kept on the phone:
     the names follow.
 11. Add the Next alarm and Stopwatch tiles to Quick Settings; long-press the
     app icon for the shortcuts.
-12. Add the three widgets; tap Turn off once on the Clock widget and check
-    the alarm list; add a city and check the World clock widget.
+12. Add the five widgets; tap Turn off once on the Clock widget and check
+    the alarm list; add a city and check the World clock widget. On the
+    Timer widget tap 1:00, then Pause, Resume and +1:00, and let it ring:
+    the widget says "Time's up" with Stop. On the Stopwatch widget tap
+    Start, Lap, Pause and Reset. Restart the phone with a timer running:
+    the widget counts on from the right time.
 13. Bedtime tab: switch the schedule on with bedtime 16 minutes ahead and
     the 15-minute reminder, and wait for the reminder. Switch on Do Not
     Disturb, allow the access, and check it turns on at bedtime and off at
@@ -159,6 +243,52 @@ Where things are kept on the phone:
     the clock-plus icon, pick the project and Log. Open ZT Time: the entry
     is there with that length. Do the same from a 1-minute timer when it
     rings.
+19. Install the Offline APK next to the full one: it appears as "ZT Clock
+    Offline", Android's app info shows no network permission, Settings has
+    "Offline edition" and no sign-in, and a test alarm rings.
+20. Signed in on two phones: add two cities and a quick timer on one,
+    change the bedtime times and pick a holiday calendar. They appear on
+    the other within a moment; bedtime arrives switched off there.
+21. Android 16: start a timer and leave the app. Its time counts down in a
+    chip in the status bar. Add the Timer tile to Quick Settings: it says
+    "Until" and the end time.
+
+22. Sounds: in an alarm's editor open Sound, play each of the five, pick
+    Buzzer and ring a test alarm in Alarm check with that alarm's sound
+    (or set the alarm a minute ahead).
+23. Settings > Ring at least this loud > 70%. Turn the phone's alarm volume
+    all the way down and let an alarm ring: it is loud, and after
+    dismissing it the alarm volume is back down.
+24. Settings > Volume buttons > Snooze. Let an alarm ring with the phone
+    locked and press a volume button: it snoozes. Then Dismiss, with an
+    alarm that has a wake-up task: the task opens.
+25. Scan a code: in an alarm's editor pick Scan a code, allow the camera
+    and scan a barcode twice in view. Let it ring with the phone locked,
+    slide to dismiss: the camera opens over the lock screen; another code
+    says "This is another code", the saved one dismisses. Try Light. Then
+    take the camera permission away in Android's settings and let it ring
+    again: it asks for sums.
+26. With an alarm ringing say "snooze" and "dismiss my alarm" to the
+    assistant; with a timer ringing, "stop the timer".
+27. Sunrise: Bedtime > Wake-up alarm on > Sunrise before the alarm on. Set
+    the wake-up time 17 minutes ahead, lock the phone and put it down. Two
+    minutes later the screen lights up dark red over the lock screen and
+    gets lighter and brighter; at the time the alarm's own screen takes
+    over. Try again and press Close: it stays closed until the alarm. Try
+    again with the phone in your hand and the screen on: no sunrise.
+28. Save sleep (Android 14 and later): Bedtime > Save sleep to Health
+    Connect > allow. With the schedule on, dismiss the wake-up alarm in
+    the morning, then open Health Connect > Data and access > Sleep: one
+    entry from bedtime to when you dismissed it, from ZT Clock. In Health
+    Connect > App permissions > ZT Clock, the privacy link opens the app's
+    own explanation.
+29. Home time: Settings > Home time zone > This phone's time zone now.
+    The Clock tab shows nothing new. Change the phone's time zone in
+    Android's settings (Date and time, automatic off): the Clock tab shows
+    "Home: …" with home's time under the time here. Set it back.
+30. On a Xiaomi, Huawei or Samsung phone: Settings > Alarm check shows the
+    maker's battery advice above "After a restart", and Open goes to the
+    app's settings. On a Pixel there is no such line.
 
 ## Development
 
@@ -166,8 +296,14 @@ Where things are kept on the phone:
 flutter pub get
 flutter analyze
 flutter test test/
-cd android && ./gradlew :app:testDebugUnitTest   # the scheduler's tests
+cd android && ./gradlew :app:testFullDebugUnitTest   # the scheduler's tests
 ```
+
+Two editions are built from the one project (`android/app/build.gradle.kts`):
+`flutter build apk --flavor full` (the default) and `--flavor offline`. The
+Offline edition's manifest (`android/app/src/offline`) takes the INTERNET
+permission out, `lib/app/edition.dart` hides what would need it, and CI
+checks the built APK has no network permission.
 
 Flutter 3.47.9 (the suite's pinned version). Strings are in
 `lib/l10n/app_en.arb` and `app_he.arb`; the native ring screen and

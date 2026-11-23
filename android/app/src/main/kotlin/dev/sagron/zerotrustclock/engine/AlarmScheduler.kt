@@ -72,6 +72,16 @@ object AlarmScheduler {
         } catch (_: Exception) {
             // Only the notification; the rings themselves are set.
         }
+        try {
+            Sunrise.refresh(context, alarms, now, pauseAll, holidays)
+        } catch (_: Exception) {
+            // Only the sunrise; the rings themselves are set.
+        }
+        try {
+            SmartWakeWindows.refresh(context, alarms, now, pauseAll, holidays)
+        } catch (_: Exception) {
+            // Only the early chance; the rings themselves are set.
+        }
         for (a in missed) AlarmNotifications.showMissed(Loc.wrap(context), a)
         Tiles.refresh(context)
         Widgets.refresh(context)
@@ -105,6 +115,7 @@ object AlarmScheduler {
     fun cancel(context: Context, alarm: Alarm) {
         val manager = context.getSystemService(AlarmManager::class.java) ?: return
         manager.cancel(firePendingIntent(context, alarm))
+        SmartWakeWindows.cancel(context, alarm)
     }
 
     private fun firePendingIntent(context: Context, alarm: Alarm): PendingIntent =

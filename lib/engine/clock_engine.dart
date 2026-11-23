@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'alarm.dart';
 import 'bedtime.dart';
 import 'clock_timer.dart';
+import '../sync/settings_sync.dart';
 import '../world/world_zone.dart';
 
 /// The alarm engine on the phone. It keeps the alarms, hands them to
@@ -29,9 +31,26 @@ abstract class ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
+    ShiftPattern? shift,
+    CalendarLink? calendar,
+    int smartWake = 0,
   });
+
+  /// Opens the camera to save a code for [WakeTask.scan]. The code's
+  /// hash, or null when nothing was scanned.
+  Future<String?> scanCode();
+
+  /// Plays [sound] once, on the alarm volume ([ClockAlarm.sound] values).
+  Future<void> previewSound(String? sound);
+  Future<void> stopPreview();
+
+  /// What the volume buttons do while an alarm rings, and how loud a ring
+  /// is at least.
+  Future<RingSettings> ringSettings();
+  Future<void> setRingSettings(RingSettings settings);
 
   /// "Pause until": a repeating alarm is silent through [until].
   Future<void> pause(String id, DateTime until);
@@ -51,6 +70,14 @@ abstract class ClockEngine {
   /// [ClockAlarm.updatedAt]. [ClockAlarm.enabled] is this phone's own
   /// switch. False while that alarm rings (nothing changed; try later).
   Future<bool> importSynced(ClockAlarm alarm);
+
+  /// Each linked alarm's first ZT Calendar event per day:
+  /// `{alarmId: {"through": "yyyy-MM-dd", "days": {"yyyy-MM-dd": minutes}}}`.
+  /// Not an edit: nothing syncs because of it.
+  Future<void> setCalendarPlans(Map<String, Object?> plans);
+
+  /// The morning screen's data (see `morningBrief`), or null to forget it.
+  Future<void> setMorningBrief(String? json);
 
   /// "Turn off once": skips the next ring; the alarm stays on.
   Future<void> skipOnce(String id);
@@ -140,6 +167,12 @@ abstract class ClockEngine {
   /// Whether the app may turn Do Not Disturb on (Android's setting).
   Future<bool> dndAccess();
 
+  /// Whether sleep can be saved to Health Connect here, and is allowed.
+  Future<SleepAccess> sleepAccess();
+
+  /// Asks to write sleep to Health Connect. True when allowed.
+  Future<bool> requestSleepAccess();
+
   /// Sleep sounds playing now, or null.
   Future<SleepSoundState?> sleepSound();
   Future<void> playSleepSound(SleepSound sound, int minutes);
@@ -149,6 +182,9 @@ abstract class ClockEngine {
 
   /// Every city Android knows, named in the app's language.
   Future<List<WorldZone>> zones();
+
+  /// The phone's own time zone ("Asia/Jerusalem"), or null.
+  Future<String?> localZone();
 
   /// The offsets from UTC right now of [ids].
   Future<Map<String, Duration>> zoneOffsets(List<String> ids);
@@ -224,6 +260,19 @@ class MethodChannelClockEngine implements ClockEngine {
       await _channel.invokeMethod<bool>('dndAccess') ?? false;
 
   @override
+  Future<SleepAccess> sleepAccess() async {
+    final m = await _channel.invokeMapMethod<String, Object?>('sleepAccess');
+    return SleepAccess(
+      available: m?['available'] == true,
+      allowed: m?['allowed'] == true,
+    );
+  }
+
+  @override
+  Future<bool> requestSleepAccess() async =>
+      await _channel.invokeMethod<bool>('requestSleepAccess') ?? false;
+
+  @override
   Future<SleepSoundState?> sleepSound() async {
     final m = await _channel.invokeMethod<Map<Object?, Object?>>('sleepSound');
     if (m == null) return null;
@@ -243,6 +292,9 @@ class MethodChannelClockEngine implements ClockEngine {
 
   @override
   Future<void> stopSleepSound() => _channel.invokeMethod('stopSleepSound');
+
+  @override
+  Future<String?> localZone() => _channel.invokeMethod<String>('localZone');
 
   @override
   Future<List<WorldZone>> zones() async => WorldZone.listFromJson(
@@ -350,8 +402,12 @@ class MethodChannelClockEngine implements ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
+    ShiftPattern? shift,
+    CalendarLink? calendar,
+    int smartWake = 0,
   }) async =>
       await _channel.invokeMethod<String>('save', {
         'id': id,
@@ -366,10 +422,35 @@ class MethodChannelClockEngine implements ClockEngine {
         'gradual': gradual,
         'ringMinutes': ringMinutes,
         'task': task?.name,
+        'taskCode': taskCode,
         'skipHolidays': skipHolidays,
         'date': date == null ? null : dayKey(date),
+        'cycle': shift?.days,
+        'cycleStart': shift?.start,
+        'calendar': calendar?.toJson(),
+        'smartWake': smartWake,
       }) ??
       '';
+
+  @override
+  Future<String?> scanCode() => _channel.invokeMethod<String>('scanCode');
+
+  @override
+  Future<void> previewSound(String? sound) =>
+      _channel.invokeMethod('previewSound', {'sound': sound});
+
+  @override
+  Future<void> stopPreview() => _channel.invokeMethod('stopPreview');
+
+  @override
+  Future<RingSettings> ringSettings() async => RingSettings.fromMap(
+    await _channel.invokeMethod<Map<Object?, Object?>>('ringSettings') ??
+        const {},
+  );
+
+  @override
+  Future<void> setRingSettings(RingSettings settings) =>
+      _channel.invokeMethod('setRingSettings', settings.toMap());
 
   @override
   Future<void> pause(String id, DateTime until) =>
@@ -416,9 +497,22 @@ class MethodChannelClockEngine implements ClockEngine {
         'gradual': a.gradual,
         'ringMinutes': a.ringMinutes,
         'task': a.task?.name,
+        'taskCode': a.taskCode,
         'skipHolidays': a.skipHolidays,
+        'cycle': a.shift?.days,
+        'cycleStart': a.shift?.start,
+        'calendar': a.calendar?.toJson(),
+        'smartWake': a.smartWake,
       }) ??
       false;
+
+  @override
+  Future<void> setCalendarPlans(Map<String, Object?> plans) =>
+      _channel.invokeMethod('setCalendarPlans', {'json': jsonEncode(plans)});
+
+  @override
+  Future<void> setMorningBrief(String? json) =>
+      _channel.invokeMethod('setMorningBrief', {'json': json});
 
   @override
   Future<void> setEnabled(String id, bool enabled) =>
@@ -468,6 +562,95 @@ class MethodChannelClockEngine implements ClockEngine {
 }
 
 enum SoundKind { ringtone, file }
+
+/// The app's own alarm sounds besides the chime, as [ClockAlarm.sound]
+/// values. They are part of the app, so they play before the first unlock.
+const builtInSounds = [
+  'builtin:bells',
+  'builtin:beeps',
+  'builtin:sunrise',
+  'builtin:buzzer',
+];
+
+/// What the volume buttons do while an alarm rings on its screen.
+enum VolumeButtons {
+  /// Change the alarm volume, as everywhere else.
+  volume,
+  snooze,
+
+  /// Dismiss. An alarm with a wake-up task still asks for it.
+  dismiss;
+
+  static VolumeButtons parse(Object? name) {
+    for (final v in values) {
+      if (v.name == name) return v;
+    }
+    return volume;
+  }
+}
+
+/// Settings of every ring on this phone.
+class RingSettings {
+  const RingSettings({
+    this.volumeButtons = VolumeButtons.volume,
+    this.minVolume = 0,
+    this.morning = MorningScreen.counts,
+  });
+
+  final VolumeButtons volumeButtons;
+
+  /// "Ring at least this loud": percent of the phone's loudest alarm
+  /// volume, one of [minVolumeChoices]. 0: off.
+  final int minVolume;
+
+  static const minVolumeChoices = [0, 30, 50, 70, 100];
+
+  /// The day ahead after an alarm is dismissed.
+  final MorningScreen morning;
+
+  factory RingSettings.fromMap(Map<Object?, Object?> m) {
+    final percent = switch (m['minVolume']) {
+      final num n => n.toInt(),
+      _ => 0,
+    };
+    return RingSettings(
+      volumeButtons: VolumeButtons.parse(m['volumeButtons']),
+      minVolume: minVolumeChoices.contains(percent) ? percent : 0,
+      morning: MorningScreen.parse(m['morning']),
+    );
+  }
+
+  Map<String, Object?> toMap() => {
+    'volumeButtons': volumeButtons.name,
+    'minVolume': minVolume,
+    'morning': morning.name,
+  };
+
+  RingSettings copyWith({
+    VolumeButtons? volumeButtons,
+    int? minVolume,
+    MorningScreen? morning,
+  }) => RingSettings(
+    volumeButtons: volumeButtons ?? this.volumeButtons,
+    minVolume: minVolume ?? this.minVolume,
+    morning: morning ?? this.morning,
+  );
+}
+
+/// The morning screen after an alarm is dismissed: off, how many events,
+/// tasks and quests today has, or with their names too (also over the
+/// lock screen).
+enum MorningScreen {
+  off,
+  counts,
+  details;
+
+  static MorningScreen parse(Object? v) => switch (v) {
+    'off' => off,
+    'details' => details,
+    _ => counts,
+  };
+}
 
 class PickedSound {
   const PickedSound(this.sound, this.name);
@@ -579,6 +762,32 @@ final stopwatchProvider =
       StopwatchController.new,
     );
 
+/// Saves the bedtime's wake-up alarm: it rings at the schedule's wake-up
+/// time on the mornings after its nights. Everything else about [alarm]
+/// (sound, snooze, wake-up task and its code) stays as it is; with no
+/// [alarm] a new one is made, named [label]. Returns its id.
+Future<String> saveWakeAlarm(
+  ClockEngine engine,
+  BedtimeSchedule s,
+  ClockAlarm? alarm, {
+  required String label,
+}) => engine.save(
+  id: alarm?.id,
+  hour: s.wakeHour,
+  minute: s.wakeMinute,
+  days: s.wakeDays,
+  label: alarm?.label ?? label,
+  vibrate: alarm?.vibrate ?? true,
+  snoozeMinutes: alarm?.snoozeMinutes ?? 10,
+  sound: alarm?.sound,
+  soundName: alarm?.soundName,
+  gradual: alarm?.gradual ?? false,
+  ringMinutes: alarm?.ringMinutes ?? ClockAlarm.defaultRingMinutes,
+  task: alarm?.task,
+  taskCode: alarm?.taskCode,
+  skipHolidays: alarm?.skipHolidays ?? false,
+);
+
 /// The bedtime schedule. [save] writes it to the engine, which sets the
 /// reminder and Do Not Disturb.
 class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
@@ -586,6 +795,50 @@ class BedtimeController extends AsyncNotifier<BedtimeSchedule> {
   Future<BedtimeSchedule> build() => ref.watch(clockEngineProvider).bedtime();
 
   Future<void> save(BedtimeSchedule schedule) async {
+    final before = state.value;
+    state = AsyncData(schedule);
+    await ref.read(clockEngineProvider).setBedtime(schedule);
+    // A change to the part that is backed up (not this phone's switches).
+    if (before == null ||
+        jsonEncode(before.backup) != jsonEncode(schedule.backup)) {
+      await ref.read(settingsEditsProvider).touch(settingsName);
+    }
+  }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'bedtime';
+
+  /// Puts the account's schedule here. Whether it is on, Do Not Disturb,
+  /// the sunrise and saving sleep stay this phone's own.
+  ///
+  /// A phone that has its own wake-up alarm switched on keeps it as the
+  /// one Bedtime controls, moved to the account's times: the other
+  /// phone's alarm arrives switched off here, and taking its id would
+  /// leave this phone's own ringing with the Bedtime switch showing off.
+  Future<void> restore(Map<String, Object?> backup) async {
+    final before = await future;
+    var schedule = before.withBackup(backup);
+    final own = before.wakeAlarmId;
+    if (own != null && own != schedule.wakeAlarmId) {
+      final engine = ref.read(clockEngineProvider);
+      try {
+        final mine = (await engine.list())
+            .where((a) => a.id == own && a.enabled)
+            .firstOrNull;
+        if (mine != null) {
+          schedule = schedule.copyWith(wakeAlarmId: own);
+          final days = schedule.wakeDays;
+          if (mine.hour != schedule.wakeHour ||
+              mine.minute != schedule.wakeMinute ||
+              mine.days.length != days.length ||
+              !mine.days.containsAll(days)) {
+            await saveWakeAlarm(engine, schedule, mine, label: mine.label);
+          }
+        }
+      } on Object {
+        // The alarms can't be read: the account's schedule as it is.
+      }
+    }
     state = AsyncData(schedule);
     await ref.read(clockEngineProvider).setBedtime(schedule);
   }
@@ -600,6 +853,12 @@ final bedtimeProvider =
 /// from Android's settings.
 final dndAccessProvider = FutureProvider<bool>(
   (ref) => ref.watch(clockEngineProvider).dndAccess(),
+);
+
+/// Whether sleep can be saved to Health Connect, and is allowed.
+/// Invalidate after coming back from Health Connect.
+final sleepAccessProvider = FutureProvider<SleepAccess>(
+  (ref) => ref.watch(clockEngineProvider).sleepAccess(),
 );
 
 /// Sleep sounds playing now. Reloads when the engine says something changed.
@@ -632,13 +891,38 @@ class ScreensaverNightController extends AsyncNotifier<bool> {
   @override
   Future<bool> build() => ref.watch(clockEngineProvider).screensaverNight();
 
-  Future<void> set(bool on) async {
+  Future<void> set(bool on, {bool byHand = true}) async {
     state = AsyncData(on);
     await ref.read(clockEngineProvider).setScreensaverNight(on);
+    if (byHand) await ref.read(settingsEditsProvider).touch(settingsName);
   }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'night-clock';
 }
 
 final screensaverNightProvider =
     AsyncNotifierProvider<ScreensaverNightController, bool>(
       ScreensaverNightController.new,
+    );
+
+/// What the volume buttons do while an alarm rings, and the least a ring
+/// is loud.
+class RingSettingsController extends AsyncNotifier<RingSettings> {
+  @override
+  Future<RingSettings> build() => ref.watch(clockEngineProvider).ringSettings();
+
+  Future<void> set(RingSettings settings, {bool byHand = true}) async {
+    state = AsyncData(settings);
+    await ref.read(clockEngineProvider).setRingSettings(settings);
+    if (byHand) await ref.read(settingsEditsProvider).touch(settingsName);
+  }
+
+  /// The group's name in the account's backup.
+  static const settingsName = 'ring';
+}
+
+final ringSettingsProvider =
+    AsyncNotifierProvider<RingSettingsController, RingSettings>(
+      RingSettingsController.new,
     );

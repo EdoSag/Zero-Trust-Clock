@@ -5,13 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zero_trust_core/zero_trust_core.dart';
 
+import '../linked/linked_apps.dart';
 import '../time_log/time_log.dart';
+import 'edition.dart';
 import 'email_links.dart';
 
 /// Every Supabase auth event (sign-in, sign-out, password-recovery link).
 /// Empty when the account could not be set up (no network config): Clock
 /// then simply runs without one.
 final authChangesProvider = StreamProvider<AuthState>((ref) {
+  if (ref.watch(offlineEditionProvider)) return const Stream.empty();
   try {
     return Supabase.instance.client.auth.onAuthStateChange;
   } on Object {
@@ -22,6 +25,7 @@ final authChangesProvider = StreamProvider<AuthState>((ref) {
 /// Whether someone is signed in. Signing in only adds backup and sync:
 /// the alarms work the same without it.
 final signedInProvider = Provider<bool>((ref) {
+  if (ref.watch(offlineEditionProvider)) return false;
   ref.watch(authChangesProvider);
   try {
     return ref.watch(accountServiceProvider).currentUserId != null;
@@ -87,7 +91,8 @@ void openVault(WidgetRef ref, UnlockResult result) {
 }
 
 /// Opens the vault with the account key. While the key is at hand, Clock
-/// also derives ZT Time's key, for "Log to ZT Time".
+/// also derives ZT Time's key, for "Log to ZT Time", and the keys of the
+/// apps it reads for the day ahead (ZT Calendar, ZT Tasks, ZT Quests).
 void unlockVault(WidgetRef ref, Uint8List dek, {required bool legacyDek}) {
   final copy = Uint8List.fromList(dek);
   ref
@@ -95,6 +100,12 @@ void unlockVault(WidgetRef ref, Uint8List dek, {required bool legacyDek}) {
       .deriveFrom(copy)
       .catchError((Object _) {})
       .whenComplete(() => copy.fillRange(0, copy.length, 0));
+  final linked = Uint8List.fromList(dek);
+  ref
+      .read(linkedKeysProvider.notifier)
+      .deriveFrom(linked)
+      .catchError((Object _) {})
+      .whenComplete(() => linked.fillRange(0, linked.length, 0));
   ref.read(vaultControllerProvider.notifier).unlock(dek, legacyDek: legacyDek);
 }
 

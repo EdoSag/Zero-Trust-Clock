@@ -45,8 +45,8 @@ class RingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_RING -> ring(intent.getStringExtra(EXTRA_ID))
-            ACTION_SNOOZE -> end(Outcome.SNOOZE)
+            ACTION_RING -> ring(intent.getStringExtra(EXTRA_ID), intent.getLongExtra(EXTRA_EARLY_FOR, 0L))
+            ACTION_SNOOZE -> end(Outcome.SNOOZE, intent.getIntExtra(EXTRA_MINUTES, 0))
             ACTION_DISMISS -> if (taskWaiting(intent)) openTask() else end(Outcome.DISMISS)
             else -> if (ringingId == null) stopNow()
         }
@@ -71,7 +71,8 @@ class RingService : Service() {
         }
     }
 
-    private fun ring(id: String?) {
+    /** [earlyFor]: the smart wake window rings ahead of this ring (epoch ms), 0 for a ring on time. */
+    private fun ring(id: String?, earlyFor: Long = 0L) {
         val text = Loc.wrap(this)
         val alarm = if (id == null) null else AlarmStore.load(this).firstOrNull { it.id == id }
         // First of all: Android gives a started foreground service a few
@@ -92,13 +93,15 @@ class RingService : Service() {
         AlarmStore.update(this) { list ->
             val i = list.indexOfFirst { it.id == alarm.id }
             if (i >= 0) {
-                list[i] = list[i].copy(armedFor = null, snoozeUntil = null)
+                val rung = list[i].copy(armedFor = null, snoozeUntil = null)
+                // Rung early: the ring it was early for is done.
+                list[i] = if (earlyFor > 0L) AlarmSchedule.servedEarly(rung, earlyFor) else rung
             }
         }
         AlarmNotifications.cancelSnoozed(this, alarm.id)
         watchLock()
         holdAwake()
-        ringer.start(alarm.sound, alarm.gradual, alarm.vibrate)
+        ringer.start(alarm.sound, alarm.gradual, alarm.vibrate, EnginePrefs.minVolume(this))
         handler.removeCallbacks(timeout)
         handler.postDelayed(timeout, alarm.ringMinutes * 60_000L)
         openRingScreenIfNotificationCannot()
@@ -178,7 +181,8 @@ class RingService : Service() {
         }
     }
 
-    private fun end(outcome: Outcome) {
+    /** [snoozeMinutes]: a snooze of another length than the alarm's own (an assistant asked). */
+    private fun end(outcome: Outcome, snoozeMinutes: Int = 0) {
         val id = ringingId
         if (id == null) {
             stopNow()
@@ -187,11 +191,19 @@ class RingService : Service() {
         handler.removeCallbacks(timeout)
         ringer.stop()
         ringingId = null
-        val before = finishInStore(id, outcome)
+        val before = finishInStore(id, outcome, snoozeMinutes)
         val text = Loc.wrap(this)
         if (outcome == Outcome.TIMEOUT && before != null) AlarmNotifications.showMissed(text, before)
         if (outcome == Outcome.SNOOZE) {
             AlarmStore.load(this).firstOrNull { it.id == id }?.let { AlarmNotifications.showSnoozed(text, it) }
+        }
+        if (outcome == Outcome.DISMISS) {
+            try {
+                // The bedtime's wake-up alarm: last night ends now.
+                SleepLog.onAlarmDismissed(this, id)
+            } catch (_: Exception) {
+                // Only the sleep entry.
+            }
         }
         AlarmScheduler.rescheduleAll(this)
         onEnded?.let { listener -> handler.post { listener() } }
@@ -199,7 +211,7 @@ class RingService : Service() {
     }
 
     /** Writes what the ring's end means for the alarm. Returns it as it was. */
-    private fun finishInStore(id: String, outcome: Outcome): Alarm? {
+    private fun finishInStore(id: String, outcome: Outcome, snoozeMinutes: Int = 0): Alarm? {
         val now = AlarmEngine.now()
         return AlarmStore.update(this) { list ->
             val i = list.indexOfFirst { it.id == id }
@@ -208,7 +220,7 @@ class RingService : Service() {
             } else {
                 val a = list[i]
                 when {
-                    outcome == Outcome.SNOOZE -> list[i] = AlarmSchedule.snooze(a, now)
+                    outcome == Outcome.SNOOZE -> list[i] = AlarmSchedule.snooze(a, now, snoozeMinutes)
                     a.test -> list.removeAt(i)
                     else -> list[i] = AlarmSchedule.afterRing(a, now)
                 }
@@ -254,6 +266,12 @@ class RingService : Service() {
         const val ACTION_DISMISS = "dev.sagron.zerotrustclock.action.DISMISS"
         const val EXTRA_ID = "id"
 
+        /** On a ring from the smart wake window: the time it was due (epoch ms). */
+        const val EXTRA_EARLY_FOR = "earlyFor"
+
+        /** On a snooze: its length in minutes, when not the alarm's own. */
+        const val EXTRA_MINUTES = "minutes"
+
         /** On a dismiss: the wake-up task was done. */
         const val EXTRA_TASK_DONE = "taskDone"
 
@@ -269,8 +287,9 @@ class RingService : Service() {
         @Volatile
         var onEnded: (() -> Unit)? = null
 
-        fun ring(context: Context, id: String) {
+        fun ring(context: Context, id: String, earlyFor: Long = 0L) {
             val intent = Intent(context, RingService::class.java).setAction(ACTION_RING).putExtra(EXTRA_ID, id)
+                .putExtra(EXTRA_EARLY_FOR, earlyFor)
             try {
                 context.startForegroundService(intent)
             } catch (_: Exception) {
@@ -283,11 +302,12 @@ class RingService : Service() {
             }
         }
 
-        fun send(context: Context, action: String, taskDone: Boolean = false) {
+        fun send(context: Context, action: String, taskDone: Boolean = false, minutes: Int = 0) {
             try {
                 context.startService(
                     Intent(context, RingService::class.java).setAction(action)
-                        .putExtra(EXTRA_TASK_DONE, taskDone),
+                        .putExtra(EXTRA_TASK_DONE, taskDone)
+                        .putExtra(EXTRA_MINUTES, minutes),
                 )
             } catch (_: Exception) {
             }

@@ -243,6 +243,30 @@ class AppL10nHe extends AppL10n {
       'פרופיל משני. כשמסיימים את הפרופיל הזה, השעונים המעוררים שלו לא מצלצלים.';
 
   @override
+  String get batteryXiaomi => 'טלפונים של Xiaomi, Redmi ו-POCO';
+
+  @override
+  String get batteryXiaomiHint =>
+      'הטלפונים האלה יכולים לעצור אפליקציה סגורה, ואיתה את השעונים המעוררים שלה. בהגדרות האפליקציה הפעילו הפעלה אוטומטית (Autostart) ובחרו בחיסכון בסוללה \"ללא הגבלות\".';
+
+  @override
+  String get batteryHuawei => 'טלפונים של Huawei ו-Honor';
+
+  @override
+  String get batteryHuaweiHint =>
+      'הטלפונים האלה סוגרים אפליקציות כדי לחסוך בסוללה. בהגדרות > סוללה > הפעלת אפליקציות, העבירו את ZT Clock לניהול ידני והשאירו דלוקים הפעלה אוטומטית והפעלה ברקע.';
+
+  @override
+  String get batterySamsung => 'טלפונים של Samsung';
+
+  @override
+  String get batterySamsungHint =>
+      'Samsung מעבירה אפליקציות שלא פותחים הרבה למצב שינה, והשעונים המעוררים של אפליקציה ישנה יכולים לאחר. בהגדרות האפליקציה פתחו את סוללה ובחרו \"ללא הגבלה\", ואל תוסיפו את ZT Clock לאפליקציות במצב שינה.';
+
+  @override
+  String get openAppSettings => 'פתיחה';
+
+  @override
   String get checkRestart => 'אחרי הפעלה מחדש';
 
   @override
@@ -503,6 +527,34 @@ class AppL10nHe extends AppL10n {
   String get dragToReorder => 'לחיצה ארוכה לשינוי הסדר, החלקה להסרה.';
 
   @override
+  String homeIn(String city) {
+    return 'בבית: $city';
+  }
+
+  @override
+  String get homeTimeZone => 'אזור הזמן של הבית';
+
+  @override
+  String get homeTimeZoneOff => 'כבוי';
+
+  @override
+  String homeTimeZoneOn(String city) {
+    return '$city. השעה שם מוצגת בלשונית השעון כשהטלפון באזור זמן אחר.';
+  }
+
+  @override
+  String homeHere(String city) {
+    return 'אזור הזמן של הטלפון עכשיו ($city)';
+  }
+
+  @override
+  String get homePickCity => 'בחירת עיר';
+
+  @override
+  String get homeTimeZoneAbout =>
+      'כשנוסעים והטלפון עובר לאזור זמן אחר, לשונית השעון מציגה גם את השעה בבית. בבית לא מתווסף כלום.';
+
+  @override
   String get bedtime => 'שינה';
 
   @override
@@ -551,6 +603,31 @@ class AppL10nHe extends AppL10n {
   String wakeUpAlarmHint(String time) {
     return 'שעון מעורר ב-$time בבקרים שאחרי הלילות שבחרתם.';
   }
+
+  @override
+  String get sunrise => 'זריחה לפני השעון המעורר';
+
+  @override
+  String sunriseHint(int minutes) {
+    return 'המסך מתבהר לאט במשך $minutes דקות לפני שעון ההשכמה. לא כשאתם כבר משתמשים בטלפון.';
+  }
+
+  @override
+  String get sunriseNeedsAlarm => 'נדרש שעון מעורר להשכמה.';
+
+  @override
+  String get saveSleep => 'שמירת השינה ב-Health Connect';
+
+  @override
+  String get saveSleepHint =>
+      'כל לילה נשמר כשינה, משעת השינה ועד שמכבים את שעון ההשכמה. אפליקציות שתאשרו ב-Health Connect יוכלו לקרוא אותו. לא מגובה.';
+
+  @override
+  String get saveSleepNotAllowed =>
+      'ל-ZT Clock אין הרשאה לשמור שינה ב-Health Connect.';
+
+  @override
+  String get saveSleepNeedsAccess => 'נדרשת הרשאה לכתוב שינה ב-Health Connect.';
 
   @override
   String get sleepSounds => 'צלילי שינה';
@@ -678,4 +755,185 @@ class AppL10nHe extends AppL10n {
 
   @override
   String get couldNotLog => 'לא הצלחנו לרשום. כדאי לבדוק את החיבור ולנסות שוב.';
+
+  @override
+  String get offlineEdition => 'מהדורה לא מקוונת';
+
+  @override
+  String get offlineEditionHint =>
+      'בלי הרשאת אינטרנט. בלי חשבון, בלי סנכרון ובלי הורדות: שום דבר לא יוצא מהטלפון הזה.';
+
+  @override
+  String get soundBells => 'פעמונים';
+
+  @override
+  String get soundBeeps => 'צפצופים';
+
+  @override
+  String get soundSunrise => 'זריחה';
+
+  @override
+  String get soundBuzzer => 'זמזם';
+
+  @override
+  String get wakeTaskScan => 'סריקת קוד';
+
+  @override
+  String get wakeTaskScanSaved => 'הקוד נשמר';
+
+  @override
+  String get wakeTaskScanHint =>
+      'כדי לכבות סורקים את אותו קוד QR או ברקוד. כדאי שיהיה רחוק מהמיטה. אם אי אפשר להשתמש במצלמה, השעון יבקש תרגילי חשבון.';
+
+  @override
+  String get wakeTaskScanAgain => 'סריקת קוד אחר';
+
+  @override
+  String get wakeTaskScanNone => 'לא נסרק קוד';
+
+  @override
+  String get volumeButtons => 'כפתורי עוצמת הקול';
+
+  @override
+  String get volumeButtonsVolume => 'שינוי עוצמת הקול';
+
+  @override
+  String get volumeButtonsAbout =>
+      'מה עושים כפתורי עוצמת הקול כששעון מעורר מצלצל על המסך שלו. משימת השכמה עדיין נדרשת.';
+
+  @override
+  String get minVolume => 'לצלצל לפחות בעוצמה הזו';
+
+  @override
+  String get minVolumeOff => 'כבוי: עוצמת השעון המעורר של הטלפון';
+
+  @override
+  String minVolumePercent(int percent) {
+    return '$percent% מהעוצמה המרבית';
+  }
+
+  @override
+  String get minVolumeAbout =>
+      'אם עוצמת השעון המעורר בטלפון נמוכה יותר, היא מוגברת בזמן הצלצול ומוחזרת אחריו. טיימרים לא משתנים.';
+
+  @override
+  String get repeatWeekdays => 'ימים בשבוע';
+
+  @override
+  String get repeatShifts => 'סבב משמרות';
+
+  @override
+  String shiftText(int on, int length) {
+    return 'משמרות: $on מכל $length ימים';
+  }
+
+  @override
+  String get shiftLength => 'ימים בסבב';
+
+  @override
+  String get shiftStart => 'יום 1 בסבב';
+
+  @override
+  String get shiftDaysHint =>
+      'הקישו על הימים בסבב שבהם השעון מצלצל. הסבב חוזר מיום 1 שוב ושוב.';
+
+  @override
+  String shiftDay(int day) {
+    return 'יום $day';
+  }
+
+  @override
+  String shiftOnOff(int on, int off) {
+    return '$on עבודה, $off חופש';
+  }
+
+  @override
+  String get shiftTwoShiftsHint =>
+      'שתי משמרות בשעות שונות, כמו 2 בוקר, 2 לילה, 4 חופש? צרו שעון מעורר לכל אחת, עם אותו יום 1.';
+
+  @override
+  String shiftToday(int day, int length) {
+    return 'היום הוא יום $day מתוך $length';
+  }
+
+  @override
+  String get calendarLink => 'לפי ZT Calendar';
+
+  @override
+  String get calendarLinkHint =>
+      'מצלצל בזמן לאירוע הראשון של היום. ‏ZT Clock קורא את ZT Calendar בכל פעם שהוא נפתח, שבועיים קדימה; בימים שלא נקראו השעון מצלצל בשעה שלו.';
+
+  @override
+  String get calendarNeedsAccount => 'התחברו כדי לעקוב אחרי ZT Calendar.';
+
+  @override
+  String get calendarNeedsRepeat => 'בחרו קודם ימים חוזרים או סבב משמרות.';
+
+  @override
+  String get calendarLead => 'לפני האירוע הראשון';
+
+  @override
+  String get calendarEarlier => 'מוקדם יותר כשצריך';
+
+  @override
+  String calendarEarlierHint(String time) {
+    return 'מצלצל ב־$time, או מוקדם יותר כשהאירוע הראשון דורש.';
+  }
+
+  @override
+  String get calendarFollow => 'תמיד לפני האירוע הראשון';
+
+  @override
+  String calendarFollowHint(String time) {
+    return 'מצלצל לפני האירוע הראשון, גם אחרי $time. בלי אירועים: $time.';
+  }
+
+  @override
+  String get calendarEarliest => 'אף פעם לא לפני';
+
+  @override
+  String get calendarOtherDays => 'גם בימים אחרים, לאירוע בבוקר';
+
+  @override
+  String get calendarLinkedShort => 'לפי ZT Calendar';
+
+  @override
+  String get smartWake => 'חלון השכמה חכמה';
+
+  @override
+  String get smartWakeHint =>
+      'כשהטלפון על המיטה, הוא מצלצל עד כדי כך מוקדם יותר כשאתם זזים, כדי שתתעוררו בשינה קלה. בלי תנועה הוא מצלצל בזמן.';
+
+  @override
+  String get smartWakeOff => 'כבוי';
+
+  @override
+  String get morningScreen => 'אחרי סגירת שעון מעורר';
+
+  @override
+  String get morningOff => 'שום דבר';
+
+  @override
+  String get morningCounts => 'היום שלפניכם, מספרים בלבד';
+
+  @override
+  String get morningDetails => 'היום שלפניכם, עם שמות';
+
+  @override
+  String get morningHint =>
+      'האירועים של היום מ־ZT Calendar, המשימות מ־ZT Tasks וה־Quests מ־ZT Quests, כפי ש־ZT Clock קרא אותם לאחרונה (כשמחוברים). השמות מוצגים גם מעל מסך הנעילה.';
+
+  @override
+  String questGoal(String category) {
+    String _temp0 = intl.Intl.selectLogic(category, {
+      'fitness': 'כושר',
+      'productivity': 'פרודוקטיביות',
+      'nutrition': 'תזונה',
+      'sleep': 'שינה',
+      'learning': 'למידה',
+      'mindfulness': 'מיינדפולנס',
+      'other': 'מטרה',
+    });
+    return '$_temp0';
+  }
 }

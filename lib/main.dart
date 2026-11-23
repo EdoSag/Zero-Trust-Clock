@@ -8,6 +8,7 @@ import 'package:zero_trust_core/zero_trust_core.dart';
 
 import 'app/clock_config.dart';
 import 'app/clock_gate.dart';
+import 'app/edition.dart';
 import 'app/email_links.dart';
 import 'engine/clock_engine.dart';
 import 'l10n/l10n.dart';
@@ -17,21 +18,30 @@ Future<void> main() async {
   // The Zero-Trust account is optional here: alarms live on the phone and
   // ring without it. Signing in (Settings) adds encrypted backup and sync.
   // A failure here must not keep the alarms away.
-  try {
-    await dotenv.load(fileName: '.env');
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
-    );
-    unawaited(EmailLinks.listen());
-  } on Object catch (e) {
-    debugPrint('Account setup failed: $e');
+  // The Offline edition has no INTERNET permission and no account at all.
+  if (!offlineEdition) {
+    try {
+      await dotenv.load(fileName: '.env');
+      await Supabase.initialize(
+        url: dotenv.env['SUPABASE_URL']!,
+        publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
+      );
+      unawaited(EmailLinks.listen());
+    } on Object catch (e) {
+      debugPrint('Account setup failed: $e');
+    }
   }
   // English or Hebrew, as picked in Settings, from the first frame.
   await ZtLanguageController.preload();
   runApp(
     ProviderScope(
-      overrides: [ztAppConfigProvider.overrideWithValue(clockAppConfig)],
+      overrides: [
+        ztAppConfigProvider.overrideWithValue(clockAppConfig),
+        if (offlineEdition)
+          accountServiceProvider.overrideWithValue(
+            AccountService(const NoAccountBackend()),
+          ),
+      ],
       child: const ZeroTrustClockApp(),
     ),
   );
@@ -79,7 +89,7 @@ class _ZeroTrustClockAppState extends ConsumerState<ZeroTrustClockApp> {
           AppL10n.delegate,
           ...ZtLanguages.delegates,
         ],
-        home: widget.home,
+        home: ZtSignInHandoffScope(child: widget.home),
         // Any touch on any screen counts as activity for auto-lock.
         builder: (context, child) => Listener(
           onPointerDown: (_) =>

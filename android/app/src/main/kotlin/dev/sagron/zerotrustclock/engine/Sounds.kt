@@ -22,6 +22,15 @@ object Sounds {
     const val SYSTEM = "system"
     private const val FILE = "file:"
     private const val URI = "uri:"
+    private const val BUILT_IN = "builtin:"
+
+    /** The app's other sounds, by the name after "builtin:". */
+    private val builtIn = mapOf(
+        "bells" to R.raw.alarm_bells,
+        "beeps" to R.raw.alarm_beeps,
+        "sunrise" to R.raw.alarm_sunrise,
+        "buzzer" to R.raw.alarm_buzzer,
+    )
 
     private fun dir(context: Context): File =
         File(AlarmStore.deviceContext(context).filesDir, DIR).apply { mkdirs() }
@@ -83,17 +92,26 @@ object Sounds {
     }
 
     /**
-     * A player for [sound], looping on the alarm volume and prepared, or
-     * null when it can't be played. Null [sound] is the app's chime.
+     * A player for [sound], on the alarm volume and prepared, or null when
+     * it can't be played. Null [sound] is the app's chime. It loops unless
+     * [looping] is false (a preview in the editor).
      */
-    fun player(context: Context, sound: String?, attributes: AudioAttributes): MediaPlayer? {
+    fun player(
+        context: Context,
+        sound: String?,
+        attributes: AudioAttributes,
+        looping: Boolean = true,
+    ): MediaPlayer? {
         val player = MediaPlayer()
+        fun raw(id: Int) = context.resources.openRawResourceFd(id).use { fd ->
+            player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
+        }
         return try {
             player.setAudioAttributes(attributes)
             when {
-                sound == null -> context.resources.openRawResourceFd(R.raw.alarm_default).use { fd ->
-                    player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
-                }
+                sound == null -> raw(R.raw.alarm_default)
+                sound.startsWith(BUILT_IN) ->
+                    raw(builtIn[sound.removePrefix(BUILT_IN)] ?: throw IllegalStateException("unknown"))
                 sound == SYSTEM -> player.setDataSource(
                     context,
                     RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
@@ -106,7 +124,7 @@ object Sounds {
                 sound.startsWith(URI) -> player.setDataSource(context, Uri.parse(sound.removePrefix(URI)))
                 else -> throw IllegalStateException("unknown")
             }
-            player.isLooping = true
+            player.isLooping = looping
             player.prepare()
             player
         } catch (_: Exception) {
@@ -115,6 +133,40 @@ object Sounds {
             } catch (_: Exception) {
             }
             null
+        }
+    }
+}
+
+/** Plays a sound once in the editor, on the alarm volume, so it sounds as it will. */
+object SoundPreview {
+    private var player: MediaPlayer? = null
+
+    fun play(context: Context, sound: String?) {
+        stop()
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        val p = Sounds.player(context.applicationContext, sound, attributes, looping = false) ?: return
+        player = p
+        try {
+            p.setOnCompletionListener { if (player === it) stop() }
+            p.start()
+        } catch (_: Exception) {
+            stop()
+        }
+    }
+
+    fun stop() {
+        val p = player ?: return
+        player = null
+        try {
+            p.stop()
+        } catch (_: Exception) {
+        }
+        try {
+            p.release()
+        } catch (_: Exception) {
         }
     }
 }

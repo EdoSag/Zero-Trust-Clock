@@ -32,7 +32,11 @@ class SyncedAlarm {
     this.gradual = false,
     this.ringMinutes = ClockAlarm.defaultRingMinutes,
     this.task,
+    this.taskCode,
     this.skipHolidays = false,
+    this.shift,
+    this.calendar,
+    this.smartWake = 0,
   });
 
   final String id;
@@ -55,7 +59,21 @@ class SyncedAlarm {
   final bool gradual;
   final int ringMinutes;
   final WakeTask? task;
+
+  /// The scan task's saved code (a hash), so the same code dismisses the
+  /// alarm on every phone.
+  final String? taskCode;
   final bool skipHolidays;
+
+  /// A shift pattern instead of weekdays.
+  final ShiftPattern? shift;
+
+  /// Linked to ZT Calendar. What the calendar holds is read on each phone
+  /// for itself and never stored here.
+  final CalendarLink? calendar;
+  final int smartWake;
+
+  bool get repeats => days.isNotEmpty || shift != null;
 
   factory SyncedAlarm.fromJson(
     String id,
@@ -84,7 +102,13 @@ class SyncedAlarm {
         ((j['ringMinutes'] as num?)?.toInt() ?? ClockAlarm.defaultRingMinutes)
             .clamp(1, 60),
     task: WakeTask.parse(j['task']),
+    taskCode: j['taskCode'] as String?,
     skipHolidays: j['skipHolidays'] as bool? ?? false,
+    shift: ShiftPattern.of(j['cycle'] as String?, j['cycleStart'] as String?),
+    calendar: CalendarLink.fromJson(j['calendar']),
+    smartWake: smartWakeChoices.contains(j['smartWake'])
+        ? (j['smartWake'] as num).toInt()
+        : 0,
   );
 
   /// Every field, null for a cleared one (see [ZtCollection]).
@@ -103,7 +127,12 @@ class SyncedAlarm {
     'gradual': gradual,
     'ringMinutes': ringMinutes,
     'task': task?.name,
+    'taskCode': taskCode,
     'skipHolidays': skipHolidays,
+    'cycle': shift?.days,
+    'cycleStart': shift?.start,
+    'calendar': calendar?.toJson(),
+    'smartWake': smartWake,
   };
 
   /// The alarm on this phone, as the copy from the account says it.
@@ -128,7 +157,11 @@ class SyncedAlarm {
     gradual: a.gradual,
     ringMinutes: a.ringMinutes,
     task: a.task,
+    taskCode: a.task == WakeTask.scan ? a.taskCode : null,
     skipHolidays: a.skipHolidays,
+    shift: a.shift,
+    calendar: a.repeats ? a.calendar : null,
+    smartWake: a.smartWake,
   );
 
   /// What the engine on [device] is given: on only if switched on there.
@@ -141,14 +174,18 @@ class SyncedAlarm {
     label: label,
     vibrate: vibrate,
     snoozeMinutes: snoozeMinutes,
-    date: days.isEmpty ? date : null,
+    date: repeats ? null : date,
     skipDate: skipDate,
     updatedAt: editedAt,
-    pauseUntil: days.isEmpty ? null : pauseUntil,
+    pauseUntil: repeats ? pauseUntil : null,
     gradual: gradual,
     ringMinutes: ringMinutes,
     task: task,
+    taskCode: taskCode,
     skipHolidays: skipHolidays,
+    shift: shift,
+    calendar: repeats ? calendar : null,
+    smartWake: smartWake,
   );
 
   @override

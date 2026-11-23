@@ -61,6 +61,7 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
     // gets Do Not Disturb now, not only from the next one.
     if (state != AppLifecycleState.resumed) return;
     ref.invalidate(dndAccessProvider);
+    ref.invalidate(sleepAccessProvider);
     final s = ref.read(bedtimeProvider).value;
     if (s != null && s.enabled && s.doNotDisturb) {
       ref.read(bedtimeProvider.notifier).save(s).catchError((Object _) {});
@@ -115,20 +116,11 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
       a.length == b.length && a.containsAll(b);
 
   Future<String> _saveWakeAlarm(BedtimeSchedule s, ClockAlarm? alarm) async {
-    final id = await _engine.save(
-      id: alarm?.id,
-      hour: s.wakeHour,
-      minute: s.wakeMinute,
-      days: s.wakeDays,
-      label: alarm?.label ?? context.l10n.wakeUp,
-      vibrate: alarm?.vibrate ?? true,
-      snoozeMinutes: alarm?.snoozeMinutes ?? 10,
-      sound: alarm?.sound,
-      soundName: alarm?.soundName,
-      gradual: alarm?.gradual ?? false,
-      ringMinutes: alarm?.ringMinutes ?? ClockAlarm.defaultRingMinutes,
-      task: alarm?.task,
-      skipHolidays: alarm?.skipHolidays ?? false,
+    final id = await saveWakeAlarm(
+      _engine,
+      s,
+      alarm,
+      label: context.l10n.wakeUp,
     );
     await ref.read(alarmsProvider.notifier).refresh();
     return id;
@@ -181,6 +173,45 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
     }
   }
 
+  Future<void> _setSunrise(BedtimeSchedule s, bool on) async {
+    await _save(s.copyWith(sunrise: on));
+    if (!on) return;
+    // The sunrise opens from a notification (Android 13 and later ask).
+    try {
+      await _engine.requestNotifications();
+    } on Object {
+      // The Alarm check screen shows it.
+    }
+  }
+
+  /// Asks Health Connect first: the switch only turns on when allowed.
+  Future<void> _setSaveSleep(BedtimeSchedule s, bool on) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
+    if (on) {
+      var allowed = false;
+      try {
+        allowed = await _engine.requestSleepAccess();
+      } on Object {
+        allowed = false;
+      }
+      ref.invalidate(sleepAccessProvider);
+      if (!allowed) {
+        showSnack(messenger, l.saveSleepNotAllowed);
+        return;
+      }
+    }
+    await _save(s.copyWith(saveSleep: on));
+  }
+
+  /// "Allow" under the switch: asks again, and when Android no longer
+  /// shows the question, opens the app's page in Health Connect.
+  Future<void> _allowSleep() => _run(() async {
+    final allowed = await _engine.requestSleepAccess();
+    ref.invalidate(sleepAccessProvider);
+    if (!allowed) await _engine.openSettings('healthConnect');
+  });
+
   Future<void> _play() => _run(() async {
     await _engine.playSleepSound(_sound, _minutes);
     await ref.read(sleepSoundProvider.notifier).refresh();
@@ -224,6 +255,7 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
     final dndAccess = ref.watch(dndAccessProvider).value ?? true;
     final wake = _wakeAlarm(s);
     final wakeOn = wake != null && wake.enabled;
+    final sleep = ref.watch(sleepAccessProvider).value ?? const SleepAccess();
     return Card(
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 16),
@@ -349,6 +381,45 @@ class _BedtimePageState extends ConsumerState<BedtimePage>
               value: wakeOn,
               onChanged: (on) => _setWakeAlarm(s, on),
             ),
+            SwitchListTile(
+              key: const ValueKey('sunrise'),
+              contentPadding: EdgeInsetsDirectional.zero,
+              title: Text(l.sunrise),
+              subtitle: Text(
+                wakeOn || s.sunrise
+                    ? l.sunriseHint(BedtimeSchedule.sunriseMinutes)
+                    : l.sunriseNeedsAlarm,
+              ),
+              value: s.sunrise,
+              // Follows the wake-up alarm; can always be switched off.
+              onChanged: wakeOn || s.sunrise
+                  ? (on) => _setSunrise(s, on)
+                  : null,
+            ),
+            if (sleep.available) ...[
+              SwitchListTile(
+                key: const ValueKey('saveSleep'),
+                contentPadding: EdgeInsetsDirectional.zero,
+                title: Text(l.saveSleep),
+                subtitle: Text(l.saveSleepHint),
+                value: s.saveSleep,
+                onChanged: (on) => _setSaveSleep(s, on),
+              ),
+              if (s.saveSleep && !sleep.allowed)
+                Row(
+                  key: const ValueKey('sleepAccess'),
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(l.saveSleepNeedsAccess, style: soft)),
+                    TextButton(onPressed: _allowSleep, child: Text(l.allow)),
+                  ],
+                ),
+            ],
           ],
         ),
       ),

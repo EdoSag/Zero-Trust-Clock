@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The full edition: the clock plus the optional Zero-Trust account
+     (encrypted backup and sync, holiday calendars, Log to ZT Time). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sign-in and sync with the shared Zero-Trust account (optional in
+         this app: alarms work without it and without a network). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application>
+        <activity android:name="dev.sagron.zerotrustclock.MainActivity">
+            <!-- Password-reset emails: https://zerotrust.bz/auth/clock/#token_hash=… -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="zerotrust.bz" android:pathPrefix="/auth/clock/"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

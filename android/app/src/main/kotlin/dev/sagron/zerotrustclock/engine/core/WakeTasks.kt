@@ -10,7 +10,10 @@ import kotlin.random.Random
 object WakeTasks {
     const val MATH = "math"
     const val SHAKE = "shake"
-    val ALL = setOf(MATH, SHAKE)
+
+    /** Scan the code saved with the alarm (a QR code or a barcode). */
+    const val SCAN = "scan"
+    val ALL = setOf(MATH, SHAKE, SCAN)
 
     /** Problems to solve, and shakes to make. */
     const val MATH_PROBLEMS = 3
@@ -18,6 +21,59 @@ object WakeTasks {
 
     /** Null for anything that isn't a known task. */
     fun parse(value: String?): String? = value?.takeIf { it in ALL }
+
+    /**
+     * The task as an alarm can keep it: scanning needs a saved code
+     * ([code], see [codeHash]); without one there is no task.
+     */
+    fun parse(value: String?, code: String?): String? {
+        val task = parse(value)
+        return if (task == SCAN && parseCode(code) == null) null else task
+    }
+
+    /**
+     * What is kept of a scanned code: its SHA-256, in hex. Enough to know
+     * the same code again, and nothing of what the code says.
+     */
+    fun codeHash(text: String): String =
+        java.security.MessageDigest.getInstance("SHA-256")
+            .digest(text.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+
+    /** [code] when it is a [codeHash], else null. */
+    fun parseCode(code: String?): String? =
+        code?.takeIf { it.length == 64 && it.all { c -> c in '0'..'9' || c in 'a'..'f' } }
+}
+
+/** What the volume buttons do while an alarm rings on its screen. */
+object VolumeButtons {
+    const val VOLUME = "volume"
+    const val SNOOZE = "snooze"
+    const val DISMISS = "dismiss"
+
+    /** [VOLUME] for anything unknown. */
+    fun parse(value: String?): String = when (value) {
+        SNOOZE, DISMISS -> value
+        else -> VOLUME
+    }
+}
+
+/** "Ring at least this loud": the alarm volume a ring starts at. */
+object RingVolume {
+    /** The choices, in percent of the phone's loudest. 0: off. */
+    val CHOICES = listOf(0, 30, 50, 70, 100)
+
+    fun parse(percent: Int): Int = if (percent in CHOICES) percent else 0
+
+    /**
+     * The level to ring at, of [max] steps: [current], or the first step
+     * that is at least [percent] of the loudest when that is higher.
+     */
+    fun atLeast(current: Int, max: Int, percent: Int): Int {
+        if (max <= 0 || percent <= 0) return current
+        val floor = ((max * percent.coerceAtMost(100) + 99) / 100).coerceIn(1, max)
+        return maxOf(current, floor)
+    }
 }
 
 /** "23 × 7 + 15": needs a little thought, never a pen. */

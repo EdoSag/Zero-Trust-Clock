@@ -10,10 +10,11 @@ import dev.sagron.zerotrustclock.R
 import java.util.Calendar
 
 /**
- * Android's standard "set an alarm" and "set a timer" requests, from
- * voice assistants and other apps ("set an alarm for 7"). No screen of its own: the alarm is
- * set in the engine at once, and the app opens unless the caller asked to
- * skip it. Callers need the SET_ALARM permission (manifest).
+ * Android's standard alarm and timer requests, from voice assistants and
+ * other apps: "set an alarm for 7", "set a timer", "dismiss my alarm",
+ * "snooze", "stop the timer". No screen of its own: it is done in the
+ * engine at once, and the app opens unless the caller asked to skip it.
+ * Callers need the SET_ALARM permission (manifest).
  */
 class SetAlarmActivity : Activity() {
     override fun attachBaseContext(base: Context) {
@@ -35,6 +36,9 @@ class SetAlarmActivity : Activity() {
             AlarmClock.ACTION_SET_ALARM -> setAlarm(intent)
             AlarmClock.ACTION_SET_TIMER -> setTimer(intent)
             AlarmClock.ACTION_SHOW_TIMERS -> open(Tabs.TIMERS)
+            AlarmClock.ACTION_DISMISS_ALARM -> dismissAlarm()
+            AlarmClock.ACTION_SNOOZE_ALARM -> snoozeAlarm(intent)
+            AlarmClock.ACTION_DISMISS_TIMER -> dismissTimer()
             else -> open()
         }
     }
@@ -53,7 +57,7 @@ class SetAlarmActivity : Activity() {
         val vibrate = intent.getBooleanExtra(AlarmClock.EXTRA_VIBRATE, true)
         // The same alarm already there: switched on rather than a second one.
         val existing = AlarmStore.load(this).firstOrNull {
-            !it.test && it.hour == hour && it.minute == minute && it.days == days
+            !it.test && it.cycle == null && it.hour == hour && it.minute == minute && it.days == days
         }
         if (existing != null) {
             if (!existing.enabled) AlarmEngine.setEnabled(this, existing.id, true)
@@ -85,6 +89,49 @@ class SetAlarmActivity : Activity() {
         ).show()
         if (!intent.getBooleanExtra(AlarmClock.EXTRA_SKIP_UI, false)) open(Tabs.TIMERS)
     }
+
+    /**
+     * "Dismiss my alarm": the ringing alarm, else the snoozed ones. An
+     * alarm with a wake-up task still asks for it (the ring screen opens
+     * on the task). With nothing ringing or snoozed the app opens: which
+     * coming alarm to skip is picked there, never guessed from a voice.
+     */
+    private fun dismissAlarm() {
+        if (RingService.ringingId != null) {
+            RingService.send(this, RingService.ACTION_DISMISS)
+            return
+        }
+        val snoozed = AlarmStore.load(this).filter { it.snoozeUntil != null }
+        if (snoozed.isNotEmpty()) {
+            snoozed.forEach { AlarmEngine.cancelSnooze(this, it.id) }
+            toast(R.string.snooze_ended)
+            return
+        }
+        toast(R.string.no_alarm_ringing)
+        open()
+    }
+
+    /** "Snooze": the ringing alarm, for its own snooze length or the one asked for. */
+    private fun snoozeAlarm(intent: Intent) {
+        if (RingService.ringingId == null) {
+            toast(R.string.no_alarm_ringing)
+            return
+        }
+        val minutes = intent.getIntExtra(AlarmClock.EXTRA_ALARM_SNOOZE_DURATION, 0)
+        RingService.send(this, RingService.ACTION_SNOOZE, minutes = minutes.coerceIn(0, 60))
+    }
+
+    /** "Stop the timer": every ringing timer. */
+    private fun dismissTimer() {
+        if (TimerStore.load(this).any { it.ringing }) {
+            TimerEngine.stopRinging(this)
+        } else {
+            toast(R.string.no_timer_ringing)
+            open(Tabs.TIMERS)
+        }
+    }
+
+    private fun toast(text: Int) = Toast.makeText(this, getString(text), Toast.LENGTH_SHORT).show()
 
     private fun open(tab: String = Tabs.ALARMS) {
         try {

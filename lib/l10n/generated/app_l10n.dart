@@ -511,6 +511,48 @@ abstract class AppL10n {
   /// **'Secondary profile. When this profile is ended, its alarms do not ring.'**
   String get checkProfileBad;
 
+  /// No description provided for @batteryXiaomi.
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaomi, Redmi and POCO phones'**
+  String get batteryXiaomi;
+
+  /// No description provided for @batteryXiaomiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These phones can stop an app that is closed, and its alarms with it. In the app\'s settings turn on Autostart, and set Battery saver to No restrictions.'**
+  String get batteryXiaomiHint;
+
+  /// No description provided for @batteryHuawei.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei and Honor phones'**
+  String get batteryHuawei;
+
+  /// No description provided for @batteryHuaweiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These phones close apps to save battery. In Settings > Battery > App launch, switch ZT Clock to Manage manually and leave Auto-launch and Run in background on.'**
+  String get batteryHuaweiHint;
+
+  /// No description provided for @batterySamsung.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung phones'**
+  String get batterySamsung;
+
+  /// No description provided for @batterySamsungHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung puts apps you rarely open to sleep, and a sleeping app\'s alarms can be late. In the app\'s settings open Battery and pick Unrestricted, and keep ZT Clock out of Sleeping apps.'**
+  String get batterySamsungHint;
+
+  /// No description provided for @openAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openAppSettings;
+
   /// No description provided for @checkRestart.
   ///
   /// In en, this message translates to:
@@ -955,6 +997,48 @@ abstract class AppL10n {
   /// **'Long-press to reorder, swipe to remove.'**
   String get dragToReorder;
 
+  /// No description provided for @homeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Home: {city}'**
+  String homeIn(String city);
+
+  /// No description provided for @homeTimeZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Home time zone'**
+  String get homeTimeZone;
+
+  /// No description provided for @homeTimeZoneOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get homeTimeZoneOff;
+
+  /// No description provided for @homeTimeZoneOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{city}. Its time shows in the Clock tab while the phone is in another time zone.'**
+  String homeTimeZoneOn(String city);
+
+  /// No description provided for @homeHere.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s time zone now ({city})'**
+  String homeHere(String city);
+
+  /// No description provided for @homePickCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a city'**
+  String get homePickCity;
+
+  /// No description provided for @homeTimeZoneAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'When you travel and the phone changes time zone, the Clock tab also shows the time at home. At home nothing is added.'**
+  String get homeTimeZoneAbout;
+
   /// No description provided for @bedtime.
   ///
   /// In en, this message translates to:
@@ -1044,6 +1128,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'An alarm at {time} on the mornings after your nights.'**
   String wakeUpAlarmHint(String time);
+
+  /// No description provided for @sunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise before the alarm'**
+  String get sunrise;
+
+  /// No description provided for @sunriseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen lights up slowly for {minutes} minutes before the wake-up alarm. Not when you are already using the phone.'**
+  String sunriseHint(int minutes);
+
+  /// No description provided for @sunriseNeedsAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the wake-up alarm.'**
+  String get sunriseNeedsAlarm;
+
+  /// No description provided for @saveSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Save sleep to Health Connect'**
+  String get saveSleep;
+
+  /// No description provided for @saveSleepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each night is saved as sleep, from bedtime until you dismiss the wake-up alarm. Apps you allow in Health Connect can read it. Not backed up.'**
+  String get saveSleepHint;
+
+  /// No description provided for @saveSleepNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'ZT Clock is not allowed to save sleep in Health Connect.'**
+  String get saveSleepNotAllowed;
+
+  /// No description provided for @saveSleepNeedsAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs permission to write sleep in Health Connect.'**
+  String get saveSleepNeedsAccess;
 
   /// No description provided for @sleepSounds.
   ///
@@ -1272,6 +1398,300 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Couldn\'t log it. Check the connection and try again.'**
   String get couldNotLog;
+
+  /// No description provided for @offlineEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline edition'**
+  String get offlineEdition;
+
+  /// No description provided for @offlineEditionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet permission. No account, no sync, no downloads: nothing leaves this phone.'**
+  String get offlineEditionHint;
+
+  /// No description provided for @soundBells.
+  ///
+  /// In en, this message translates to:
+  /// **'Bells'**
+  String get soundBells;
+
+  /// No description provided for @soundBeeps.
+  ///
+  /// In en, this message translates to:
+  /// **'Beeps'**
+  String get soundBeeps;
+
+  /// No description provided for @soundSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get soundSunrise;
+
+  /// No description provided for @soundBuzzer.
+  ///
+  /// In en, this message translates to:
+  /// **'Buzzer'**
+  String get soundBuzzer;
+
+  /// No description provided for @wakeTaskScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a code'**
+  String get wakeTaskScan;
+
+  /// No description provided for @wakeTaskScanSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Code saved'**
+  String get wakeTaskScanSaved;
+
+  /// No description provided for @wakeTaskScanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the same QR code or barcode to dismiss. Keep it away from the bed. If the camera can\'t be used, the alarm asks for sums instead.'**
+  String get wakeTaskScanHint;
+
+  /// No description provided for @wakeTaskScanAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan another'**
+  String get wakeTaskScanAgain;
+
+  /// No description provided for @wakeTaskScanNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No code was scanned'**
+  String get wakeTaskScanNone;
+
+  /// No description provided for @volumeButtons.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume buttons'**
+  String get volumeButtons;
+
+  /// No description provided for @volumeButtonsVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the volume'**
+  String get volumeButtonsVolume;
+
+  /// No description provided for @volumeButtonsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'What the volume buttons do while an alarm rings on its own screen. A wake-up task is still asked for.'**
+  String get volumeButtonsAbout;
+
+  /// No description provided for @minVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring at least this loud'**
+  String get minVolume;
+
+  /// No description provided for @minVolumeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: the phone\'s alarm volume'**
+  String get minVolumeOff;
+
+  /// No description provided for @minVolumePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of the loudest'**
+  String minVolumePercent(int percent);
+
+  /// No description provided for @minVolumeAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'If the phone\'s alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.'**
+  String get minVolumeAbout;
+
+  /// No description provided for @repeatWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get repeatWeekdays;
+
+  /// No description provided for @repeatShifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift pattern'**
+  String get repeatShifts;
+
+  /// No description provided for @shiftText.
+  ///
+  /// In en, this message translates to:
+  /// **'Shifts: {on} of every {length} days'**
+  String shiftText(int on, int length);
+
+  /// No description provided for @shiftLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Days in the cycle'**
+  String get shiftLength;
+
+  /// No description provided for @shiftStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Day 1 of the cycle'**
+  String get shiftStart;
+
+  /// No description provided for @shiftDaysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the days of the cycle the alarm rings on. The cycle repeats from day 1 again and again.'**
+  String get shiftDaysHint;
+
+  /// No description provided for @shiftDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String shiftDay(int day);
+
+  /// No description provided for @shiftOnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{on} on, {off} off'**
+  String shiftOnOff(int on, int off);
+
+  /// No description provided for @shiftTwoShiftsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Two shifts with different times, like 2 days, 2 nights, 4 off? Make one alarm for each, with the same day 1.'**
+  String get shiftTwoShiftsHint;
+
+  /// No description provided for @shiftToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is day {day} of {length}'**
+  String shiftToday(int day, int length);
+
+  /// No description provided for @calendarLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow ZT Calendar'**
+  String get calendarLink;
+
+  /// No description provided for @calendarLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings in time for the day\'s first event. ZT Clock reads ZT Calendar each time it is opened, two weeks ahead; days it hasn\'t read ring at the alarm\'s own time.'**
+  String get calendarLinkHint;
+
+  /// No description provided for @calendarNeedsAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to follow ZT Calendar.'**
+  String get calendarNeedsAccount;
+
+  /// No description provided for @calendarNeedsRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick repeat days or a shift pattern first.'**
+  String get calendarNeedsRepeat;
+
+  /// No description provided for @calendarLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Before the first event'**
+  String get calendarLead;
+
+  /// No description provided for @calendarEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier when needed'**
+  String get calendarEarlier;
+
+  /// No description provided for @calendarEarlierHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings at {time}, or earlier when the first event needs it.'**
+  String calendarEarlierHint(String time);
+
+  /// No description provided for @calendarFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Always before the first event'**
+  String get calendarFollow;
+
+  /// No description provided for @calendarFollowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings before the first event, later than {time} too. Without events: {time}.'**
+  String calendarFollowHint(String time);
+
+  /// No description provided for @calendarEarliest.
+  ///
+  /// In en, this message translates to:
+  /// **'Never before'**
+  String get calendarEarliest;
+
+  /// No description provided for @calendarOtherDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Also on other days, for a morning event'**
+  String get calendarOtherDays;
+
+  /// No description provided for @calendarLinkedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows ZT Calendar'**
+  String get calendarLinkedShort;
+
+  /// No description provided for @smartWake.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart wake window'**
+  String get smartWake;
+
+  /// No description provided for @smartWakeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'With the phone on the bed, it rings up to this much earlier when you stir, so you wake in light sleep. Without movement it rings at its time.'**
+  String get smartWakeHint;
+
+  /// No description provided for @smartWakeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get smartWakeOff;
+
+  /// No description provided for @morningScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'After dismissing an alarm'**
+  String get morningScreen;
+
+  /// No description provided for @morningOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing'**
+  String get morningOff;
+
+  /// No description provided for @morningCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'The day ahead, counts only'**
+  String get morningCounts;
+
+  /// No description provided for @morningDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'The day ahead, with names'**
+  String get morningDetails;
+
+  /// No description provided for @morningHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s events from ZT Calendar, tasks from ZT Tasks and quests from ZT Quests, as ZT Clock last read them (signed in). Names also show over the lock screen.'**
+  String get morningHint;
+
+  /// No description provided for @questGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'{category, select, fitness{Fitness} productivity{Productivity} nutrition{Nutrition} sleep{Sleep} learning{Learning} mindfulness{Mindfulness} other{Goal}}'**
+  String questGoal(String category);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

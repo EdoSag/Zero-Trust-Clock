@@ -21,6 +21,9 @@ object AlarmSchedule {
      */
     const val LATE_RING_MS = 10 * 60_000L
 
+    /** How far ahead a repeating alarm's next ring is looked for. */
+    const val SEARCH_DAYS = 2L * ShiftPattern.MAX_DAYS + 14
+
     /** One planned ring: the calendar day it belongs to, and the moment. */
     data class Ring(val day: LocalDate, val at: ZonedDateTime)
 
@@ -30,7 +33,28 @@ object AlarmSchedule {
      * happens twice (clocks go back) rings the first time only.
      */
     fun ringOn(alarm: Alarm, day: LocalDate, zone: ZoneId): ZonedDateTime =
-        ZonedDateTime.of(day, LocalTime.of(alarm.hour, alarm.minute), zone)
+        ZonedDateTime.of(day, timeOn(alarm, day) ?: LocalTime.of(alarm.hour, alarm.minute), zone)
+
+    /** A repeating alarm's own ring days: its weekdays, or its shift pattern's days on. */
+    fun ringDay(alarm: Alarm, day: LocalDate): Boolean {
+        val shift = alarm.shift
+        return if (shift != null) shift.ringsOn(day) else day.dayOfWeek.value in alarm.days
+    }
+
+    /**
+     * The time a repeating alarm rings on [day], or null when it doesn't
+     * ring that day. Linked to ZT Calendar, it is moved for the day's first
+     * event (see CalendarLink); one that rings once keeps its time.
+     */
+    fun timeOn(alarm: Alarm, day: LocalDate): LocalTime? {
+        val own = LocalTime.of(alarm.hour, alarm.minute)
+        if (!alarm.repeats) return own
+        val usual = if (ringDay(alarm, day)) own else null
+        val link = alarm.calendar ?: return usual
+        val through = parseDay(alarm.calendarThrough)
+        val known = through != null && !day.isAfter(through)
+        return link.timeOn(usual, alarm.calendarPlan[day.toString()], known)
+    }
 
     /**
      * The last silent day of a pause: the alarm's own "Pause until" or
@@ -69,14 +93,18 @@ object AlarmSchedule {
         val today = now.toLocalDate()
         val paused = pausedThrough(alarm, pauseAll)
         val first = if (paused != null && !paused.isBefore(today)) paused.plusDays(1) else today
+        val served = alarm.servedUntil
         // Covers a skipped ring of a once-a-week alarm, and a week of
-        // holidays (Sukkot, Passover) on top of it.
-        for (d in 0L..40L) {
+        // holidays (Sukkot, Passover) on top of it; and a long shift
+        // cycle with a skipped ring in it.
+        for (d in 0L..SEARCH_DAYS) {
             val day = first.plusDays(d)
-            if (day.dayOfWeek.value !in alarm.days) continue
+            val time = timeOn(alarm, day) ?: continue
             if (day == skip) continue
             if (alarm.skipHolidays && day in holidays) continue
-            val at = ringOn(alarm, day, zone)
+            val at = ZonedDateTime.of(day, time, zone)
+            // The smart wake window already rang for it, earlier.
+            if (served != null && at.toInstant().toEpochMilli() <= served) continue
             if (at.isAfter(now)) return Ring(day, at)
         }
         return null
@@ -134,12 +162,25 @@ object AlarmSchedule {
      * Sets the time and days. A changed alarm starts fresh: no skip, no
      * snooze. One that rings once gets the first such time after [now].
      */
-    fun withTime(alarm: Alarm, hour: Int, minute: Int, days: Set<Int>, now: ZonedDateTime): Alarm {
+    fun withTime(
+        alarm: Alarm,
+        hour: Int,
+        minute: Int,
+        days: Set<Int>,
+        now: ZonedDateTime,
+        cycle: String? = alarm.cycle,
+        cycleStart: String? = alarm.cycleStart,
+    ): Alarm {
+        val shift = ShiftPattern.of(cycle, cycleStart)
         val base = alarm.copy(
-            hour = hour, minute = minute, days = days,
-            skipDate = null, snoozeUntil = null, armedFor = null,
+            hour = hour, minute = minute,
+            // Weekdays or a shift pattern, never both.
+            days = if (shift != null) emptySet() else days,
+            cycle = shift?.days,
+            cycleStart = shift?.start?.toString(),
+            skipDate = null, snoozeUntil = null, armedFor = null, servedUntil = null,
         )
-        if (days.isNotEmpty()) return base.copy(date = null)
+        if (base.repeats) return base.copy(date = null)
         val today = now.toLocalDate()
         val day = if (ringOn(base, today, now.zone).isAfter(now)) today else today.plusDays(1)
         return base.copy(date = day.toString())
@@ -178,8 +219,9 @@ object AlarmSchedule {
         }
     }
 
-    fun snooze(alarm: Alarm, now: ZonedDateTime): Alarm = alarm.copy(
-        snoozeUntil = now.toInstant().toEpochMilli() + alarm.snoozeMinutes * 60_000L,
+    fun snooze(alarm: Alarm, now: ZonedDateTime, minutes: Int? = null): Alarm = alarm.copy(
+        snoozeUntil = now.toInstant().toEpochMilli() +
+            (minutes?.takeIf { it > 0 }?.coerceAtMost(60) ?: alarm.snoozeMinutes) * 60_000L,
     )
 
     /**
@@ -198,6 +240,8 @@ object AlarmSchedule {
         if (a.skipDate != null && !skipActive(a, now)) a = a.copy(skipDate = null)
         val pause = parseDay(a.pauseUntil)
         if (a.pauseUntil != null && (pause == null || pause.isBefore(now.toLocalDate()))) a = a.copy(pauseUntil = null)
+        val served = a.servedUntil
+        if (served != null && served < now.toInstant().toEpochMilli()) a = a.copy(servedUntil = null)
         return a
     }
 
@@ -214,6 +258,29 @@ object AlarmSchedule {
     fun wasMissed(alarm: Alarm, nowMs: Long): Boolean {
         val armed = alarm.armedFor ?: return false
         return alarm.enabled && nowMs - armed > LATE_RING_MS
+    }
+
+    /**
+     * The smart wake window rang early for the ring at [ringAt]: that
+     * ring is done, the next one is the one after it.
+     */
+    fun servedEarly(alarm: Alarm, ringAt: Long): Alarm =
+        alarm.copy(servedUntil = maxOf(alarm.servedUntil ?: 0L, ringAt))
+
+    /**
+     * When the smart wake window before the next ring opens (epoch
+     * milliseconds), or null: no window, snoozed, or no ring ahead.
+     */
+    fun smartWindow(
+        alarm: Alarm,
+        now: ZonedDateTime,
+        pauseAll: LocalDate? = null,
+        holidays: Set<LocalDate> = emptySet(),
+    ): Pair<Long, Long>? {
+        if (alarm.smartWake <= 0 || alarm.snoozeUntil != null || alarm.test) return null
+        val ring = nextRing(alarm, now, pauseAll, holidays) ?: return null
+        val at = ring.at.toInstant().toEpochMilli()
+        return Pair(at - alarm.smartWake * 60_000L, at)
     }
 
     fun at(ms: Long, zone: ZoneId): ZonedDateTime = Instant.ofEpochMilli(ms).atZone(zone)

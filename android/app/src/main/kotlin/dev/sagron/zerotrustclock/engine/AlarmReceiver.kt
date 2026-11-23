@@ -6,8 +6,9 @@ import android.content.Intent
 import android.os.UserManager
 
 /**
- * Android calls this at an alarm's time, when an upcoming-alarm window
- * starts, and for the snoozed and upcoming notifications' buttons.
+ * Android calls this at an alarm's time, when an upcoming-alarm window or
+ * the sunrise starts, and for the snoozed and upcoming notifications'
+ * buttons.
  */
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -17,6 +18,10 @@ class AlarmReceiver : BroadcastReceiver() {
             ACTION_CANCEL_SNOOZE -> AlarmEngine.cancelSnooze(context, id)
             // The upcoming alarm's window starts: rescheduling shows it.
             UpcomingAlarms.ACTION_WINDOW -> AlarmScheduler.rescheduleAll(context)
+            // The sunrise before the wake-up alarm starts: the same.
+            Sunrise.ACTION_START -> AlarmScheduler.rescheduleAll(context)
+            // A smart wake window opens: the same starts listening.
+            SmartWakeWindows.ACTION_OPEN -> AlarmScheduler.rescheduleAll(context)
             UpcomingAlarms.ACTION_SKIP -> AlarmEngine.skipOnce(context, id)
             UpcomingAlarms.ACTION_OFF -> AlarmEngine.setEnabled(context, id, false)
         }

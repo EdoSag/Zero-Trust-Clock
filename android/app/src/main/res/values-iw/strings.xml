@@ -54,6 +54,21 @@
     <string name="widget_no_alarm">אין שעון מעורר</string>
     <string name="widget_sample_alarm">ג׳ 7:00</string>
     <string name="widget_sample_city">טוקיו</string>
+    <string name="widget_timer_name">טיימר</string>
+    <string name="widget_timer_title">ZT Clock · טיימר</string>
+    <string name="widget_timer_description">הטיימר שמסתיים ראשון, עם השהיה ו-+1:00. כשאין טיימר פעיל, מפעילים אחד בהקשה.</string>
+    <string name="widget_timer_none">הפעלת טיימר</string>
+    <string name="widget_timer_more">%1$s · ועוד %2$d</string>
+    <string name="widget_sample_timer">4:59</string>
+    <string name="widget_stopwatch_name">שעון עצר</string>
+    <string name="widget_stopwatch_title">ZT Clock · שעון עצר</string>
+    <string name="widget_stopwatch_description">שעון העצר, עם התחלה, השהיה והקפה.</string>
+    <string name="widget_sample_stopwatch">0:00</string>
+    <string name="widget_stopwatch_paused">מושהה</string>
+    <string name="widget_start">התחלה</string>
+    <string name="tile_timer">טיימר</string>
+    <string name="tile_timer_until">עד %1$s</string>
+    <string name="tile_timer_set">הקישו לקביעה</string>
     <string name="channel_bedtime">שעת שינה</string>
     <string name="bedtime_reminder_title">שעת השינה ב-%1$s</string>
     <string name="bedtime_reminder_text">הגיע הזמן להירגע.</string>
@@ -68,4 +83,62 @@
     <string name="ring_task_progress">%1$d מתוך %2$d</string>
     <string name="ring_task_wrong">לא בדיוק. נסו שוב.</string>
     <string name="screensaver_name">שעון לילה</string>
+    <string name="ring_task_scan">סורקים את הקוד כדי לכבות</string>
+    <string name="ring_task_scan_button">פתיחת המצלמה</string>
+    <string name="scan_hint_wake">כוונו את המצלמה אל הקוד ששמרתם לשעון המעורר הזה.</string>
+    <string name="scan_hint_save">כוונו את המצלמה אל קוד QR או ברקוד. בחרו קוד שנמצא רחוק מהמיטה.</string>
+    <string name="scan_wrong">זה קוד אחר.</string>
+    <string name="scan_light">תאורה</string>
+    <string name="scan_light_off">כיבוי התאורה</string>
+    <string name="scan_back">חזרה</string>
+    <string name="scan_no_camera">ל-ZT Clock אין גישה למצלמה. אפשר לאשר אותה בהגדרות הטלפון.</string>
+    <string name="no_alarm_ringing">אין שעון מעורר שמצלצל</string>
+    <string name="no_timer_ringing">אין טיימר שמצלצל</string>
+    <string name="snooze_ended">הנודניק בוטל</string>
+    <string name="channel_sunrise">זריחה</string>
+    <string name="channel_sunrise_about">פותח את מסך הזריחה לפני שעון ההשכמה. בלי צליל.</string>
+    <string name="sunrise_title">זריחה</string>
+    <string name="sunrise_text">שעון מעורר ב-%1$s</string>
+    <string name="sunrise_close">סגירה</string>
+    <string name="health_title">שינה ב-Health Connect</string>
+    <string name="health_text">כש\"שמירת השינה ב-Health Connect\" דולקת במסך השינה, ZT Clock כותב רשומת שינה אחת לכל לילה: משעת השינה ועד שמכבים את שעון ההשכמה, או עד שעת ההשכמה אם הוא לא צלצל. זה לוח הזמנים שלכם, לא מדידה.\n\nZT Clock רק כותב שינה. הוא אף פעם לא קורא את נתוני הבריאות שלכם, ולא מגבה, מסנכרן או שולח את הרשומות האלה לשום מקום.\n\nאפשר לכבות את זה במסך השינה בכל רגע. רשומות שכבר נשמרו נשארות ב-Health Connect, ושם אפשר למחוק אותן.</string>
+    <string name="health_policy">מדיניות פרטיות: https://zerotrust.bz/privacy/</string>
+    <!-- Smart wake window -->
+    <string name="channel_smart_wake">השכמה חכמה</string>
+    <string name="channel_smart_wake_about">מוצגת בזמן שהטלפון מקשיב לתנועה לפני שעון מעורר</string>
+    <string name="smart_wake_title">השכמה חכמה</string>
+    <string name="smart_wake_text">יצלצל מוקדם אם תזוזו, לכל המאוחר ב־%1$s</string>
+    <!-- The morning screen after an alarm is dismissed -->
+    <string name="morning_hello">בוקר טוב</string>
+    <string name="morning_hello_afternoon">צהריים טובים</string>
+    <string name="morning_hello_evening">ערב טוב</string>
+    <string name="morning_close">סגירה</string>
+    <string name="morning_nothing">אין שום דבר מתוכנן להיום</string>
+    <string name="morning_no_events">אין אירועים היום</string>
+    <string name="morning_first_at">%1$s, הראשון ב־%2$s</string>
+    <string name="morning_no_tasks">אין משימות להיום</string>
+    <string name="morning_tasks_overdue">%1$s, %2$s</string>
+    <string name="morning_more">ועוד %1$d</string>
+    <string name="morning_note_counts">מתוך ZT Calendar, ‏ZT Tasks ו־ZT Quests, כפי ש־ZT Clock קרא אותם לאחרונה. השמות מוצגים כשההגדרות מאפשרות זאת.</string>
+    <string name="morning_note_details">מתוך ZT Calendar, ‏ZT Tasks ו־ZT Quests, כפי ש־ZT Clock קרא אותם לאחרונה.</string>
+    <plurals name="morning_events">
+        <item quantity="one">אירוע אחד היום</item>
+        <item quantity="two">שני אירועים היום</item>
+        <item quantity="other">%d אירועים היום</item>
+    </plurals>
+    <plurals name="morning_tasks">
+        <item quantity="one">משימה אחת להיום</item>
+        <item quantity="two">שתי משימות להיום</item>
+        <item quantity="other">%d משימות להיום</item>
+    </plurals>
+    <plurals name="morning_overdue">
+        <item quantity="one">אחת באיחור</item>
+        <item quantity="two">שתיים באיחור</item>
+        <item quantity="other">%d באיחור</item>
+    </plurals>
+    <plurals name="morning_quests">
+        <item quantity="one">משימה יומית אחת ב־Quests</item>
+        <item quantity="two">שתי משימות יומיות ב־Quests</item>
+        <item quantity="other">%d משימות יומיות ב־Quests</item>
+    </plurals>
 </resources>

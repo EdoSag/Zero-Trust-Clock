@@ -119,6 +119,8 @@ object TimerEngine {
         } else if (TimerRingService.ringing) {
             TimerRingService.quiet(context)
         }
+        Tiles.refresh(context)
+        Widgets.refreshTimer(context)
         notifyChanged()
     }
 
@@ -166,12 +168,17 @@ object TimerEngine {
         val s = TimerStore.updateStopwatch(context) { how(it, now) }
         TimerNotifications.showStopwatch(Loc.wrap(context), s, now)
         Tiles.refresh(context)
+        Widgets.refreshStopwatch(context)
         notifyChanged()
     }
 
-    /** After a restart the notification is gone; show it again. */
+    /**
+     * After a restart the notification is gone, and the widget counts
+     * from the phone's start: show both again.
+     */
     fun refreshStopwatch(context: Context) {
         TimerNotifications.showStopwatch(Loc.wrap(context), TimerStore.stopwatch(context), now())
+        Widgets.refreshStopwatch(context)
     }
 
     private const val TIMER_CODE_BASE = 3_000_000

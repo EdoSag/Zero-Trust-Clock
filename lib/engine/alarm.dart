@@ -7,7 +7,11 @@ enum WakeTask {
   math,
 
   /// Shake the phone 30 times.
-  shake;
+  shake,
+
+  /// Scan the code saved with the alarm (a QR code or a barcode), which
+  /// is somewhere away from the bed. Needs [ClockAlarm.taskCode].
+  scan;
 
   static WakeTask? parse(Object? name) {
     for (final t in values) {
@@ -16,6 +20,117 @@ enum WakeTask {
     return null;
   }
 }
+
+/// "Ring in time for my first event": how an alarm follows ZT Calendar
+/// (the engine's `CalendarLink`, which decides the times).
+class CalendarLink {
+  const CalendarLink({
+    this.lead = 60,
+    this.follow = false,
+    this.earliest = 5 * 60,
+    this.otherDays = false,
+  });
+
+  /// Minutes between the ring and the day's first event.
+  final int lead;
+
+  /// False: the alarm's own time, earlier when the first event needs it.
+  /// True: [lead] minutes before the first event, later too; the alarm's
+  /// own time on a day without events.
+  final bool follow;
+
+  /// Never earlier than this (minutes after midnight); events starting
+  /// before it don't count.
+  final int earliest;
+
+  /// Also rings on days off, for an event before noon.
+  final bool otherDays;
+
+  static const leads = [15, 30, 45, 60, 75, 90, 120, 150, 180];
+
+  Map<String, Object?> toJson() => {
+    'lead': lead,
+    'follow': follow,
+    'earliest': earliest,
+    'otherDays': otherDays,
+  };
+
+  static CalendarLink? fromJson(Object? j) {
+    if (j is! Map) return null;
+    return CalendarLink(
+      lead: ((j['lead'] as num?)?.toInt() ?? 60).clamp(0, 360),
+      follow: j['follow'] == true,
+      earliest: ((j['earliest'] as num?)?.toInt() ?? 300).clamp(0, 1439),
+      otherDays: j['otherDays'] == true,
+    );
+  }
+
+  CalendarLink copyWith({
+    int? lead,
+    bool? follow,
+    int? earliest,
+    bool? otherDays,
+  }) => CalendarLink(
+    lead: lead ?? this.lead,
+    follow: follow ?? this.follow,
+    earliest: earliest ?? this.earliest,
+    otherDays: otherDays ?? this.otherDays,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is CalendarLink &&
+      other.lead == lead &&
+      other.follow == follow &&
+      other.earliest == earliest &&
+      other.otherDays == otherDays;
+
+  @override
+  int get hashCode => Object.hash(lead, follow, earliest, otherDays);
+}
+
+/// A rotating shift pattern: [days] has one character per day of the
+/// cycle, '1' rings and '0' is a day off; day 1 is [start] (yyyy-MM-dd).
+class ShiftPattern {
+  const ShiftPattern(this.days, this.start);
+
+  final String days;
+  final String start;
+
+  static const minDays = 2;
+  static const maxDays = 56;
+
+  int get length => days.length;
+  int get on => '1'.allMatches(days).length;
+
+  /// Null unless it is a valid pattern (as the engine checks it).
+  static ShiftPattern? of(String? days, String? start) {
+    if (days == null || start == null) return null;
+    if (days.length < minDays || days.length > maxDays) return null;
+    if (!RegExp(r'^[01]+$').hasMatch(days) || !days.contains('1')) return null;
+    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(start)) return null;
+    return ShiftPattern(days, start);
+  }
+
+  /// Whether [day] is a day on, counting from [start] (before it too).
+  bool ringsOn(DateTime day) {
+    final p = start.split('-').map(int.parse).toList();
+    final first = DateTime.utc(p[0], p[1], p[2]);
+    final d = DateTime.utc(day.year, day.month, day.day);
+    final diff = d.difference(first).inDays;
+    return days[diff % length] == '1';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ShiftPattern && other.days == days && other.start == start;
+
+  @override
+  int get hashCode => Object.hash(days, start);
+}
+
+/// The smart wake window's lengths in minutes (0: off).
+const smartWakeChoices = [0, 10, 20, 30];
 
 /// One alarm, as the engine on the phone reports it. The engine (Kotlin,
 /// `android/.../engine`) owns the alarms and decides when they ring; the
@@ -45,7 +160,12 @@ class ClockAlarm {
     this.gradual = false,
     this.ringMinutes = defaultRingMinutes,
     this.task,
+    this.taskCode,
     this.skipHolidays = false,
+    this.shift,
+    this.calendar,
+    this.calendarThrough,
+    this.smartWake = 0,
   });
 
   static const defaultRingMinutes = 10;
@@ -106,10 +226,27 @@ class ClockAlarm {
   /// Done before it can be dismissed; null: a slide dismisses it.
   final WakeTask? task;
 
+  /// For [WakeTask.scan]: the saved code, as a hash (the engine never
+  /// keeps what the code says).
+  final String? taskCode;
+
   /// A repeating alarm stays silent on this phone's public holidays.
   final bool skipHolidays;
 
-  bool get repeats => days.isNotEmpty;
+  /// Rings on a rotating shift pattern instead of weekdays ([days] empty).
+  final ShiftPattern? shift;
+
+  /// Linked to ZT Calendar: rings in time for the day's first event.
+  final CalendarLink? calendar;
+
+  /// The last day the engine knows ZT Calendar's events for (yyyy-MM-dd).
+  final String? calendarThrough;
+
+  /// Smart wake window: may ring up to this many minutes early when the
+  /// phone feels movement. 0: off.
+  final int smartWake;
+
+  bool get repeats => days.isNotEmpty || shift != null;
 
   factory ClockAlarm.fromJson(Map<String, dynamic> j) {
     DateTime? time(Object? ms) =>
@@ -140,7 +277,14 @@ class ClockAlarm {
       gradual: j['gradual'] as bool? ?? false,
       ringMinutes: (j['ringMinutes'] as num?)?.toInt() ?? defaultRingMinutes,
       task: WakeTask.parse(j['task']),
+      taskCode: j['taskCode'] as String?,
       skipHolidays: j['skipHolidays'] as bool? ?? false,
+      shift: ShiftPattern.of(j['cycle'] as String?, j['cycleStart'] as String?),
+      calendar: CalendarLink.fromJson(j['calendar']),
+      calendarThrough: j['calendarThrough'] as String?,
+      smartWake: smartWakeChoices.contains(j['smartWake'])
+          ? (j['smartWake'] as num).toInt()
+          : 0,
     );
   }
 
@@ -168,7 +312,12 @@ class ClockAlarm {
         gradual: gradual,
         ringMinutes: ringMinutes,
         task: task,
+        taskCode: taskCode,
         skipHolidays: skipHolidays,
+        shift: shift,
+        calendar: calendar,
+        calendarThrough: calendarThrough,
+        smartWake: smartWake,
       );
 
   /// The engine's list, earliest time of day first.
@@ -185,6 +334,9 @@ class ClockAlarm {
   }
 }
 
+/// Phone makers whose own battery saving can stop a closed app.
+enum BatteryBrand { xiaomi, huawei, samsung }
+
 /// What can stop an alarm from ringing properly on this phone, as the
 /// Alarm check screen shows it.
 class AlarmCheck {
@@ -199,6 +351,7 @@ class AlarmCheck {
     this.ownerProfile = true,
     this.bootAt,
     this.bootLocked = false,
+    this.maker = '',
   });
 
   /// Notifications are on for the app.
@@ -228,6 +381,20 @@ class AlarmCheck {
   /// That happened before the phone's first unlock.
   final bool bootLocked;
 
+  /// The phone's maker and brand, lower case ("xiaomi redmi").
+  final String maker;
+
+  /// The maker's own battery saving that can stop a closed app, if this
+  /// phone is from one of them. Advice only: Android can't tell the app
+  /// how it is set, so it is not counted in [problems].
+  BatteryBrand? get batteryBrand {
+    bool any(List<String> names) => names.any(maker.contains);
+    if (any(const ['xiaomi', 'redmi', 'poco'])) return BatteryBrand.xiaomi;
+    if (any(const ['huawei', 'honor'])) return BatteryBrand.huawei;
+    if (any(const ['samsung'])) return BatteryBrand.samsung;
+    return null;
+  }
+
   factory AlarmCheck.fromMap(Map<Object?, Object?> m) {
     final boot = (m['bootAt'] as num?)?.toInt() ?? 0;
     return AlarmCheck(
@@ -241,6 +408,7 @@ class AlarmCheck {
       ownerProfile: m['ownerProfile'] as bool? ?? true,
       bootAt: boot > 0 ? DateTime.fromMillisecondsSinceEpoch(boot) : null,
       bootLocked: m['bootLocked'] as bool? ?? false,
+      maker: m['maker'] as String? ?? '',
     );
   }
 

@@ -37,6 +37,8 @@ object BedtimeEngine {
     fun save(context: Context, bedtime: Bedtime) {
         prefs(context).edit().putString("schedule", bedtime.toJson()).commit()
         refresh(context)
+        // The sunrise follows the wake-up alarm, and is set with the alarms.
+        AlarmScheduler.rescheduleAll(context)
     }
 
     fun hasDndAccess(context: Context): Boolean =
@@ -140,6 +142,13 @@ object BedtimeEngine {
 class BedtimeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == BedtimeEngine.ACTION_REMIND) BedtimeEngine.showReminder(context)
+        if (intent.action == BedtimeEngine.ACTION_END) {
+            try {
+                SleepLog.onNightEnded(context)
+            } catch (_: Exception) {
+                // Only the sleep entry.
+            }
+        }
         // Every one of them: set the next, and Do Not Disturb as it should be now.
         BedtimeEngine.refresh(context)
     }

@@ -30,7 +30,12 @@ ClockAlarm alarm(
   bool gradual = false,
   int ringMinutes = ClockAlarm.defaultRingMinutes,
   WakeTask? task,
+  String? taskCode,
   bool skipHolidays = false,
+  ShiftPattern? shift,
+  CalendarLink? calendar,
+  String? calendarThrough,
+  int smartWake = 0,
 }) => ClockAlarm(
   id: id,
   hour: hour,
@@ -54,7 +59,12 @@ ClockAlarm alarm(
   gradual: gradual,
   ringMinutes: ringMinutes,
   task: task,
+  taskCode: taskCode,
   skipHolidays: skipHolidays,
+  shift: shift,
+  calendar: calendar,
+  calendarThrough: calendarThrough,
+  smartWake: smartWake,
 );
 
 /// When a switched-on alarm rings next in the fake engine.
@@ -163,6 +173,54 @@ class FakeClockEngine implements ClockEngine {
     return soundToPick;
   }
 
+  /// What [scanCode] answers (null: nothing scanned).
+  String? codeToScan;
+
+  @override
+  Future<String?> scanCode() async {
+    calls.add('scanCode');
+    return codeToScan;
+  }
+
+  @override
+  Future<void> previewSound(String? sound) async {
+    calls.add('previewSound ${sound ?? 'chime'}');
+  }
+
+  @override
+  Future<void> stopPreview() async {
+    calls.add('stopPreview');
+  }
+
+  RingSettings ring = const RingSettings();
+
+  @override
+  Future<RingSettings> ringSettings() async => ring;
+
+  @override
+  Future<void> setRingSettings(RingSettings settings) async {
+    calls.add(
+      'setRingSettings ${settings.volumeButtons.name} ${settings.minVolume}',
+    );
+    ring = settings;
+  }
+
+  /// What the day ahead last gave the engine.
+  Map<String, Object?>? calendarPlans;
+  String? morningBrief;
+
+  @override
+  Future<void> setCalendarPlans(Map<String, Object?> plans) async {
+    calls.add('setCalendarPlans ${plans.keys.join(',')}');
+    calendarPlans = plans;
+  }
+
+  @override
+  Future<void> setMorningBrief(String? json) async {
+    calls.add('setMorningBrief ${json == null ? 'null' : 'json'}');
+    morningBrief = json;
+  }
+
   /// Imports refused, as while that alarm rings.
   final Set<String> ringingIds = {};
 
@@ -185,6 +243,11 @@ class FakeClockEngine implements ClockEngine {
       date: a.date,
       skipDate: a.skipDate,
       updatedAt: a.updatedAt,
+      task: a.task,
+      taskCode: a.taskCode,
+      shift: a.shift,
+      calendar: a.calendar,
+      smartWake: a.smartWake,
     );
     if (i >= 0) {
       alarms[i] = copy;
@@ -213,11 +276,19 @@ class FakeClockEngine implements ClockEngine {
     bool gradual = false,
     int ringMinutes = ClockAlarm.defaultRingMinutes,
     WakeTask? task,
+    String? taskCode,
     bool skipHolidays = false,
     DateTime? date,
+    ShiftPattern? shift,
+    CalendarLink? calendar,
+    int smartWake = 0,
   }) async {
     _mayFail();
     lastSave = {
+      'shift': shift,
+      'calendar': calendar,
+      'smartWake': smartWake,
+      'taskCode': taskCode,
       'sound': sound,
       'soundName': soundName,
       'gradual': gradual,
@@ -234,12 +305,15 @@ class FakeClockEngine implements ClockEngine {
     // Like the engine: a new or re-timed alarm is switched on, an
     // unchanged one keeps its switch.
     final old = alarms.where((a) => a.id == id).firstOrNull;
-    final newDate = days.isEmpty && date != null ? dayKey(date) : null;
+    final newDate = days.isEmpty && shift == null && date != null
+        ? dayKey(date)
+        : null;
     final retimed =
         old == null ||
         old.hour != hour ||
         old.minute != minute ||
         !setEquals(old.days, days) ||
+        old.shift != shift ||
         (newDate != null && newDate != old.date);
     final saved = alarm(
       id ?? 'new-${++_ids}',
@@ -256,8 +330,12 @@ class FakeClockEngine implements ClockEngine {
       gradual: gradual,
       ringMinutes: ringMinutes,
       task: task,
+      taskCode: taskCode,
       skipHolidays: skipHolidays,
       date: newDate,
+      shift: shift,
+      calendar: shift != null || days.isNotEmpty ? calendar : null,
+      smartWake: smartWake,
     );
     final i = alarms.indexWhere((a) => a.id == saved.id);
     if (i >= 0) {
@@ -592,6 +670,12 @@ class FakeClockEngine implements ClockEngine {
   @override
   Future<List<WorldZone>> zones() async => zoneList;
 
+  /// The phone's own time zone.
+  String? phoneZone = 'Europe/London';
+
+  @override
+  Future<String?> localZone() async => phoneZone;
+
   @override
   Future<Map<String, Duration>> zoneOffsets(List<String> ids) async => {
     for (final z in zoneList)
@@ -648,6 +732,22 @@ class FakeClockEngine implements ClockEngine {
 
   @override
   Future<bool> dndAccess() async => hasDndAccess;
+
+  /// Health Connect: on this phone, allowed, and what asking answers.
+  bool sleepAvailable = true;
+  bool sleepAllowed = false;
+  bool grantSleep = true;
+
+  @override
+  Future<SleepAccess> sleepAccess() async =>
+      SleepAccess(available: sleepAvailable, allowed: sleepAllowed);
+
+  @override
+  Future<bool> requestSleepAccess() async {
+    calls.add('requestSleepAccess');
+    if (grantSleep) sleepAllowed = true;
+    return sleepAllowed;
+  }
 
   @override
   Future<SleepSoundState?> sleepSound() async => playing;

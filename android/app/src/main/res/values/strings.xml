@@ -56,6 +56,21 @@
     <string name="widget_no_alarm">No alarm set</string>
     <string name="widget_sample_alarm">Tue 7:00</string>
     <string name="widget_sample_city">Tokyo</string>
+    <string name="widget_timer_name">Timer</string>
+    <string name="widget_timer_title">ZT Clock · Timer</string>
+    <string name="widget_timer_description">The timer that ends next, with Pause and +1:00. With none running, start one with a tap.</string>
+    <string name="widget_timer_none">Start a timer</string>
+    <string name="widget_timer_more">%1$s · +%2$d more</string>
+    <string name="widget_sample_timer">4:59</string>
+    <string name="widget_stopwatch_name">Stopwatch</string>
+    <string name="widget_stopwatch_title">ZT Clock · Stopwatch</string>
+    <string name="widget_stopwatch_description">The stopwatch, with Start, Pause and Lap.</string>
+    <string name="widget_sample_stopwatch">0:00</string>
+    <string name="widget_stopwatch_paused">Paused</string>
+    <string name="widget_start">Start</string>
+    <string name="tile_timer">Timer</string>
+    <string name="tile_timer_until">Until %1$s</string>
+    <string name="tile_timer_set">Tap to set</string>
     <string name="channel_bedtime">Bedtime</string>
     <string name="bedtime_reminder_title">Bedtime at %1$s</string>
     <string name="bedtime_reminder_text">Time to wind down.</string>
@@ -70,4 +85,58 @@
     <string name="ring_task_progress">%1$d of %2$d</string>
     <string name="ring_task_wrong">Not quite. Try again.</string>
     <string name="screensaver_name">Night clock</string>
+    <string name="ring_task_scan">Scan your code to dismiss</string>
+    <string name="ring_task_scan_button">Open the camera</string>
+    <string name="scan_hint_wake">Point the camera at the code you saved for this alarm.</string>
+    <string name="scan_hint_save">Point the camera at a QR code or a barcode. Pick one that stays away from your bed.</string>
+    <string name="scan_wrong">This is another code.</string>
+    <string name="scan_light">Light</string>
+    <string name="scan_light_off">Light off</string>
+    <string name="scan_back">Back</string>
+    <string name="scan_no_camera">ZT Clock can\'t use the camera. Allow it in the phone\'s settings.</string>
+    <string name="no_alarm_ringing">No alarm is ringing</string>
+    <string name="no_timer_ringing">No timer is ringing</string>
+    <string name="snooze_ended">Snooze ended</string>
+    <string name="channel_sunrise">Sunrise</string>
+    <string name="channel_sunrise_about">Opens the sunrise screen before the wake-up alarm. No sound.</string>
+    <string name="sunrise_title">Sunrise</string>
+    <string name="sunrise_text">Alarm at %1$s</string>
+    <string name="sunrise_close">Close</string>
+    <string name="health_title">Sleep in Health Connect</string>
+    <string name="health_text">When \"Save sleep to Health Connect\" is on in Bedtime, ZT Clock writes one sleep entry for each night: from your bedtime until you dismiss the wake-up alarm, or until your wake-up time when it did not ring. It is your schedule, not a measurement.\n\nZT Clock only writes sleep. It never reads your health data, and it does not back up, sync or send these entries anywhere.\n\nYou can switch it off in Bedtime at any time. Entries already saved stay in Health Connect, where you can delete them.</string>
+    <string name="health_policy">Privacy policy: https://zerotrust.bz/privacy/</string>
+    <!-- Smart wake window -->
+    <string name="channel_smart_wake">Smart wake</string>
+    <string name="channel_smart_wake_about">Shown while the phone listens for movement before an alarm</string>
+    <string name="smart_wake_title">Smart wake</string>
+    <string name="smart_wake_text">Rings early if you stir, by %1$s at the latest</string>
+    <!-- The morning screen after an alarm is dismissed -->
+    <string name="morning_hello">Good morning</string>
+    <string name="morning_hello_afternoon">Good afternoon</string>
+    <string name="morning_hello_evening">Good evening</string>
+    <string name="morning_close">Close</string>
+    <string name="morning_nothing">Nothing planned today</string>
+    <string name="morning_no_events">No events today</string>
+    <string name="morning_first_at">%1$s, the first at %2$s</string>
+    <string name="morning_no_tasks">No tasks due today</string>
+    <string name="morning_tasks_overdue">%1$s, %2$s</string>
+    <string name="morning_more">and %1$d more</string>
+    <string name="morning_note_counts">From ZT Calendar, ZT Tasks and ZT Quests, as ZT Clock last read them. Names are shown when Settings say so.</string>
+    <string name="morning_note_details">From ZT Calendar, ZT Tasks and ZT Quests, as ZT Clock last read them.</string>
+    <plurals name="morning_events">
+        <item quantity="one">1 event today</item>
+        <item quantity="other">%d events today</item>
+    </plurals>
+    <plurals name="morning_tasks">
+        <item quantity="one">1 task due today</item>
+        <item quantity="other">%d tasks due today</item>
+    </plurals>
+    <plurals name="morning_overdue">
+        <item quantity="one">1 overdue</item>
+        <item quantity="other">%d overdue</item>
+    </plurals>
+    <plurals name="morning_quests">
+        <item quantity="one">1 daily quest</item>
+        <item quantity="other">%d daily quests</item>
+    </plurals>
 </resources>

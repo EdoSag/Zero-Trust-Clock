@@ -103,6 +103,7 @@ class AlarmCard extends StatelessWidget {
                           [
                             if (alarm.label.isNotEmpty) alarm.label,
                             repeatText(context, alarm, now: now),
+                            if (alarm.calendar != null) l.calendarLinkedShort,
                           ].join(' · '),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colors.onSurfaceVariant,

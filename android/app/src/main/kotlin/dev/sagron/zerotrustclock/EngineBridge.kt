@@ -17,15 +17,20 @@ import android.os.UserManager
 import android.provider.Settings
 import dev.sagron.zerotrustclock.engine.AlarmEngine
 import dev.sagron.zerotrustclock.engine.BedtimeEngine
+import dev.sagron.zerotrustclock.engine.SleepLog
 import dev.sagron.zerotrustclock.engine.Holidays
 import dev.sagron.zerotrustclock.engine.Screensaver
 import dev.sagron.zerotrustclock.engine.SleepSoundService
 import dev.sagron.zerotrustclock.engine.core.Bedtime
+import dev.sagron.zerotrustclock.engine.core.CalendarLink
 import dev.sagron.zerotrustclock.engine.AlarmNotifications
 import dev.sagron.zerotrustclock.engine.AlarmScheduler
 import dev.sagron.zerotrustclock.engine.EnginePrefs
 import dev.sagron.zerotrustclock.engine.Loc
+import dev.sagron.zerotrustclock.engine.MorningBrief
 import dev.sagron.zerotrustclock.engine.RingService
+import dev.sagron.zerotrustclock.engine.ScanActivity
+import dev.sagron.zerotrustclock.engine.SoundPreview
 import dev.sagron.zerotrustclock.engine.Sounds
 import dev.sagron.zerotrustclock.engine.Tabs
 import dev.sagron.zerotrustclock.engine.TimerEngine
@@ -58,6 +63,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             AlarmScheduler.rescheduleAll(activity)
             TimerEngine.refresh(activity)
             BedtimeEngine.refresh(activity)
+            // Nights that could not be written to Health Connect yet.
+            SleepLog.flush(activity)
         } catch (_: Exception) {
         }
     }
@@ -101,8 +108,13 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             gradual = call.argument<Boolean>("gradual") ?: false,
                             ringMinutes = (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                             task = call.argument<String>("task"),
+                            taskCode = call.argument<String>("taskCode"),
                             skipHolidays = call.argument<Boolean>("skipHolidays") ?: false,
                             date = call.argument<String>("date"),
+                            cycle = call.argument<String>("cycle"),
+                            cycleStart = call.argument<String>("cycleStart"),
+                            calendar = calendarLink(call),
+                            smartWake = call.argument<Int>("smartWake") ?: 0,
                         ),
                     )
                     result.success(id)
@@ -128,8 +140,19 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                             (call.argument<Int>("ringMinutes") ?: 10).coerceIn(1, 60),
                             call.argument<String>("task"),
                             call.argument<Boolean>("skipHolidays") ?: false,
+                            call.argument<String>("taskCode"),
+                            call.argument<String>("cycle"),
+                            call.argument<String>("cycleStart"),
+                            calendarLink(call),
+                            call.argument<Int>("smartWake") ?: 0,
                         ),
                     )
+                }
+                "setCalendarPlans" -> done(result) {
+                    AlarmEngine.setCalendarPlans(activity, call.argument<String>("json") ?: "{}")
+                }
+                "setMorningBrief" -> done(result) {
+                    MorningBrief.save(activity, call.argument<String>("json"))
                 }
                 "setEnabled" -> done(result) {
                     AlarmEngine.setEnabled(activity, id(call), call.argument<Boolean>("enabled") ?: false)
@@ -143,6 +166,21 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 "pauseAllUntil" -> result.success(AlarmEngine.pauseAllUntil(activity))
                 "setPauseAll" -> done(result) { AlarmEngine.setPauseAll(activity, call.argument<String>("until")) }
                 "pickSound" -> pickSound(call.argument<String>("kind") ?: "file", call.argument<String>("current"), result)
+                "previewSound" -> done(result) { SoundPreview.play(activity, call.argument<String>("sound")) }
+                "stopPreview" -> done(result) { SoundPreview.stop() }
+                "scanCode" -> scanCode(result)
+                "ringSettings" -> result.success(
+                    mapOf(
+                        "volumeButtons" to EnginePrefs.volumeButtons(activity),
+                        "minVolume" to EnginePrefs.minVolume(activity),
+                        "morning" to EnginePrefs.morning(activity),
+                    ),
+                )
+                "setRingSettings" -> done(result) {
+                    EnginePrefs.setVolumeButtons(activity, call.argument<String>("volumeButtons"))
+                    EnginePrefs.setMinVolume(activity, call.argument<Int>("minVolume") ?: 0)
+                    call.argument<String>("morning")?.let { EnginePrefs.setMorning(activity, it) }
+                }
                 "cancelSnooze" -> done(result) { AlarmEngine.cancelSnooze(activity, id(call)) }
                 "delete" -> done(result) { AlarmEngine.delete(activity, id(call)) }
                 "testAlarm" -> done(result) {
@@ -196,6 +234,10 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                     BedtimeEngine.save(activity, Bedtime.fromJson(call.argument<String>("json")))
                 }
                 "dndAccess" -> result.success(BedtimeEngine.hasDndAccess(activity))
+                "sleepAccess" -> result.success(
+                    mapOf("available" to SleepLog.available(activity), "allowed" to SleepLog.allowed(activity)),
+                )
+                "requestSleepAccess" -> requestSleepAccess(result)
                 "sleepSound" -> result.success(
                     SleepSoundService.state?.let { mapOf("kind" to it.kind, "endsAt" to it.endsAt) },
                 )
@@ -208,6 +250,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
                 }
                 "stopSleepSound" -> done(result) { SleepSoundService.stop(activity) }
                 "zones" -> result.success(WorldZones.allJson(activity))
+                // The phone's own time zone, e.g. "Asia/Jerusalem".
+                "localZone" -> result.success(java.util.TimeZone.getDefault().id)
                 "zoneOffsets" -> result.success(
                     WorldZones.offsets(call.argument<List<String>>("ids") ?: emptyList()),
                 )
@@ -222,6 +266,12 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         } catch (e: Exception) {
             result.error("engine", e.message, null)
         }
+    }
+
+    /** The alarm's link to ZT Calendar, as the app sends it (a map), or null. */
+    private fun calendarLink(call: MethodCall): CalendarLink? {
+        val m = call.argument<Map<String, Any?>>("calendar") ?: return null
+        return CalendarLink.fromJson(org.json.JSONObject(m))
     }
 
     private fun id(call: MethodCall): String =
@@ -260,6 +310,8 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             "bootLocked" to EnginePrefs.bootLocked(activity),
             "ringing" to (RingService.ringingId != null),
             "sdk" to Build.VERSION.SDK_INT,
+            // Some makers stop closed apps; the screen says what to switch.
+            "maker" to "${Build.MANUFACTURER} ${Build.BRAND}".lowercase(),
         )
     }
 
@@ -276,11 +328,41 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
     }
 
+    private var pendingSleep: MethodChannel.Result? = null
+
+    /** Asks to write sleep to Health Connect (Android 14 and later). */
+    private fun requestSleepAccess(result: MethodChannel.Result) {
+        if (!SleepLog.available(activity)) {
+            result.success(false)
+            return
+        }
+        if (SleepLog.allowed(activity)) {
+            result.success(true)
+            return
+        }
+        pendingSleep?.success(false)
+        pendingSleep = result
+        try {
+            activity.requestPermissions(arrayOf(SleepLog.PERMISSION), REQUEST_SLEEP)
+        } catch (_: Exception) {
+            pendingSleep = null
+            result.success(false)
+        }
+    }
+
     fun onPermissionsResult(requestCode: Int, grantResults: IntArray) {
-        if (requestCode != REQUEST_NOTIFICATIONS) return
         val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-        pendingPermission?.success(granted)
-        pendingPermission = null
+        when (requestCode) {
+            REQUEST_NOTIFICATIONS -> {
+                pendingPermission?.success(granted)
+                pendingPermission = null
+            }
+            REQUEST_SLEEP -> {
+                pendingSleep?.success(granted)
+                pendingSleep = null
+                if (granted) SleepLog.flush(activity)
+            }
+        }
     }
 
     private var pendingSound: MethodChannel.Result? = null
@@ -311,7 +393,30 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         }
     }
 
+    private var pendingScan: MethodChannel.Result? = null
+
+    /**
+     * Opens the camera to save a code for the "scan a code" wake-up task.
+     * Answers the code's hash, or null when nothing was scanned.
+     */
+    private fun scanCode(result: MethodChannel.Result) {
+        pendingScan?.success(null)
+        pendingScan = result
+        try {
+            activity.startActivityForResult(ScanActivity.saveIntent(activity), REQUEST_SCAN)
+        } catch (_: Exception) {
+            pendingScan = null
+            result.success(null)
+        }
+    }
+
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode == REQUEST_SCAN) {
+            val code = if (resultCode == Activity.RESULT_OK) data?.getStringExtra(ScanActivity.EXTRA_CODE) else null
+            pendingScan?.success(code)
+            pendingScan = null
+            return true
+        }
         if (requestCode != REQUEST_RINGTONE && requestCode != REQUEST_FILE) return false
         val result = pendingSound ?: return true
         pendingSound = null
@@ -364,6 +469,9 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
             "doNotDisturb" -> Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS)
             "screensaver" -> Intent(Settings.ACTION_DREAM_SETTINGS)
             "dndAccess" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+            // The app's own page in Health Connect (Android 14 and later).
+            "healthConnect" -> Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS")
+                .putExtra(Intent.EXTRA_PACKAGE_NAME, pkg)
             else -> Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app)
         }
         try {
@@ -377,5 +485,7 @@ class EngineBridge(private val activity: Activity, messenger: BinaryMessenger) :
         const val REQUEST_NOTIFICATIONS = 7301
         const val REQUEST_RINGTONE = 7302
         const val REQUEST_FILE = 7303
+        const val REQUEST_SCAN = 7304
+        const val REQUEST_SLEEP = 7305
     }
 }

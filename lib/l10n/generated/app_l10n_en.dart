@@ -243,6 +243,30 @@ class AppL10nEn extends AppL10n {
       'Secondary profile. When this profile is ended, its alarms do not ring.';
 
   @override
+  String get batteryXiaomi => 'Xiaomi, Redmi and POCO phones';
+
+  @override
+  String get batteryXiaomiHint =>
+      'These phones can stop an app that is closed, and its alarms with it. In the app\'s settings turn on Autostart, and set Battery saver to No restrictions.';
+
+  @override
+  String get batteryHuawei => 'Huawei and Honor phones';
+
+  @override
+  String get batteryHuaweiHint =>
+      'These phones close apps to save battery. In Settings > Battery > App launch, switch ZT Clock to Manage manually and leave Auto-launch and Run in background on.';
+
+  @override
+  String get batterySamsung => 'Samsung phones';
+
+  @override
+  String get batterySamsungHint =>
+      'Samsung puts apps you rarely open to sleep, and a sleeping app\'s alarms can be late. In the app\'s settings open Battery and pick Unrestricted, and keep ZT Clock out of Sleeping apps.';
+
+  @override
+  String get openAppSettings => 'Open';
+
+  @override
   String get checkRestart => 'After a restart';
 
   @override
@@ -506,6 +530,34 @@ class AppL10nEn extends AppL10n {
   String get dragToReorder => 'Long-press to reorder, swipe to remove.';
 
   @override
+  String homeIn(String city) {
+    return 'Home: $city';
+  }
+
+  @override
+  String get homeTimeZone => 'Home time zone';
+
+  @override
+  String get homeTimeZoneOff => 'Off';
+
+  @override
+  String homeTimeZoneOn(String city) {
+    return '$city. Its time shows in the Clock tab while the phone is in another time zone.';
+  }
+
+  @override
+  String homeHere(String city) {
+    return 'This phone\'s time zone now ($city)';
+  }
+
+  @override
+  String get homePickCity => 'Pick a city';
+
+  @override
+  String get homeTimeZoneAbout =>
+      'When you travel and the phone changes time zone, the Clock tab also shows the time at home. At home nothing is added.';
+
+  @override
   String get bedtime => 'Bedtime';
 
   @override
@@ -556,6 +608,32 @@ class AppL10nEn extends AppL10n {
   String wakeUpAlarmHint(String time) {
     return 'An alarm at $time on the mornings after your nights.';
   }
+
+  @override
+  String get sunrise => 'Sunrise before the alarm';
+
+  @override
+  String sunriseHint(int minutes) {
+    return 'The screen lights up slowly for $minutes minutes before the wake-up alarm. Not when you are already using the phone.';
+  }
+
+  @override
+  String get sunriseNeedsAlarm => 'Needs the wake-up alarm.';
+
+  @override
+  String get saveSleep => 'Save sleep to Health Connect';
+
+  @override
+  String get saveSleepHint =>
+      'Each night is saved as sleep, from bedtime until you dismiss the wake-up alarm. Apps you allow in Health Connect can read it. Not backed up.';
+
+  @override
+  String get saveSleepNotAllowed =>
+      'ZT Clock is not allowed to save sleep in Health Connect.';
+
+  @override
+  String get saveSleepNeedsAccess =>
+      'Needs permission to write sleep in Health Connect.';
 
   @override
   String get sleepSounds => 'Sleep sounds';
@@ -685,4 +763,186 @@ class AppL10nEn extends AppL10n {
   @override
   String get couldNotLog =>
       'Couldn\'t log it. Check the connection and try again.';
+
+  @override
+  String get offlineEdition => 'Offline edition';
+
+  @override
+  String get offlineEditionHint =>
+      'No internet permission. No account, no sync, no downloads: nothing leaves this phone.';
+
+  @override
+  String get soundBells => 'Bells';
+
+  @override
+  String get soundBeeps => 'Beeps';
+
+  @override
+  String get soundSunrise => 'Sunrise';
+
+  @override
+  String get soundBuzzer => 'Buzzer';
+
+  @override
+  String get wakeTaskScan => 'Scan a code';
+
+  @override
+  String get wakeTaskScanSaved => 'Code saved';
+
+  @override
+  String get wakeTaskScanHint =>
+      'Scan the same QR code or barcode to dismiss. Keep it away from the bed. If the camera can\'t be used, the alarm asks for sums instead.';
+
+  @override
+  String get wakeTaskScanAgain => 'Scan another';
+
+  @override
+  String get wakeTaskScanNone => 'No code was scanned';
+
+  @override
+  String get volumeButtons => 'Volume buttons';
+
+  @override
+  String get volumeButtonsVolume => 'Change the volume';
+
+  @override
+  String get volumeButtonsAbout =>
+      'What the volume buttons do while an alarm rings on its own screen. A wake-up task is still asked for.';
+
+  @override
+  String get minVolume => 'Ring at least this loud';
+
+  @override
+  String get minVolumeOff => 'Off: the phone\'s alarm volume';
+
+  @override
+  String minVolumePercent(int percent) {
+    return '$percent% of the loudest';
+  }
+
+  @override
+  String get minVolumeAbout =>
+      'If the phone\'s alarm volume is lower, it is raised while an alarm rings and put back afterwards. Timers are not changed.';
+
+  @override
+  String get repeatWeekdays => 'Weekdays';
+
+  @override
+  String get repeatShifts => 'Shift pattern';
+
+  @override
+  String shiftText(int on, int length) {
+    return 'Shifts: $on of every $length days';
+  }
+
+  @override
+  String get shiftLength => 'Days in the cycle';
+
+  @override
+  String get shiftStart => 'Day 1 of the cycle';
+
+  @override
+  String get shiftDaysHint =>
+      'Tap the days of the cycle the alarm rings on. The cycle repeats from day 1 again and again.';
+
+  @override
+  String shiftDay(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String shiftOnOff(int on, int off) {
+    return '$on on, $off off';
+  }
+
+  @override
+  String get shiftTwoShiftsHint =>
+      'Two shifts with different times, like 2 days, 2 nights, 4 off? Make one alarm for each, with the same day 1.';
+
+  @override
+  String shiftToday(int day, int length) {
+    return 'Today is day $day of $length';
+  }
+
+  @override
+  String get calendarLink => 'Follow ZT Calendar';
+
+  @override
+  String get calendarLinkHint =>
+      'Rings in time for the day\'s first event. ZT Clock reads ZT Calendar each time it is opened, two weeks ahead; days it hasn\'t read ring at the alarm\'s own time.';
+
+  @override
+  String get calendarNeedsAccount => 'Sign in to follow ZT Calendar.';
+
+  @override
+  String get calendarNeedsRepeat =>
+      'Pick repeat days or a shift pattern first.';
+
+  @override
+  String get calendarLead => 'Before the first event';
+
+  @override
+  String get calendarEarlier => 'Earlier when needed';
+
+  @override
+  String calendarEarlierHint(String time) {
+    return 'Rings at $time, or earlier when the first event needs it.';
+  }
+
+  @override
+  String get calendarFollow => 'Always before the first event';
+
+  @override
+  String calendarFollowHint(String time) {
+    return 'Rings before the first event, later than $time too. Without events: $time.';
+  }
+
+  @override
+  String get calendarEarliest => 'Never before';
+
+  @override
+  String get calendarOtherDays => 'Also on other days, for a morning event';
+
+  @override
+  String get calendarLinkedShort => 'Follows ZT Calendar';
+
+  @override
+  String get smartWake => 'Smart wake window';
+
+  @override
+  String get smartWakeHint =>
+      'With the phone on the bed, it rings up to this much earlier when you stir, so you wake in light sleep. Without movement it rings at its time.';
+
+  @override
+  String get smartWakeOff => 'Off';
+
+  @override
+  String get morningScreen => 'After dismissing an alarm';
+
+  @override
+  String get morningOff => 'Nothing';
+
+  @override
+  String get morningCounts => 'The day ahead, counts only';
+
+  @override
+  String get morningDetails => 'The day ahead, with names';
+
+  @override
+  String get morningHint =>
+      'Today\'s events from ZT Calendar, tasks from ZT Tasks and quests from ZT Quests, as ZT Clock last read them (signed in). Names also show over the lock screen.';
+
+  @override
+  String questGoal(String category) {
+    String _temp0 = intl.Intl.selectLogic(category, {
+      'fitness': 'Fitness',
+      'productivity': 'Productivity',
+      'nutrition': 'Nutrition',
+      'sleep': 'Sleep',
+      'learning': 'Learning',
+      'mindfulness': 'Mindfulness',
+      'other': 'Goal',
+    });
+    return '$_temp0';
+  }
 }
