@@ -440,6 +440,53 @@ void main() {
       expect(engine.calendarPlans!.keys, ['new']);
     });
 
+    testWidgets('signed out while a refresh reads: nothing it read is kept', (
+      tester,
+    ) async {
+      final engine = FakeClockEngine(
+        alarms: [
+          alarm('a', days: {1}, calendar: const CalendarLink()),
+        ],
+      );
+      final items = _GatedItems({
+        LinkedApp.calendar: const [],
+        LinkedApp.tasks: const [],
+      });
+      late DayAhead dayAhead;
+      late AppL10n l;
+      late LinkedKeys keys;
+      await tester.pumpWidget(
+        testApp(
+          engine,
+          home: Consumer(
+            builder: (context, ref, _) {
+              dayAhead = ref.read(dayAheadProvider);
+              keys = ref.read(linkedKeysProvider.notifier);
+              l = AppL10n.of(context);
+              return const SizedBox();
+            },
+          ),
+          overrides: [
+            linkedItemsProvider.overrideWithValue(items),
+            linkedKeysProvider.overrideWith(_Unlocked.new),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        final gate = items.gate = Completer<void>();
+        final run = dayAhead.refresh(l, force: true);
+        while (!items.reads.contains(LinkedApp.tasks)) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        // Signing out locks the vault, which clears the keys.
+        keys.clear();
+        gate.complete();
+        await run;
+      });
+      expect(engine.morningBrief, isNull);
+    });
+
     testWidgets('locked or signed out: nothing is read', (tester) async {
       final engine = FakeClockEngine();
       final items = FakeLinkedItems(const {});
