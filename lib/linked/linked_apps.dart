@@ -250,7 +250,12 @@ class DayAhead {
   }
 
   Future<void> _run(DateTime now, AppL10n l) async {
-    if (ref.read(linkedKeysProvider).isEmpty) return;
+    final keys = ref.read(linkedKeysProvider);
+    if (keys.isEmpty) return;
+    // Locking, signing out or another account replaces the keys: what was
+    // read for the old ones must not reach the engine (the morning screen
+    // would show the old account's day after sign-out cleared it).
+    bool stale() => !identical(ref.read(linkedKeysProvider), keys);
     final items = ref.read(linkedItemsProvider);
     final engine = ref.read(clockEngineProvider);
     final calendar = await _tryRead(items, LinkedApp.calendar);
@@ -273,6 +278,7 @@ class DayAhead {
               'days': firstEventPlan(byDay, earliest: link.earliest),
             },
       };
+      if (stale()) return;
       if (plans.isNotEmpty) await engine.setCalendarPlans(plans);
     }
     final tasks = await _tryRead(items, LinkedApp.tasks);
@@ -291,6 +297,7 @@ class DayAhead {
       ],
       goalName: (g) => g.name.isNotEmpty ? g.name : l.questGoal(g.category),
     );
+    if (stale()) return;
     await engine.setMorningBrief(jsonEncode(brief));
   }
 
