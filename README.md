@@ -1,13 +1,14 @@
 # Zero-Trust Clock
 
-Alarms that ring, with **Turn off once** (on the phone: **ZT Clock**), plus
-timers, a stopwatch, a world clock and bedtime. Same settings and look as
-the other Zero-Trust apps, built on
-[Zero-Trust-Core](https://github.com/EdoSag/Zero-Trust-Core).
+Alarms that ring, with **Turn off once**, plus timers, a stopwatch, a world
+clock and bedtime. It works without an account; signing in adds encrypted
+backup and sync. On the phone it is called **ZT Clock**; in stores and on
+release pages, **Zero-Trust Clock**. Same settings and look as the other
+Zero-Trust apps, built on
+[Zero-Trust-Core](https://github.com/EdoSag/Zero-Trust-Core). Part of the
+[Zero-Trust suite](https://zerotrust.bz).
 
-Work happens on the `Dev` branch; `main` holds releases.
-
-## What is in it now (0.18.0)
+## What it does
 
 - **Alarms.** Add one with +, pick repeat days, a label, vibration and the
   snooze length. The switch turns an alarm off for good.
@@ -163,12 +164,63 @@ Work happens on the `Dev` branch; `main` holds releases.
   is on, its Do Not Disturb, the sunrise and saving sleep stay each
   phone's own, like an alarm's switch. Like every Zero-Trust app, a signed-in Clock asks to unlock
   after a restart or auto-lock; the alarms ring either way.
-- English and Hebrew, also on the ring screen and in notifications.
 - **Offline edition** (`zero-trust-clock-offline-…apk` in each release):
   the same clock with no internet permission at all, so no account, no
   sync and no downloads (no holiday calendars, no Log to ZT Time). It is
   its own app, "ZT Clock Offline", and can sit next to the full one.
   Settings says which edition is installed.
+
+## Privacy
+
+ZT Clock works without an account. When you sign in, it is zero-knowledge like every Zero-Trust app: your data is encrypted on
+your device, with keys made from your password, before anything is sent.
+The server stores only ciphertext and your password itself is never
+sent, so neither we nor anyone who breaks into the server can read your
+data. The recovery key shown at sign-up is the only way back in if you
+forget the password. How the keys work:
+[Zero-Trust-Core](https://github.com/EdoSag/Zero-Trust-Core#key-hierarchy) and
+[zerotrust.bz/security](https://zerotrust.bz/security/).
+
+- Alarms stay on the phone and ring without an account, the app or an
+  unlocked phone.
+- Alarm and timer labels are not shown on the lock screen or on the home
+  screen widgets.
+- Scan a code keeps only a hash of the code, and no picture.
+- Smart wake listens to the motion sensor only while its window is open;
+  nothing is recorded.
+- Saving sleep to Health Connect only writes; the app never reads health
+  data.
+- The Offline edition has no internet permission at all.
+
+## One account, one core
+
+Signing in is optional. The account is the one Zero-Trust account that opens every app in the suite. Sign-in, unlock
+(fingerprint or face, auto-lock), the recovery key, settings, the look,
+sync and languages come from
+[Zero-Trust-Core](https://github.com/EdoSag/Zero-Trust-Core), so they work
+the same in every app. Accounts made before the core still sign in and
+see their data.
+
+## Install
+
+Android: get the latest signed APK from this repository's
+[Releases](https://github.com/EdoSag/Zero-Trust-Clock/releases/latest),
+or from [zerotrust.bz/install](https://zerotrust.bz/install/#clock),
+which also shows each file's SHA-256, the signing fingerprint and an
+Obtainium link. GitHub Releases are the main way the apps are published.
+
+Builds from GitHub check for a newer release themselves (Settings > About,
+one anonymous request a day, can be turned off). Every Zero-Trust app is signed
+with the same key, and Android only installs an update signed with it.
+
+Each release has two APKs: ZT Clock, and ZT Clock Offline (no internet
+permission, so no account, no sync and no downloads). They can sit next to
+each other.
+
+## Languages
+
+English and Hebrew, with right-to-left layout. Choose under
+Settings > Appearance > Language. The ring screen and notifications follow it too.
 
 ## How it is built
 
@@ -290,30 +342,90 @@ Where things are kept on the phone:
     maker's battery advice above "After a restart", and Open goes to the
     app's settings. On a Pixel there is no such line.
 
-## Development
+## Build from source
 
-```
+Flutter 3.47.9, the version CI pins (3.50 deprecates `material.dart` and
+fails analyze).
+
+```bash
+# .env (not committed; CI writes its own). Public client values only:
+# never a service-role key, because .env is bundled into the APK.
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_ANON_KEY=<publishable key>
+
 flutter pub get
-flutter analyze
-flutter test test/
+flutter analyze && flutter test test/
 cd android && ./gradlew :app:testFullDebugUnitTest   # the scheduler's tests
+flutter build apk --flavor full      # or --flavor offline
 ```
+
+Never add `cryptography_flutter`: it breaks the core's key derivation and
+sign-in fails.
 
 Two editions are built from the one project (`android/app/build.gradle.kts`):
-`flutter build apk --flavor full` (the default) and `--flavor offline`. The
-Offline edition's manifest (`android/app/src/offline`) takes the INTERNET
-permission out, `lib/app/edition.dart` hides what would need it, and CI
-checks the built APK has no network permission.
+`--flavor full` (the default) and `--flavor offline`. The Offline edition's
+manifest (`android/app/src/offline`) takes the INTERNET permission out,
+`lib/app/edition.dart` hides what would need it, and CI checks the built APK
+has no network permission.
 
-Flutter 3.47.9 (the suite's pinned version). Strings are in
-`lib/l10n/app_en.arb` and `app_he.arb`; the native ring screen and
-notifications keep theirs in `android/app/src/main/res/values*/strings.xml`.
-The launcher icons are drawn from the suite's brand mark with
-`flutter test tool/launcher_icon_test.dart`.
+Strings are in `lib/l10n/app_en.arb` and `app_he.arb`; the native ring screen
+and notifications keep theirs in
+`android/app/src/main/res/values*/strings.xml`. The launcher icons are drawn
+from the suite's brand mark with `flutter test tool/launcher_icon_test.dart`,
+and the app's alarm sounds are made by `tool/make_alarm_sounds.py`.
+
+## Branches and releases
+
+Work happens on `Dev`: pull requests target `Dev`, never `main`, and get a
+test build. A release is one `Dev` → `main` pull request. Every push to
+`main` runs the tests, builds both editions as signed APKs and a Google Play bundle
+and publishes them as a GitHub Release named "Zero-Trust Clock"
+(`.github/workflows/android-apk.yml`). The workflow needs the repository
+secrets `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD`, the
+keystore shared by all Zero-Trust apps.
 
 The Google Play listing (English and Hebrew: title, descriptions, icon,
-feature graphic, release notes) is in `fastlane/metadata/android/`. A push
-to `main` also builds the `.aab` that Play takes. Phone screenshots still
-need to be added under `images/phoneScreenshots/`.
+feature graphic, release notes) is in `fastlane/metadata/android/`. Phone
+screenshots still need to be added under `images/phoneScreenshots/`.
 
-Licence: AGPL-3.0 (see `LICENSE`).
+## Support and security
+
+- Help centre: [zerotrust.bz/help](https://zerotrust.bz/help/). Questions and
+  account deletion: support@zerotrust.bz.
+- Security problems: please report them privately to cyber@zerotrust.bz. What
+  the encryption does and doesn't protect against is on
+  [zerotrust.bz/security](https://zerotrust.bz/security/).
+- [Privacy policy](https://zerotrust.bz/privacy/) and
+  [terms](https://zerotrust.bz/terms/).
+
+## License
+
+Copyright (C) 2026 Edo Sagron (https://zerotrust.bz)
+
+Zero-Trust is open source under the [GNU Affero General Public License v3.0](LICENSE)
+(AGPL-3.0-only), the same licence Signal uses.
+
+- You may use, study, change and share the code, including in your own projects.
+- If you share a changed version, or run it for other people over a network, you must
+  publish your full source code under the same licence.
+- This program comes with no warranty; see the licence for details.
+
+Third-party libraries keep their own licences; the app lists them under
+Settings > Open-source licences.
+
+### Name and logo
+
+The AGPL covers the code, not the brand. "Zero-Trust", "ZT", the app names and icons are
+reserved. If you publish a fork, give it a different name and icon so nobody mistakes it
+for an official Zero-Trust app.
+
+### Servers
+
+The official apps use the Zero-Trust servers. A fork must use its own backend (for
+example its own Supabase project) and must not connect to the official servers.
+
+### Contributing
+
+Pull requests are welcome. By sending one you agree that your contribution is licensed
+under the AGPL-3.0 and that the copyright holder may also license it under other terms,
+including commercially. This keeps the project able to offer paid plans and other licences.
